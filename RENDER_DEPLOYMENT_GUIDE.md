@@ -34,9 +34,23 @@ This will output the complete JSON string you need for production.
 
 After deployment, check:
 - ✅ Service starts without errors
-- ✅ Firebase connection works
+- ✅ Firebase connection works  
 - ✅ User registration functions properly
 - ✅ Dashboard loads correctly
+
+**To test Firebase specifically on Render.com:**
+
+You can run the Firebase test script in your Render.com console:
+```bash
+python test_firebase_simple.py
+```
+
+This will verify that Firebase is properly connected and working.
+
+**Check the deployment logs for these messages:**
+- `✅ Firebase App: Production initialization successful with FIREBASE_CREDENTIALS_JSON!`
+- `✅ User data saved to Firebase Realtime Database: [phone_number]`
+- `✅ User data saved to Firestore: [phone_number]`
 
 ## 🔒 Security Checklist
 

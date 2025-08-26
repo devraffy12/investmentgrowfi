@@ -1,0 +1,631 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}Notifications - InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-bell"></i> Notifications
+            </h1>
+            <p class="text-muted">Stay updated with your investment activities</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-outline-primary me-2" onclick="markAllAsRead()">
+                <i class="fas fa-check-double"></i> Mark All Read
+            </button>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?filter=all">All Notifications</a></li>
+                    <li><a class="dropdown-item" href="?filter=unread">Unread Only</a></li>
+                    <li><a class="dropdown-item" href="?filter=payouts">Payouts</a></li>
+                    <li><a class="dropdown-item" href="?filter=investments">Investments</a></li>
+                    <li><a class="dropdown-item" href="?filter=referrals">Referrals</a></li>
+                    <li><a class="dropdown-item" href="?filter=system">System</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                    <h5>{{ total_notifications|default:"0" }}</h5>
+                    <small class="text-muted">Total Notifications</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-envelope-open fa-2x text-success mb-2"></i>
+                    <h5>{{ unread_notifications|default:"0" }}</h5>
+                    <small class="text-muted">Unread</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-coins fa-2x text-warning mb-2"></i>
+                    <h5>{{ payout_notifications|default:"0" }}</h5>
+                    <small class="text-muted">Payout Alerts</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-handshake fa-2x text-info mb-2"></i>
+                    <h5>{{ referral_notifications|default:"0" }}</h5>
+                    <small class="text-muted">Referral Updates</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Recent Notifications</h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                        <label class="form-check-label" for="autoRefresh">
+                            Auto Refresh
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="notificationsList">
+                        {% for notification in notifications %}
+                        <div class="list-group-item notification-item {% if not notification.is_read %}unread{% endif %}" 
+                             data-notification-id="{{ notification.id }}">
+                            <div class="d-flex align-items-start">
+                                <div class="notification-icon me-3">
+                                    {% if notification.type == 'payout' %}
+                                        <div class="bg-success text-white rounded-circle p-2">
+                                            <i class="fas fa-coins"></i>
+                                        </div>
+                                    {% elif notification.type == 'investment' %}
+                                        <div class="bg-primary text-white rounded-circle p-2">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                    {% elif notification.type == 'referral' %}
+                                        <div class="bg-warning text-white rounded-circle p-2">
+                                            <i class="fas fa-handshake"></i>
+                                        </div>
+                                    {% elif notification.type == 'withdrawal' %}
+                                        <div class="bg-info text-white rounded-circle p-2">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </div>
+                                    {% elif notification.type == 'system' %}
+                                        <div class="bg-danger text-white rounded-circle p-2">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="bg-secondary text-white rounded-circle p-2">
+                                            <i class="fas fa-info"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1 notification-title">{{ notification.title }}</h6>
+                                            <p class="mb-1 text-muted notification-message">{{ notification.message }}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock"></i> {{ notification.created_at|timesince }} ago
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="notification-actions">
+                                            {% if not notification.is_read %}
+                                                <button class="btn btn-sm btn-outline-primary me-1" onclick="markAsRead({{ notification.id }})">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            {% endif %}
+                                            
+                                            <div class="dropdown d-inline-block">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="#" onclick="viewDetails({{ notification.id }})">
+                                                        <i class="fas fa-eye"></i> View Details
+                                                    </a></li>
+                                                    {% if not notification.is_read %}
+                                                    <li><a class="dropdown-item" href="#" onclick="markAsRead({{ notification.id }})">
+                                                        <i class="fas fa-check"></i> Mark as Read
+                                                    </a></li>
+                                                    {% else %}
+                                                    <li><a class="dropdown-item" href="#" onclick="markAsUnread({{ notification.id }})">
+                                                        <i class="fas fa-envelope"></i> Mark as Unread
+                                                    </a></li>
+                                                    {% endif %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteNotification({{ notification.id }})">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if notification.action_url %}
+                                    <div class="mt-2">
+                                        <a href="{{ notification.action_url }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-external-link-alt"></i> {{ notification.action_text|default:"View" }}
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No notifications yet</h5>
+                            <p class="text-muted">You'll receive notifications about your investments and earnings here.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {% if notifications.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Notifications pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if notifications.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ notifications.previous_page_number }}{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in notifications.paginator.page_range %}
+                                {% if num == notifications.number %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if notifications.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ notifications.next_page_number }}{% if request.GET.filter %}&filter={{ request.GET.filter }}{% endif %}">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Detail Modal -->
+<div class="modal fade" id="notificationDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-info-circle"></i> Notification Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="notificationDetailContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="markReadBtn">Mark as Read</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Settings Modal -->
+<div class="modal fade" id="notificationSettingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-cog"></i> Notification Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                    <label class="form-check-label" for="emailNotifications">
+                        Email Notifications
+                    </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="payoutAlerts" checked>
+                    <label class="form-check-label" for="payoutAlerts">
+                        Daily Payout Alerts
+                    </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="investmentAlerts" checked>
+                    <label class="form-check-label" for="investmentAlerts">
+                        Investment Status Updates
+                    </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="referralAlerts" checked>
+                    <label class="form-check-label" for="referralAlerts">
+                        Referral Commission Alerts
+                    </label>
+                </div>
+                
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="systemAlerts" checked>
+                    <label class="form-check-label" for="systemAlerts">
+                        System Announcements
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveNotificationSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentNotificationId = null;
+let autoRefreshInterval = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto refresh functionality
+    const autoRefreshToggle = document.getElementById('autoRefresh');
+    if (autoRefreshToggle.checked) {
+        startAutoRefresh();
+    }
+    
+    autoRefreshToggle.addEventListener('change', function() {
+        if (this.checked) {
+            startAutoRefresh();
+        } else {
+            stopAutoRefresh();
+        }
+    });
+    
+    // Load notification settings
+    loadNotificationSettings();
+});
+
+function startAutoRefresh() {
+    autoRefreshInterval = setInterval(function() {
+        refreshNotifications();
+    }, 30000); // Refresh every 30 seconds
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+function refreshNotifications() {
+    fetch('/api/notifications/refresh/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.has_new) {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error refreshing notifications:', error));
+}
+
+function markAsRead(notificationId) {
+    fetch(`/api/notifications/${notificationId}/mark-read/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            notificationItem.classList.remove('unread');
+            
+            // Update unread counter
+            const unreadCount = document.querySelector('.notification-badge');
+            if (unreadCount) {
+                const currentCount = parseInt(unreadCount.textContent) - 1;
+                unreadCount.textContent = Math.max(0, currentCount);
+                if (currentCount <= 0) {
+                    unreadCount.style.display = 'none';
+                }
+            }
+        }
+    })
+    .catch(error => console.error('Error marking notification as read:', error));
+}
+
+function markAsUnread(notificationId) {
+    fetch(`/api/notifications/${notificationId}/mark-unread/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            notificationItem.classList.add('unread');
+        }
+    })
+    .catch(error => console.error('Error marking notification as unread:', error));
+}
+
+function markAllAsRead() {
+    fetch('/api/notifications/mark-all-read/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            
+            // Update unread counter
+            const unreadCount = document.querySelector('.notification-badge');
+            if (unreadCount) {
+                unreadCount.style.display = 'none';
+            }
+            
+            // Show success message
+            showToast('All notifications marked as read', 'success');
+        }
+    })
+    .catch(error => console.error('Error marking all notifications as read:', error));
+}
+
+function deleteNotification(notificationId) {
+    if (confirm('Are you sure you want to delete this notification?')) {
+        fetch(`/api/notifications/${notificationId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                notificationItem.remove();
+                showToast('Notification deleted', 'success');
+            }
+        })
+        .catch(error => console.error('Error deleting notification:', error));
+    }
+}
+
+function viewDetails(notificationId) {
+    currentNotificationId = notificationId;
+    
+    fetch(`/api/notifications/${notificationId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('notificationDetailContent').innerHTML = `
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Title</h6>
+                        <p>${data.title}</p>
+                        
+                        <h6>Message</h6>
+                        <p>${data.message}</p>
+                        
+                        <h6>Type</h6>
+                        <span class="badge bg-primary">${data.type}</span>
+                        
+                        <h6 class="mt-3">Date</h6>
+                        <p>${data.created_at}</p>
+                        
+                        ${data.metadata ? `
+                        <h6>Additional Information</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                ${Object.entries(data.metadata).map(([key, value]) => 
+                                    `<tr><td><strong>${key}:</strong></td><td>${value}</td></tr>`
+                                ).join('')}
+                            </table>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Update mark as read button
+            const markReadBtn = document.getElementById('markReadBtn');
+            if (data.is_read) {
+                markReadBtn.textContent = 'Mark as Unread';
+                markReadBtn.onclick = () => markAsUnread(notificationId);
+            } else {
+                markReadBtn.textContent = 'Mark as Read';
+                markReadBtn.onclick = () => markAsRead(notificationId);
+            }
+            
+            new bootstrap.Modal(document.getElementById('notificationDetailModal')).show();
+        })
+        .catch(error => console.error('Error loading notification details:', error));
+}
+
+function loadNotificationSettings() {
+    fetch('/api/notifications/settings/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('emailNotifications').checked = data.email_notifications;
+            document.getElementById('payoutAlerts').checked = data.payout_alerts;
+            document.getElementById('investmentAlerts').checked = data.investment_alerts;
+            document.getElementById('referralAlerts').checked = data.referral_alerts;
+            document.getElementById('systemAlerts').checked = data.system_alerts;
+        })
+        .catch(error => console.error('Error loading notification settings:', error));
+}
+
+function saveNotificationSettings() {
+    const settings = {
+        email_notifications: document.getElementById('emailNotifications').checked,
+        payout_alerts: document.getElementById('payoutAlerts').checked,
+        investment_alerts: document.getElementById('investmentAlerts').checked,
+        referral_alerts: document.getElementById('referralAlerts').checked,
+        system_alerts: document.getElementById('systemAlerts').checked,
+    };
+    
+    fetch('/api/notifications/settings/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('notificationSettingsModal')).hide();
+            showToast('Settings saved successfully', 'success');
+        }
+    })
+    .catch(error => console.error('Error saving notification settings:', error));
+}
+
+function showToast(message, type = 'info') {
+    // Create and show a bootstrap toast
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastElement.role = 'alert';
+    toastElement.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toastElement);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    // Remove the toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1080';
+    document.body.appendChild(container);
+    return container;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.notification-item.unread {
+    background-color: rgba(13, 110, 253, 0.05);
+    border-left: 4px solid #0d6efd;
+}
+
+.notification-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.notification-icon {
+    min-width: 40px;
+}
+
+.notification-icon > div {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-actions {
+    display: flex;
+    align-items: center;
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+@media (max-width: 768px) {
+    .notification-actions {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    
+    .notification-actions .btn {
+        margin-bottom: 0.25rem;
+    }
+    
+    .display-5 {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}

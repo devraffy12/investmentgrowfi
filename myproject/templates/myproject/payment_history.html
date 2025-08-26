@@ -1,0 +1,575 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}Payment History InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-history"></i> Payment History
+            </h1>
+            <p class="text-muted">Complete record of all your financial transactions</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-success me-2" onclick="exportHistory()">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+            <button class="btn btn-primary" onclick="generateStatement()">
+                <i class="fas fa-file-pdf"></i> Generate Statement
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-gradient text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                    <h6>Total Deposits</h6>
+                    <h4>₱{{ summary.total_deposits|default:"0.00" }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                    <h6>Total Withdrawals</h6>
+                    <h4>₱{{ summary.total_withdrawals|default:"0.00" }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-coins fa-2x mb-2"></i>
+                    <h6>Total Payouts</h6>
+                    <h4>₱{{ summary.total_payouts|default:"0.00" }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-handshake fa-2x mb-2"></i>
+                    <h6>Referral Earnings</h6>
+                    <h4>₱{{ summary.total_referrals|default:"0.00" }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h6>Net Profit</h6>
+                    <h4>₱{{ summary.net_profit|default:"0.00" }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                    <h6>Total Transactions</h6>
+                    <h4>{{ summary.total_transactions|default:"0" }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter"></i> Filter Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" id="filterForm">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label class="form-label">Transaction Type</label>
+                                <select class="form-select" name="type">
+                                    <option value="">All Types</option>
+                                    <option value="deposit" {% if request.GET.type == 'deposit' %}selected{% endif %}>Deposits</option>
+                                    <option value="withdrawal" {% if request.GET.type == 'withdrawal' %}selected{% endif %}>Withdrawals</option>
+                                    <option value="payout" {% if request.GET.type == 'payout' %}selected{% endif %}>Daily Payouts</option>
+                                    <option value="referral" {% if request.GET.type == 'referral' %}selected{% endif %}>Referral Earnings</option>
+                                    <option value="investment" {% if request.GET.type == 'investment' %}selected{% endif %}>Investments</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="">All Statuses</option>
+                                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>Processing</option>
+                                    <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">From Date</label>
+                                <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">To Date</label>
+                                <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">Amount Range</label>
+                                <select class="form-select" name="amount_range">
+                                    <option value="">All Amounts</option>
+                                    <option value="0-500" {% if request.GET.amount_range == '0-500' %}selected{% endif %}>₱0 - ₱500</option>
+                                    <option value="500-1000" {% if request.GET.amount_range == '500-1000' %}selected{% endif %}>₱500 - ₱1,000</option>
+                                    <option value="1000-5000" {% if request.GET.amount_range == '1000-5000' %}selected{% endif %}>₱1,000 - ₱5,000</option>
+                                    <option value="5000+" {% if request.GET.amount_range == '5000+' %}selected{% endif %}>₱5,000+</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                                <a href="?" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction History Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Transaction History</h5>
+                    <div>
+                        <small class="text-muted">Showing {{ transactions.start_index }} - {{ transactions.end_index }} of {{ transactions.paginator.count }} transactions</small>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Transaction ID</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Method</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ transaction.created_at|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ transaction.created_at|date:"g:i A" }}</small>
+                                    </td>
+                                    <td>
+                                        <code>{{ transaction.reference_number|default:transaction.id }}</code>
+                                    </td>
+                                    <td>
+                                        {% if transaction.transaction_type == 'deposit' %}
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-arrow-down"></i> Deposit
+                                            </span>
+                                        {% elif transaction.transaction_type == 'withdrawal' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-arrow-up"></i> Withdrawal
+                                            </span>
+                                        {% elif transaction.transaction_type == 'payout' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-coins"></i> Payout
+                                            </span>
+                                        {% elif transaction.transaction_type == 'referral' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-handshake"></i> Referral
+                                            </span>
+                                        {% elif transaction.transaction_type == 'investment' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-chart-line"></i> Investment
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-dark">
+                                                <i class="fas fa-question"></i> Other
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div>{{ transaction.description|truncatechars:50 }}</div>
+                                        {% if transaction.investment %}
+                                            <small class="text-muted">{{ transaction.investment.plan.name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if transaction.transaction_type == 'withdrawal' %}
+                                            <span class="text-danger fw-bold">-₱{{ transaction.amount }}</span>
+                                        {% else %}
+                                            <span class="text-success fw-bold">+₱{{ transaction.amount }}</span>
+                                        {% endif %}
+                                        {% if transaction.fee > 0 %}
+                                            <div><small class="text-muted">Fee: ₱{{ transaction.fee }}</small></div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if transaction.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif transaction.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif transaction.status == 'processing' %}
+                                            <span class="badge bg-info">Processing</span>
+                                        {% elif transaction.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ transaction.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if transaction.payment_method %}
+                                            <div>{{ transaction.payment_method|title }}</div>
+                                            {% if transaction.payment_reference %}
+                                                <small class="text-muted">{{ transaction.payment_reference }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-info" onclick="viewTransaction('{{ transaction.id }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if transaction.can_download_receipt %}
+                                                <button class="btn btn-outline-primary" onclick="downloadReceipt('{{ transaction.id }}')">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                            {% endif %}
+                                            {% if transaction.status == 'pending' and transaction.transaction_type == 'withdrawal' %}
+                                                <button class="btn btn-outline-danger" onclick="cancelTransaction('{{ transaction.id }}')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No transactions found</h5>
+                                        <p class="text-muted">Your transaction history will appear here once you start investing.</p>
+                                        <a href="{% url 'deposit' %}" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i> Make Your First Deposit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if transactions.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Transaction pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if transactions.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ transactions.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in transactions.paginator.page_range %}
+                                {% if num == transactions.number %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > transactions.number|add:'-3' and num < transactions.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if transactions.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ transactions.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Detail Modal -->
+<div class="modal fade" id="transactionDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-receipt"></i> Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transactionDetailContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="downloadReceiptBtn" style="display: none;">
+                    <i class="fas fa-download"></i> Download Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statement Generation Modal -->
+<div class="modal fade" id="statementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-file-pdf"></i> Generate Statement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="statementForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">From Date</label>
+                            <input type="date" class="form-control" name="from_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">To Date</label>
+                            <input type="date" class="form-control" name="to_date" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label class="form-label">Include Transaction Types</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="include_deposits" checked>
+                                    <label class="form-check-label">Deposits</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="include_withdrawals" checked>
+                                    <label class="form-check-label">Withdrawals</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="include_payouts" checked>
+                                    <label class="form-check-label">Daily Payouts</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="include_referrals" checked>
+                                    <label class="form-check-label">Referral Earnings</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label class="form-label">Format</label>
+                        <select class="form-select" name="format">
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Spreadsheet</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="generateStatementReport()">
+                    <i class="fas fa-file-alt"></i> Generate Statement
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewTransaction(transactionId) {
+    fetch(`/api/transactions/${transactionId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('transactionDetailContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Transaction Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>ID:</strong></td><td>${data.id}</td></tr>
+                            <tr><td><strong>Reference:</strong></td><td>${data.reference_number || 'N/A'}</td></tr>
+                            <tr><td><strong>Type:</strong></td><td>${data.transaction_type}</td></tr>
+                            <tr><td><strong>Amount:</strong></td><td>₱${data.amount}</td></tr>
+                            <tr><td><strong>Fee:</strong></td><td>₱${data.fee || '0.00'}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td><span class="badge bg-${getStatusColor(data.status)}">${data.status}</span></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Payment Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Method:</strong></td><td>${data.payment_method || 'N/A'}</td></tr>
+                            <tr><td><strong>Reference:</strong></td><td>${data.payment_reference || 'N/A'}</td></tr>
+                            <tr><td><strong>Date:</strong></td><td>${data.created_at}</td></tr>
+                            <tr><td><strong>Processed:</strong></td><td>${data.processed_at || 'Pending'}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Description</h6>
+                        <p>${data.description}</p>
+                        ${data.notes ? `<h6>Notes</h6><p>${data.notes}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Show download button if receipt is available
+            const downloadBtn = document.getElementById('downloadReceiptBtn');
+            if (data.can_download_receipt) {
+                downloadBtn.style.display = 'block';
+                downloadBtn.onclick = () => downloadReceipt(transactionId);
+            } else {
+                downloadBtn.style.display = 'none';
+            }
+            
+            new bootstrap.Modal(document.getElementById('transactionDetailModal')).show();
+        })
+        .catch(error => console.error('Error loading transaction details:', error));
+}
+
+function downloadReceipt(transactionId) {
+    window.open(`/transactions/${transactionId}/receipt/`, '_blank');
+}
+
+function cancelTransaction(transactionId) {
+    if (confirm('Are you sure you want to cancel this transaction?')) {
+        fetch(`/api/transactions/${transactionId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to cancel transaction');
+            }
+        })
+        .catch(error => console.error('Error canceling transaction:', error));
+    }
+}
+
+function exportHistory() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'excel');
+    window.open(`/payment-history/?${params.toString()}`, '_blank');
+}
+
+function generateStatement() {
+    new bootstrap.Modal(document.getElementById('statementModal')).show();
+}
+
+function generateStatementReport() {
+    const form = document.getElementById('statementForm');
+    const formData = new FormData(form);
+    
+    // Convert to URL parameters
+    const params = new URLSearchParams();
+    for (let [key, value] of formData.entries()) {
+        params.append(key, value);
+    }
+    
+    window.open(`/generate-statement/?${params.toString()}`, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('statementModal')).hide();
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'completed': return 'success';
+        case 'pending': return 'warning';
+        case 'processing': return 'info';
+        case 'failed': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.table th {
+    border-top: none;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+@media (max-width: 768px) {
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+}
+</style>
+{% endblock %}

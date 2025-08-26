@@ -1,0 +1,483 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}User Dashboard InvestPH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="sidebar p-3">
+                <div class="text-center mb-4">
+                    {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture.url }}" class="rounded-circle mb-2" width="60" height="60" alt="Profile">
+                    {% else %}
+                        <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user fa-2x text-primary"></i>
+                        </div>
+                    {% endif %}
+                    <h6 class="text-white mb-1">{{ user.first_name|default:user.username }}</h6>
+                    <small class="text-light">
+                        {% if profile.is_verified %}
+                            <i class="fas fa-check-circle text-success"></i> Verified
+                        {% else %}
+                            <i class="fas fa-exclamation-circle text-warning"></i> Unverified
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="{% url 'user_dashboard' %}">
+                        <i class="fas fa-home"></i> Overview
+                    </a>
+                    <a class="nav-link" href="{% url 'my_investments' %}">
+                        <i class="fas fa-chart-pie"></i> Investments
+                        {% if active_investments_count > 0 %}
+                            <span class="badge bg-success">{{ active_investments_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link" href="{% url 'transaction_history' %}">
+                        <i class="fas fa-history"></i> Transactions
+                    </a>
+                    <a class="nav-link" href="{% url 'referrals' %}">
+                        <i class="fas fa-users"></i> Referrals
+                        {% if total_referrals > 0 %}
+                            <span class="badge bg-info">{{ total_referrals }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link" href="{% url 'notifications' %}">
+                        <i class="fas fa-bell"></i> Notifications
+                        {% if unread_notifications > 0 %}
+                            <span class="badge bg-danger">{{ unread_notifications }}</span>
+                        {% endif %}
+                    </a>
+                    <a class="nav-link" href="{% url 'profile' %}">
+                        <i class="fas fa-user-cog"></i> Settings
+                    </a>
+                </nav>
+                
+                <hr class="my-3 bg-light">
+                
+                <div class="text-center">
+                    <h6 class="text-white">Quick Balance</h6>
+                    <h4 class="text-warning">₱{{ profile.balance|floatformat:2 }}</h4>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'deposit' %}" class="btn btn-success btn-sm mb-1">
+                            <i class="fas fa-plus"></i> Deposit
+                        </a>
+                        <a href="{% url 'withdraw' %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-minus"></i> Withdraw
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="main-content p-4">
+                <!-- Welcome Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2>Good {{ time_greeting }}, {{ user.first_name|default:user.username }}!</h2>
+                                <p class="text-muted">Here's your investment overview for {{ current_date|date:"F d, Y" }}</p>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Member since: {{ user.date_joined|date:"M Y" }}</small><br>
+                                <small class="text-muted">Last login: {{ user.last_login|timesince }} ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Status Alert -->
+                {% if not profile.is_verified %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Account Verification Required!</strong> 
+                    Complete your profile verification to unlock all features and increase your deposit limits.
+                    <a href="{% url 'profile' %}" class="alert-link">Verify Now</a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <!-- Financial Overview Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stats-card text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                        <i class="fas fa-wallet fa-2x text-primary"></i>
+                                    </div>
+                                </div>
+                                <h6 class="text-muted">Available Balance</h6>
+                                <h3 class="text-primary mb-0">₱{{ profile.balance|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stats-card text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                        <i class="fas fa-chart-line fa-2x text-success"></i>
+                                    </div>
+                                </div>
+                                <h6 class="text-muted">Total Invested</h6>
+                                <h3 class="text-success mb-0">₱{{ profile.total_invested|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stats-card text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                        <i class="fas fa-money-bill-wave fa-2x text-warning"></i>
+                                    </div>
+                                </div>
+                                <h6 class="text-muted">Total Earnings</h6>
+                                <h3 class="text-warning mb-0">₱{{ profile.total_earnings|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card stats-card text-center h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                        <i class="fas fa-calendar-day fa-2x text-info"></i>
+                                    </div>
+                                </div>
+                                <h6 class="text-muted">Today's Earnings</h6>
+                                <h3 class="text-info mb-0">₱{{ today_earnings|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Performance Chart -->
+                <div class="row mb-4">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <h5><i class="fas fa-chart-area"></i> Investment Performance</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Last 30 Days
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="updateChart('7')">Last 7 Days</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="updateChart('30')">Last 30 Days</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="updateChart('90')">Last 3 Months</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="performanceChart" height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5><i class="fas fa-target"></i> Investment Goals</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>Monthly Target: ₱10,000</small>
+                                        <small>{{ monthly_progress }}%</small>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width: {{ monthly_progress }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>Yearly Target: ₱100,000</small>
+                                        <small>{{ yearly_progress }}%</small>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info" style="width: {{ yearly_progress }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <a href="{% url 'investment_plans' %}" class="btn btn-gradient btn-sm">
+                                        <i class="fas fa-plus"></i> Boost Progress
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <h5><i class="fas fa-clock"></i> Recent Activity</h5>
+                                <a href="{% url 'transaction_history' %}" class="btn btn-outline-primary btn-sm">View All</a>
+                            </div>
+                            <div class="card-body">
+                                {% if recent_activities %}
+                                    <div class="timeline">
+                                        {% for activity in recent_activities %}
+                                        <div class="timeline-item">
+                                            <div class="timeline-marker">
+                                                {% if activity.type == 'investment' %}
+                                                    <i class="fas fa-chart-line text-primary"></i>
+                                                {% elif activity.type == 'payout' %}
+                                                    <i class="fas fa-money-bill text-success"></i>
+                                                {% elif activity.type == 'deposit' %}
+                                                    <i class="fas fa-plus-circle text-info"></i>
+                                                {% elif activity.type == 'withdrawal' %}
+                                                    <i class="fas fa-minus-circle text-warning"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h6 class="mb-1">{{ activity.title }}</h6>
+                                                <p class="text-muted mb-1">{{ activity.description }}</p>
+                                                <small class="text-muted">{{ activity.date|timesince }} ago</small>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted">No recent activity</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-fire"></i> Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'investment_plans' %}" class="btn btn-gradient">
+                                        <i class="fas fa-rocket"></i> Start New Investment
+                                    </a>
+                                    <a href="{% url 'deposit' %}" class="btn btn-success">
+                                        <i class="fas fa-wallet"></i> Add Funds
+                                    </a>
+                                    <a href="{% url 'withdraw' %}" class="btn btn-warning">
+                                        <i class="fas fa-credit-card"></i> Withdraw Earnings
+                                    </a>
+                                    <a href="{% url 'calculator' %}" class="btn btn-info">
+                                        <i class="fas fa-calculator"></i> Calculate Returns
+                                    </a>
+                                    <a href="{% url 'referrals' %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-share"></i> Invite Friends
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Referral Summary -->
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6><i class="fas fa-users"></i> Referral Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h4 class="text-primary">{{ total_referrals }}</h4>
+                                        <small class="text-muted">Referrals</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-success">₱{{ referral_earnings|floatformat:2 }}</h4>
+                                        <small class="text-muted">Earned</small>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-2">
+                                    <a href="{% url 'referrals' %}" class="btn btn-outline-primary btn-sm">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Performance Chart
+const ctx = document.getElementById('performanceChart').getContext('2d');
+let performanceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [
+            {
+                label: 'Daily Earnings',
+                data: {{ earnings_data|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Cumulative Earnings',
+                data: {{ cumulative_data|safe }},
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4,
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            intersect: false,
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₱' + value.toFixed(2);
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ₱' + context.parsed.y.toFixed(2);
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Update chart based on time period
+function updateChart(days) {
+    // This would typically fetch new data via AJAX
+    console.log('Updating chart for last', days, 'days');
+}
+
+// Real-time updates
+setInterval(function() {
+    if (!document.hidden) {
+        // Update balance and other real-time data
+        fetch('/api/dashboard-updates/')
+            .then(response => response.json())
+            .then(data => {
+                // Update balance display
+                document.querySelector('.text-warning').textContent = '₱' + data.balance;
+                // Update other real-time elements
+            })
+            .catch(error => console.log('Error updating dashboard:', error));
+    }
+}, 30000); // Update every 30 seconds
+
+// Greeting animation
+document.addEventListener('DOMContentLoaded', function() {
+    const greeting = document.querySelector('h2');
+    greeting.style.opacity = '0';
+    greeting.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+        greeting.style.transition = 'all 0.5s ease';
+        greeting.style.opacity = '1';
+        greeting.style.transform = 'translateY(0)';
+    }, 100);
+});
+</script>
+
+<style>
+.sidebar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: calc(100vh - 76px);
+}
+
+.main-content {
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 76px);
+}
+
+.stats-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

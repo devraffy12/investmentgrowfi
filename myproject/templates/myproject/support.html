@@ -1,0 +1,708 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Customer Support GrowFi{% endblock %}
+
+{% block content %}
+<!-- Customer Support Header -->
+<div class="content-card">
+    <div class="card-header">
+        <h5>
+            <i class="fas fa-headset"></i>
+            Customer Support
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="support-intro">
+            <p>Need help? Our customer support team is here to assist you 24/7. Choose your preferred method to get in touch with us.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Methods -->
+<div class="content-card">
+    <div class="card-header">
+        <h5>
+            <i class="fas fa-comments"></i>
+            Contact Methods
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="contact-methods">
+            <a href="https://t.me/growfi_support" target="_blank" class="contact-item telegram">
+                <div class="contact-icon">
+                    <i class="fab fa-telegram-plane"></i>
+                </div>
+                <div class="contact-content">
+                    <div class="contact-title">Telegram</div>
+                    <div class="contact-subtitle">@growfi_support</div>
+                    <div class="contact-description">Chat with us instantly</div>
+                </div>
+                <div class="contact-status online">
+                    <span>Online</span>
+                </div>
+            </a>
+            
+            <a href="mailto:support@growfi.com" class="contact-item email">
+                <div class="contact-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="contact-content">
+                    <div class="contact-title">Email</div>
+                    <div class="contact-subtitle">support@growfi.com</div>
+                    <div class="contact-description">24-48 hour response</div>
+                </div>
+                <div class="contact-arrow">
+                    <i class="fas fa-external-link-alt"></i>
+                </div>
+            </a>
+            
+            <a href="tel:+639123456789" class="contact-item phone">
+                <div class="contact-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="contact-content">
+                    <div class="contact-title">Phone</div>
+                    <div class="contact-subtitle">+63 912 345 6789</div>
+                    <div class="contact-description">Mon-Fri 9AM-6PM</div>
+                </div>
+                <div class="contact-arrow">
+                    <i class="fas fa-phone"></i>
+                </div>
+            </a>
+            
+            <a href="https://www.facebook.com/growfi.official" target="_blank" class="contact-item facebook">
+                <div class="contact-icon">
+                    <i class="fab fa-facebook-messenger"></i>
+                </div>
+                <div class="contact-content">
+                    <div class="contact-title">Facebook</div>
+                    <div class="contact-subtitle">@growfi.official</div>
+                    <div class="contact-description">Message us anytime</div>
+                </div>
+                <div class="contact-arrow">
+                    <i class="fas fa-external-link-alt"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Support Tickets -->
+<div class="content-card">
+    <div class="card-header">
+        <h5>
+            <i class="fas fa-ticket-alt"></i>
+            Support Tickets
+        </h5>
+        <button class="btn-outline" onclick="showCreateTicketModal()">
+            <i class="fas fa-plus"></i>
+            Create Ticket
+        </button>
+    </div>
+    <div class="card-body">
+        {% if tickets %}
+            <div class="tickets-list">
+                {% for ticket in tickets %}
+                <div class="ticket-item">
+                    <div class="ticket-info">
+                        <div class="ticket-title">{{ ticket.subject }}</div>
+                        <div class="ticket-meta">
+                            <span class="ticket-id">#{{ ticket.id }}</span>
+                            <span class="ticket-date">{{ ticket.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    <div class="ticket-status">
+                        <span class="status-badge {{ ticket.status }}">{{ ticket.get_status_display }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <h5>No Support Tickets</h5>
+                <p>You haven't created any support tickets yet. If you need assistance, feel free to create a ticket or contact us directly.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- FAQ Section -->
+<div class="content-card">
+    <div class="card-header">
+        <h5>
+            <i class="fas fa-question-circle"></i>
+            Frequently Asked Questions
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(1)">
+                    <span>How do I make a deposit?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer" id="faq-1">
+                    <p>You can make a deposit by going to the Dashboard and clicking on the "Deposit" button. Choose your preferred payment method and follow the instructions.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(2)">
+                    <span>How long does it take to process withdrawals?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer" id="faq-2">
+                    <p>Withdrawal requests are typically processed within 24-48 hours during business days. Processing times may vary depending on your chosen payment method.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(3)">
+                    <span>How do daily payouts work?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer" id="faq-3">
+                    <p>Daily payouts are automatically credited to your account balance every 24 hours based on your active investments. You can view your payout history in the Records section.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(4)">
+                    <span>How do I refer friends and earn commissions?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer" id="faq-4">
+                    <p>Share your referral code found in your Profile page. When someone registers using your code and makes their first investment, you'll earn a referral commission.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Ticket Modal -->
+<div class="modal-overlay" id="createTicketModal" onclick="hideCreateTicketModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h5>Create Support Ticket</h5>
+            <button class="modal-close" onclick="hideCreateTicketModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="priority">Priority</label>
+                    <select id="priority" name="priority" class="form-control">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="4" required placeholder="Please describe your issue or question in detail..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="hideCreateTicketModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Support Intro */
+.support-intro {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.support-intro p {
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Contact Methods */
+.contact-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.contact-item:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.contact-item.telegram {
+    border-color: #0088cc;
+}
+
+.contact-item.telegram:hover {
+    background: linear-gradient(135deg, #0088cc, #006db3);
+    color: white;
+}
+
+.contact-item.email:hover {
+    background: linear-gradient(135deg, #ea4335, #d33c2c);
+    color: white;
+}
+
+.contact-item.phone:hover {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.contact-item.facebook:hover {
+    background: linear-gradient(135deg, #1877f2, #166fe5);
+    color: white;
+}
+
+.contact-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.contact-item.telegram .contact-icon {
+    background: linear-gradient(135deg, #0088cc, #006db3);
+}
+
+.contact-item.email .contact-icon {
+    background: linear-gradient(135deg, #ea4335, #d33c2c);
+}
+
+.contact-item.phone .contact-icon {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.contact-item.facebook .contact-icon {
+    background: linear-gradient(135deg, #1877f2, #166fe5);
+}
+
+.contact-content {
+    flex: 1;
+}
+
+.contact-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.contact-subtitle {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.contact-description {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.contact-status {
+    flex-shrink: 0;
+}
+
+.contact-status.online span {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.contact-status.online span::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.contact-arrow {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Tickets List */
+.tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ticket-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--primary);
+}
+
+.ticket-info {
+    flex: 1;
+}
+
+.ticket-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.ticket-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.ticket-id {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.ticket-status {
+    flex-shrink: 0;
+}
+
+.status-badge.open {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.in_progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.resolved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.closed {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* FAQ Section */
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.faq-item {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.faq-question {
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.faq-question:hover {
+    background: var(--bg-secondary);
+}
+
+.faq-question i {
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.faq-answer {
+    padding: 0 1rem;
+    background: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.faq-answer.active {
+    padding: 1rem;
+    max-height: 200px;
+}
+
+.faq-answer p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--radius-xl);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-2xl);
+    animation: modalSlideIn 0.3s ease;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+}
+
+/* Animations */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+    .contact-item {
+        padding: 1rem;
+    }
+    
+    .contact-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
+    }
+    
+    .contact-title {
+        font-size: 0.875rem;
+    }
+    
+    .contact-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .contact-description {
+        font-size: 0.7rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .modal-header,
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function showCreateTicketModal() {
+    document.getElementById('createTicketModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideCreateTicketModal() {
+    document.getElementById('createTicketModal').classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function toggleFaq(id) {
+    const answer = document.getElementById(`faq-${id}`);
+    const question = answer.previousElementSibling;
+    const icon = question.querySelector('i');
+    
+    // Close all other FAQs
+    document.querySelectorAll('.faq-answer').forEach(item => {
+        if (item !== answer) {
+            item.classList.remove('active');
+            item.previousElementSibling.querySelector('i').style.transform = 'rotate(0deg)';
+        }
+    });
+    
+    // Toggle current FAQ
+    answer.classList.toggle('active');
+    
+    if (answer.classList.contains('active')) {
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// Close modal when pressing Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {   
+        hideCreateTicketModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+[
+  {
+    "timestamp": "2025-08-21T18:50:21.041834",
+    "domain": "investmentgrowfi.onrender.com",
+    "render_ips": [
+      "216.24.57.251",
+      "216.24.57.7"
+    ],
+    "dev_ip": "180.190.127.16",
+    "status": "success"
+  },
+  {
+    "timestamp": "2025-08-21T18:52:39.404751",
+    "domain": "investmentgrowfi.onrender.com",
+    "dns_ips": [
+      "216.24.57.251",
+      "216.24.57.7"
+    ],
+    "render_outbound_ips": [
+      "44.229.227.142",
+      "54.188.71.94",
+      "52.13.128.108"
+    ],
+    "dev_ip": "180.190.127.16",
+    "status": "success"
+  }
+]

@@ -1,0 +1,590 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}Privacy Policy InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-shield-alt"></i> Privacy Policy
+            </h1>
+            <p class="lead text-muted">Your privacy and data security are our top priorities</p>
+            <small class="text-muted">Last updated: {{ last_updated|date:"F d, Y"|default:"January 15, 2024" }}</small>
+        </div>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Quick Navigation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><a href="#information-we-collect" class="text-decoration-none">1. Information We Collect</a></li>
+                                <li><a href="#how-we-use" class="text-decoration-none">2. How We Use Your Information</a></li>
+                                <li><a href="#information-sharing" class="text-decoration-none">3. Information Sharing</a></li>
+                                <li><a href="#data-security" class="text-decoration-none">4. Data Security</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><a href="#data-retention" class="text-decoration-none">5. Data Retention</a></li>
+                                <li><a href="#your-rights" class="text-decoration-none">6. Your Rights</a></li>
+                                <li><a href="#cookies" class="text-decoration-none">7. Cookies and Tracking</a></li>
+                                <li><a href="#contact-us" class="text-decoration-none">8. Contact Information</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Content -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Introduction -->
+            <div class="card mb-4" id="introduction">
+                <div class="card-header">
+                    <h3><i class="fas fa-info-circle"></i> Introduction</h3>
+                </div>
+                <div class="card-body">
+                    <p>InvestPH ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our investment platform services.</p>
+                    
+                    <p>By using our services, you agree to the collection and use of information in accordance with this policy. We will not use or share your information with anyone except as described in this Privacy Policy.</p>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Important:</strong> Please read this Privacy Policy carefully. If you do not agree with the terms of this privacy policy, please do not access or use our services.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information We Collect -->
+            <div class="card mb-4" id="information-we-collect">
+                <div class="card-header">
+                    <h3><i class="fas fa-database"></i> 1. Information We Collect</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Personal Information</h5>
+                    <p>We collect the following personal information when you register and use our services:</p>
+                    <ul>
+                        <li><strong>Account Information:</strong> Name, email address, phone number, date of birth</li>
+                        <li><strong>Identity Verification:</strong> Government-issued ID, address verification documents</li>
+                        <li><strong>Financial Information:</strong> Bank account details, payment method information (GCash, etc.)</li>
+                        <li><strong>Investment Data:</strong> Investment preferences, transaction history, earnings records</li>
+                        <li><strong>Communication Data:</strong> Support tickets, chat messages, email correspondence</li>
+                    </ul>
+
+                    <h5 class="mt-4">Automatically Collected Information</h5>
+                    <ul>
+                        <li><strong>Device Information:</strong> IP address, browser type, device type, operating system</li>
+                        <li><strong>Usage Data:</strong> Pages visited, time spent on site, click patterns, feature usage</li>
+                        <li><strong>Location Data:</strong> General geographic location based on IP address</li>
+                        <li><strong>Cookies and Tracking:</strong> Session cookies, preference cookies, analytics cookies</li>
+                    </ul>
+
+                    <h5 class="mt-4">Third-Party Information</h5>
+                    <p>We may receive information about you from third parties such as:</p>
+                    <ul>
+                        <li>Payment processors (GCash, banks) for transaction verification</li>
+                        <li>Identity verification services for KYC compliance</li>
+                        <li>Referral partners when you're referred to our platform</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- How We Use Information -->
+            <div class="card mb-4" id="how-we-use">
+                <div class="card-header">
+                    <h3><i class="fas fa-cogs"></i> 2. How We Use Your Information</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Service Provision</h5>
+                    <ul>
+                        <li>Create and maintain your investment account</li>
+                        <li>Process deposits, withdrawals, and investment transactions</li>
+                        <li>Calculate and distribute daily payouts</li>
+                        <li>Manage referral programs and commission calculations</li>
+                        <li>Provide customer support and technical assistance</li>
+                    </ul>
+
+                    <h5 class="mt-4">Legal and Security</h5>
+                    <ul>
+                        <li>Verify your identity for KYC (Know Your Customer) compliance</li>
+                        <li>Prevent fraud, money laundering, and other illegal activities</li>
+                        <li>Comply with applicable laws and regulations</li>
+                        <li>Protect the security and integrity of our platform</li>
+                        <li>Investigate and resolve disputes</li>
+                    </ul>
+
+                    <h5 class="mt-4">Communication and Marketing</h5>
+                    <ul>
+                        <li>Send important account notifications and updates</li>
+                        <li>Provide investment performance reports</li>
+                        <li>Send promotional offers and investment opportunities (with consent)</li>
+                        <li>Conduct surveys and gather feedback</li>
+                    </ul>
+
+                    <h5 class="mt-4">Platform Improvement</h5>
+                    <ul>
+                        <li>Analyze usage patterns to improve our services</li>
+                        <li>Develop new features and investment products</li>
+                        <li>Personalize your platform experience</li>
+                        <li>Generate anonymized analytics and reports</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Information Sharing -->
+            <div class="card mb-4" id="information-sharing">
+                <div class="card-header">
+                    <h3><i class="fas fa-share-alt"></i> 3. Information Sharing and Disclosure</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>We do not sell your personal information to third parties.</strong>
+                    </div>
+
+                    <h5>When We Share Information</h5>
+                    <p>We may share your information in the following limited circumstances:</p>
+
+                    <h6>Service Providers</h6>
+                    <ul>
+                        <li>Payment processors for transaction processing</li>
+                        <li>Identity verification services for KYC compliance</li>
+                        <li>Cloud storage providers for secure data hosting</li>
+                        <li>Email service providers for communication</li>
+                        <li>Analytics providers for platform improvement</li>
+                    </ul>
+
+                    <h6>Legal Requirements</h6>
+                    <ul>
+                        <li>Government agencies when required by law</li>
+                        <li>Regulatory bodies for compliance purposes</li>
+                        <li>Law enforcement for criminal investigations</li>
+                        <li>Courts in response to legal proceedings</li>
+                    </ul>
+
+                    <h6>Business Transfers</h6>
+                    <ul>
+                        <li>In case of merger, acquisition, or sale of assets</li>
+                        <li>During business restructuring or bankruptcy proceedings</li>
+                    </ul>
+
+                    <h6>Consent</h6>
+                    <ul>
+                        <li>When you explicitly consent to sharing</li>
+                        <li>For referral programs (with your permission)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Data Security -->
+            <div class="card mb-4" id="data-security">
+                <div class="card-header">
+                    <h3><i class="fas fa-lock"></i> 4. Data Security</h3>
+                </div>
+                <div class="card-body">
+                    <p>We implement comprehensive security measures to protect your personal information:</p>
+
+                    <h5>Technical Safeguards</h5>
+                    <ul>
+                        <li><strong>Encryption:</strong> All data transmitted is encrypted using SSL/TLS protocols</li>
+                        <li><strong>Secure Storage:</strong> Personal data is stored in encrypted databases</li>
+                        <li><strong>Access Controls:</strong> Multi-factor authentication and role-based access</li>
+                        <li><strong>Regular Updates:</strong> Security patches and system updates</li>
+                        <li><strong>Monitoring:</strong> 24/7 security monitoring and intrusion detection</li>
+                    </ul>
+
+                    <h5 class="mt-4">Administrative Safeguards</h5>
+                    <ul>
+                        <li><strong>Employee Training:</strong> Regular privacy and security training</li>
+                        <li><strong>Background Checks:</strong> Screening of personnel with data access</li>
+                        <li><strong>Data Minimization:</strong> Collecting only necessary information</li>
+                        <li><strong>Regular Audits:</strong> Internal and external security assessments</li>
+                    </ul>
+
+                    <h5 class="mt-4">Physical Safeguards</h5>
+                    <ul>
+                        <li><strong>Secure Facilities:</strong> Restricted access to data centers</li>
+                        <li><strong>Backup Systems:</strong> Secure backup and disaster recovery</li>
+                        <li><strong>Equipment Security:</strong> Secure disposal of hardware</li>
+                    </ul>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> While we strive to protect your personal information, no method of transmission over the Internet or electronic storage is 100% secure. We cannot guarantee absolute security.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Retention -->
+            <div class="card mb-4" id="data-retention">
+                <div class="card-header">
+                    <h3><i class="fas fa-clock"></i> 5. Data Retention</h3>
+                </div>
+                <div class="card-body">
+                    <p>We retain your personal information for as long as necessary to fulfill the purposes outlined in this privacy policy:</p>
+
+                    <h5>Retention Periods</h5>
+                    <ul>
+                        <li><strong>Account Data:</strong> For the duration of your account plus 7 years for regulatory compliance</li>
+                        <li><strong>Transaction Records:</strong> 10 years as required by financial regulations</li>
+                        <li><strong>Identity Documents:</strong> 7 years after account closure for compliance</li>
+                        <li><strong>Communication Records:</strong> 3 years for customer service purposes</li>
+                        <li><strong>Marketing Data:</strong> Until you opt-out or 2 years of inactivity</li>
+                    </ul>
+
+                    <h5 class="mt-4">Data Deletion</h5>
+                    <p>We will delete or anonymize your personal information when:</p>
+                    <ul>
+                        <li>The retention period expires</li>
+                        <li>You request deletion (subject to legal requirements)</li>
+                        <li>The information is no longer needed for our services</li>
+                        <li>Legal requirements mandate deletion</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Your Rights -->
+            <div class="card mb-4" id="your-rights">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-shield"></i> 6. Your Privacy Rights</h3>
+                </div>
+                <div class="card-body">
+                    <p>You have the following rights regarding your personal information:</p>
+
+                    <h5>Access and Information</h5>
+                    <ul>
+                        <li><strong>Right to Access:</strong> Request a copy of your personal data</li>
+                        <li><strong>Right to Information:</strong> Know how your data is being processed</li>
+                        <li><strong>Data Portability:</strong> Receive your data in a structured format</li>
+                    </ul>
+
+                    <h5 class="mt-4">Control and Correction</h5>
+                    <ul>
+                        <li><strong>Right to Rectification:</strong> Correct inaccurate personal information</li>
+                        <li><strong>Right to Update:</strong> Modify your account information</li>
+                        <li><strong>Right to Opt-out:</strong> Unsubscribe from marketing communications</li>
+                    </ul>
+
+                    <h5 class="mt-4">Deletion and Restriction</h5>
+                    <ul>
+                        <li><strong>Right to Erasure:</strong> Request deletion of your personal data</li>
+                        <li><strong>Right to Restriction:</strong> Limit processing of your information</li>
+                        <li><strong>Right to Object:</strong> Object to certain types of processing</li>
+                    </ul>
+
+                    <div class="mt-4">
+                        <h6>How to Exercise Your Rights</h6>
+                        <p>To exercise any of these rights, please:</p>
+                        <ul>
+                            <li>Log in to your account and update your preferences</li>
+                            <li>Contact our support team at <a href="mailto:privacy@investph.com">privacy@investph.com</a></li>
+                            <li>Submit a request through our <a href="{% url 'support' %}">support portal</a></li>
+                        </ul>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-clock"></i>
+                            <strong>Response Time:</strong> We will respond to your request within 30 days.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cookies and Tracking -->
+            <div class="card mb-4" id="cookies">
+                <div class="card-header">
+                    <h3><i class="fas fa-cookie-bite"></i> 7. Cookies and Tracking Technologies</h3>
+                </div>
+                <div class="card-body">
+                    <p>We use cookies and similar tracking technologies to enhance your experience:</p>
+
+                    <h5>Types of Cookies</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Cookie Type</th>
+                                    <th>Purpose</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Essential</strong></td>
+                                    <td>Enable basic site functionality and security</td>
+                                    <td>Session</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Functional</strong></td>
+                                    <td>Remember your preferences and settings</td>
+                                    <td>1 year</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Analytics</strong></td>
+                                    <td>Help us understand site usage and performance</td>
+                                    <td>2 years</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Marketing</strong></td>
+                                    <td>Deliver relevant advertisements and promotions</td>
+                                    <td>1 year</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 class="mt-4">Managing Cookies</h5>
+                    <p>You can control cookies through:</p>
+                    <ul>
+                        <li>Your browser settings (disable, delete, or block cookies)</li>
+                        <li>Our cookie consent banner when you first visit</li>
+                        <li>Your account privacy settings</li>
+                        <li>Third-party opt-out tools for advertising cookies</li>
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> Disabling essential cookies may affect site functionality.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Third-Party Services -->
+            <div class="card mb-4" id="third-party">
+                <div class="card-header">
+                    <h3><i class="fas fa-external-link-alt"></i> Third-Party Services</h3>
+                </div>
+                <div class="card-body">
+                    <p>Our platform integrates with third-party services that have their own privacy policies:</p>
+
+                    <h5>Payment Processors</h5>
+                    <ul>
+                        <li><strong>GCash:</strong> For mobile payments and transfers</li>
+                        <li><strong>Banking Partners:</strong> For traditional bank transfers</li>
+                    </ul>
+
+                    <h5>Analytics and Tracking</h5>
+                    <ul>
+                        <li><strong>Google Analytics:</strong> For website usage analysis</li>
+                        <li><strong>Facebook Pixel:</strong> For advertising and conversion tracking</li>
+                    </ul>
+
+                    <h5>Customer Support</h5>
+                    <ul>
+                        <li><strong>Live Chat Providers:</strong> For real-time customer support</li>
+                        <li><strong>Email Services:</strong> For automated communications</li>
+                    </ul>
+
+                    <p class="mt-3">We recommend reviewing the privacy policies of these third-party services to understand how they handle your information.</p>
+                </div>
+            </div>
+
+            <!-- Children's Privacy -->
+            <div class="card mb-4" id="children">
+                <div class="card-header">
+                    <h3><i class="fas fa-child"></i> Children's Privacy</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Age Restriction:</strong> Our services are not intended for individuals under 18 years of age.
+                    </div>
+                    
+                    <p>InvestPH does not knowingly collect personal information from children under 18. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately.</p>
+                    
+                    <p>If we discover that we have collected personal information from a child under 18, we will:</p>
+                    <ul>
+                        <li>Delete the information immediately</li>
+                        <li>Terminate the account</li>
+                        <li>Notify the parent or guardian</li>
+                        <li>Refund any deposits made</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- International Transfers -->
+            <div class="card mb-4" id="international">
+                <div class="card-header">
+                    <h3><i class="fas fa-globe"></i> International Data Transfers</h3>
+                </div>
+                <div class="card-body">
+                    <p>Your personal information may be transferred to and processed in countries other than the Philippines for the following purposes:</p>
+                    
+                    <ul>
+                        <li>Cloud storage and backup services</li>
+                        <li>Customer support operations</li>
+                        <li>Technical infrastructure maintenance</li>
+                        <li>Analytics and business intelligence</li>
+                    </ul>
+                    
+                    <p>When we transfer your data internationally, we ensure adequate protection through:</p>
+                    <ul>
+                        <li>Standard Contractual Clauses (SCCs)</li>
+                        <li>Adequacy decisions by regulatory authorities</li>
+                        <li>Appropriate safeguards and security measures</li>
+                        <li>Compliance with applicable data protection laws</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Updates to Privacy Policy -->
+            <div class="card mb-4" id="updates">
+                <div class="card-header">
+                    <h3><i class="fas fa-sync-alt"></i> Updates to This Privacy Policy</h3>
+                </div>
+                <div class="card-body">
+                    <p>We may update this Privacy Policy from time to time to reflect changes in our practices or for legal and regulatory reasons.</p>
+                    
+                    <h5>How We Notify You</h5>
+                    <ul>
+                        <li>Email notification to your registered email address</li>
+                        <li>Prominent notice on our website and platform</li>
+                        <li>In-app notification when you log in</li>
+                        <li>Updated "Last Modified" date at the top of this policy</li>
+                    </ul>
+                    
+                    <h5>Your Choices After Updates</h5>
+                    <p>When we make material changes to this Privacy Policy:</p>
+                    <ul>
+                        <li>We will notify you at least 30 days before the changes take effect</li>
+                        <li>You can review the updated policy and decide whether to continue using our services</li>
+                        <li>If you do not agree with the changes, you may close your account</li>
+                        <li>Continued use of our services constitutes acceptance of the updated policy</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="card mb-4" id="contact-us">
+                <div class="card-header">
+                    <h3><i class="fas fa-envelope"></i> Contact Us</h3>
+                </div>
+                <div class="card-body">
+                    <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>General Inquiries</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-envelope text-primary"></i> <a href="mailto:support@investph.com">support@investph.com</a></li>
+                                <li><i class="fas fa-phone text-primary"></i> +63 2 1234 5678</li>
+                                <li><i class="fas fa-comments text-primary"></i> Live chat on our website</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>Privacy-Specific Inquiries</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-shield-alt text-success"></i> <a href="mailto:privacy@investph.com">privacy@investph.com</a></li>
+                                <li><i class="fas fa-user-shield text-success"></i> Data Protection Officer</li>
+                                <li><i class="fas fa-file-alt text-success"></i> <a href="{% url 'support' %}">Submit Privacy Request</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Mailing Address</h6>
+                        <address>
+                            InvestPH Privacy Team<br>
+                            123 Investment Street<br>
+                            Makati City, Metro Manila 1234<br>
+                            Philippines
+                        </address>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock"></i>
+                        <strong>Response Time:</strong> We aim to respond to all privacy-related inquiries within 5 business days.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Highlight current section in navigation
+window.addEventListener('scroll', function() {
+    const sections = document.querySelectorAll('.card[id]');
+    const navLinks = document.querySelectorAll('a[href^="#"]');
+    
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop - 100) {
+            current = section.getAttribute('id');
+        }
+    });
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active', 'fw-bold');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active', 'fw-bold');
+        }
+    });
+});
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+a.active {
+    color: #0d6efd !important;
+    font-weight: bold;
+}
+
+address {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+</style>
+{% endblock %}

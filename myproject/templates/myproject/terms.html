@@ -1,0 +1,689 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}Terms and Conditions InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-file-contract"></i> Terms and Conditions
+            </h1>
+            <p class="lead text-muted">Please read these terms carefully before using our investment platform</p>
+            <small class="text-muted">Last updated: {{ last_updated|date:"F d, Y"|default:"August 8, 2025" }}</small>
+        </div>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Quick Navigation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><a href="#acceptance" class="text-decoration-none">1. Acceptance of Terms</a></li>
+                                <li><a href="#definitions" class="text-decoration-none">2. Definitions</a></li>
+                                <li><a href="#eligibility" class="text-decoration-none">3. Eligibility Requirements</a></li>
+                                <li><a href="#account" class="text-decoration-none">4. Account Registration</a></li>
+                                <li><a href="#investment-terms" class="text-decoration-none">5. Investment Terms</a></li>
+                                <li><a href="#payments" class="text-decoration-none">6. Payments and Withdrawals</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><a href="#referral-program" class="text-decoration-none">7. Referral Program</a></li>
+                                <li><a href="#prohibited-activities" class="text-decoration-none">8. Prohibited Activities</a></li>
+                                <li><a href="#risks" class="text-decoration-none">9. Investment Risks</a></li>
+                                <li><a href="#liability" class="text-decoration-none">10. Limitation of Liability</a></li>
+                                <li><a href="#termination" class="text-decoration-none">11. Account Termination</a></li>
+                                <li><a href="#governing-law" class="text-decoration-none">12. Governing Law</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Content -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Acceptance of Terms -->
+            <div class="card mb-4" id="acceptance">
+                <div class="card-header">
+                    <h3><i class="fas fa-handshake"></i> 1. Acceptance of Terms</h3>
+                </div>
+                <div class="card-body">
+                    <p>By accessing and using InvestPH ("the Platform," "we," "us," or "our"), you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Important:</strong> If you do not agree to abide by the above, please do not use this service.
+                    </div>
+                    
+                    <h6>Agreement Scope</h6>
+                    <ul>
+                        <li>These Terms apply to all users of the InvestPH platform</li>
+                        <li>By creating an account, you confirm your acceptance of these Terms</li>
+                        <li>Your continued use of the platform constitutes ongoing acceptance</li>
+                        <li>We may update these Terms at any time with prior notice</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Definitions -->
+            <div class="card mb-4" id="definitions">
+                <div class="card-header">
+                    <h3><i class="fas fa-book"></i> 2. Definitions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th width="30%">Term</th>
+                                    <th>Definition</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>"Platform"</strong></td>
+                                    <td>The InvestPH website and mobile application</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"User" / "You"</strong></td>
+                                    <td>Any individual who accesses or uses our platform</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"Investment Plan"</strong></td>
+                                    <td>Financial products offered on our platform with specified terms</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"Daily Payout"</strong></td>
+                                    <td>Daily returns credited to user accounts based on investment plans</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"Referral"</strong></td>
+                                    <td>New users brought to the platform through referral links</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"Commission"</strong></td>
+                                    <td>Earnings from successful referrals as per our referral program</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"KYC"</strong></td>
+                                    <td>Know Your Customer verification process</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>"Account Balance"</strong></td>
+                                    <td>Total funds available in a user's account</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eligibility -->
+            <div class="card mb-4" id="eligibility">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-check"></i> 3. Eligibility Requirements</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Age Requirements</h6>
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>You must be at least 18 years old to use this platform.</strong>
+                    </div>
+                    
+                    <h6>Geographic Restrictions</h6>
+                    <ul>
+                        <li>Our services are available to residents of the Philippines</li>
+                        <li>You must provide a valid Philippine address</li>
+                        <li>Valid Philippine government-issued ID required for verification</li>
+                    </ul>
+                    
+                    <h6>Legal Capacity</h6>
+                    <ul>
+                        <li>You must have legal capacity to enter into binding agreements</li>
+                        <li>You must not be prohibited from using financial services</li>
+                        <li>You must comply with all applicable laws and regulations</li>
+                    </ul>
+                    
+                    <h6>Financial Requirements</h6>
+                    <ul>
+                        <li>Ability to make minimum deposit of ₱300</li>
+                        <li>Valid payment method (GCash, Bank Account)</li>
+                        <li>Understanding of investment risks</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Account Registration -->
+            <div class="card mb-4" id="account">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-plus"></i> 4. Account Registration and Security</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Registration Process</h6>
+                    <ul>
+                        <li>Provide accurate and complete registration information</li>
+                        <li>Verify your email address and phone number</li>
+                        <li>Complete KYC verification within 30 days</li>
+                        <li>Accept these Terms and Privacy Policy</li>
+                    </ul>
+                    
+                    <h6>Account Security</h6>
+                    <ul>
+                        <li>You are responsible for maintaining account confidentiality</li>
+                        <li>Use strong passwords and enable two-factor authentication</li>
+                        <li>Notify us immediately of any unauthorized access</li>
+                        <li>Do not share your account credentials with others</li>
+                    </ul>
+                    
+                    <h6>Account Information</h6>
+                    <ul>
+                        <li>Keep your account information up to date</li>
+                        <li>Notify us of any changes to your contact details</li>
+                        <li>Ensure accuracy of payment information</li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-gift"></i>
+                        <strong>Welcome Bonus:</strong> New users receive ₱30 bonus upon successful registration and verification.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Terms -->
+            <div class="card mb-4" id="investment-terms">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-line"></i> 5. Investment Terms and Conditions</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Investment Plans</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Minimum Amount</th>
+                                    <th>Daily Return</th>
+                                    <th>Duration</th>
+                                    <th>Total ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Starter</td>
+                                    <td>₱300</td>
+                                    <td>₱50</td>
+                                    <td>30 days</td>
+                                    <td>500%</td>
+                                </tr>
+                                <tr>
+                                    <td>Standard</td>
+                                    <td>₱500</td>
+                                    <td>₱90</td>
+                                    <td>30 days</td>
+                                    <td>540%</td>
+                                </tr>
+                                <tr>
+                                    <td>Premium</td>
+                                    <td>₱1,000</td>
+                                    <td>₱190</td>
+                                    <td>30 days</td>
+                                    <td>570%</td>
+                                </tr>
+                                <tr>
+                                    <td>Elite</td>
+                                    <td>₱1,500</td>
+                                    <td>₱270</td>
+                                    <td>30 days</td>
+                                    <td>540%</td>
+                                </tr>
+                                <tr>
+                                    <td>Gold</td>
+                                    <td>₱2,000</td>
+                                    <td>₱400</td>
+                                    <td>30 days</td>
+                                    <td>600%</td>
+                                </tr>
+                                <tr>
+                                    <td>Diamond</td>
+                                    <td>₱3,000</td>
+                                    <td>₱600</td>
+                                    <td>30 days</td>
+                                    <td>600%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h6>Investment Rules</h6>
+                    <ul>
+                        <li>Daily payouts are processed automatically at 12:00 PM daily</li>
+                        <li>Investment period is exactly 30 days from activation</li>
+                        <li>No early withdrawal of investment capital</li>
+                        <li>Daily returns can be withdrawn anytime</li>
+                        <li>Multiple investments allowed per user</li>
+                        <li>Reinvestment encouraged for compound growth</li>
+                    </ul>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-clock"></i>
+                        <strong>Payout Schedule:</strong> Daily payouts are automatically credited to your account every day at 12:00 PM Philippine Time.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments and Withdrawals -->
+            <div class="card mb-4" id="payments">
+                <div class="card-header">
+                    <h3><i class="fas fa-credit-card"></i> 6. Payments and Withdrawals</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Accepted Payment Methods</h6>
+                    <ul>
+                        <li><strong>GCash:</strong> Instant deposits and withdrawals</li>
+                        <li><strong>Bank Transfer:</strong> Traditional bank transfers</li>
+                        <li><strong>Online Banking:</strong> Real-time bank transfers</li>
+                    </ul>
+                    
+                    <h6>Deposit Terms</h6>
+                    <ul>
+                        <li>Minimum deposit: ₱300</li>
+                        <li>Maximum deposit: ₱100,000 per transaction</li>
+                        <li>Deposits are processed instantly</li>
+                        <li>No deposit fees charged</li>
+                    </ul>
+                    
+                    <h6>Withdrawal Terms</h6>
+                    <ul>
+                        <li>Minimum withdrawal: ₱100</li>
+                        <li>Maximum withdrawal: ₱50,000 per day</li>
+                        <li>Processing time: 24-48 hours</li>
+                        <li>10% processing fee applies to all withdrawals</li>
+                        <li>Investment capital can only be withdrawn after 30 days</li>
+                    </ul>
+                    
+                    <h6>Payment Processing</h6>
+                    <ul>
+                        <li>All transactions are processed in Philippine Pesos (₱)</li>
+                        <li>Transactions are subject to verification</li>
+                        <li>We reserve the right to request additional documentation</li>
+                        <li>Suspicious transactions will be investigated</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-percent"></i>
+                        <strong>Withdrawal Fee:</strong> A 10% processing fee is charged on all withdrawal transactions.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral Program -->
+            <div class="card mb-4" id="referral-program">
+                <div class="card-header">
+                    <h3><i class="fas fa-handshake"></i> 7. Referral Program</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Commission Structure</h6>
+                    <ul>
+                        <li><strong>Direct Referrals:</strong> 5% commission on every investment</li>
+                        <li><strong>Lifetime Earnings:</strong> Commission earned for life of referral</li>
+                        <li><strong>No Limits:</strong> Unlimited referrals allowed</li>
+                        <li><strong>Instant Credits:</strong> Commissions credited immediately</li>
+                    </ul>
+                    
+                    <h6>Referral Rules</h6>
+                    <ul>
+                        <li>Use only your unique referral link</li>
+                        <li>Referred users must complete verification</li>
+                        <li>Commission paid only on verified investments</li>
+                        <li>Self-referrals are strictly prohibited</li>
+                        <li>Fake referrals will result in account suspension</li>
+                    </ul>
+                    
+                    <h6>Commission Calculation</h6>
+                    <div class="alert alert-info">
+                        <strong>Example:</strong> If your referral invests ₱1,000, you earn ₱50 (5%) commission immediately.
+                    </div>
+                    
+                    <h6>Prohibited Referral Activities</h6>
+                    <ul>
+                        <li>Spam or unsolicited emails</li>
+                        <li>False or misleading claims</li>
+                        <li>Creating multiple accounts</li>
+                        <li>Using misleading referral codes</li>
+                        <li>Participating in referral farms</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Prohibited Activities -->
+            <div class="card mb-4" id="prohibited-activities">
+                <div class="card-header">
+                    <h3><i class="fas fa-ban"></i> 8. Prohibited Activities</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Violation of these terms may result in immediate account suspension.</strong>
+                    </div>
+                    
+                    <h6>Account Misuse</h6>
+                    <ul>
+                        <li>Creating multiple accounts</li>
+                        <li>Sharing account credentials</li>
+                        <li>Providing false information</li>
+                        <li>Impersonating others</li>
+                    </ul>
+                    
+                    <h6>Financial Misconduct</h6>
+                    <ul>
+                        <li>Money laundering activities</li>
+                        <li>Fraudulent transactions</li>
+                        <li>Chargebacks or payment disputes</li>
+                        <li>Using stolen payment methods</li>
+                    </ul>
+                    
+                    <h6>Platform Abuse</h6>
+                    <ul>
+                        <li>Attempting to hack or breach security</li>
+                        <li>Using automated tools or bots</li>
+                        <li>Reverse engineering the platform</li>
+                        <li>Interfering with other users</li>
+                    </ul>
+                    
+                    <h6>Legal Violations</h6>
+                    <ul>
+                        <li>Any illegal activities</li>
+                        <li>Violation of local laws</li>
+                        <li>Tax evasion</li>
+                        <li>Terrorist financing</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Investment Risks -->
+            <div class="card mb-4" id="risks">
+                <div class="card-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> 9. Investment Risks and Disclaimers</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-warning"></i>
+                        <strong>IMPORTANT:</strong> All investments carry risk. Never invest more than you can afford to lose.
+                    </div>
+                    
+                    <h6>Risk Acknowledgment</h6>
+                    <ul>
+                        <li>Investment values can go up or down</li>
+                        <li>Past performance does not guarantee future results</li>
+                        <li>Platform may experience technical issues</li>
+                        <li>Regulatory changes may affect operations</li>
+                        <li>Market conditions may impact returns</li>
+                    </ul>
+                    
+                    <h6>No Guarantees</h6>
+                    <ul>
+                        <li>We do not guarantee specific returns</li>
+                        <li>Projected earnings are estimates only</li>
+                        <li>Platform availability is not guaranteed</li>
+                        <li>Payment processing times may vary</li>
+                    </ul>
+                    
+                    <h6>User Responsibility</h6>
+                    <ul>
+                        <li>Understand risks before investing</li>
+                        <li>Seek independent financial advice</li>
+                        <li>Monitor your investments regularly</li>
+                        <li>Comply with tax obligations</li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Recommendation:</strong> Start with small amounts to understand the platform before making larger investments.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Limitation of Liability -->
+            <div class="card mb-4" id="liability">
+                <div class="card-header">
+                    <h3><i class="fas fa-shield-alt"></i> 10. Limitation of Liability</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Platform Liability</h6>
+                    <ul>
+                        <li>We are not liable for investment losses</li>
+                        <li>Technical issues are not grounds for compensation</li>
+                        <li>Third-party service failures are excluded</li>
+                        <li>Force majeure events are not covered</li>
+                    </ul>
+                    
+                    <h6>Maximum Liability</h6>
+                    <div class="alert alert-warning">
+                        Our total liability to you for any claim shall not exceed the amount you have deposited in the past 12 months.
+                    </div>
+                    
+                    <h6>Excluded Damages</h6>
+                    <ul>
+                        <li>Indirect or consequential damages</li>
+                        <li>Lost profits or business opportunities</li>
+                        <li>Emotional distress or punitive damages</li>
+                        <li>Third-party claims or losses</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Account Termination -->
+            <div class="card mb-4" id="termination">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-times"></i> 11. Account Termination</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Voluntary Termination</h6>
+                    <ul>
+                        <li>You may close your account at any time</li>
+                        <li>Complete all pending investments before closure</li>
+                        <li>Withdraw all available funds</li>
+                        <li>Submit closure request to support</li>
+                    </ul>
+                    
+                    <h6>Involuntary Termination</h6>
+                    <p>We may suspend or terminate your account for:</p>
+                    <ul>
+                        <li>Violation of these Terms</li>
+                        <li>Suspicious or fraudulent activity</li>
+                        <li>Failure to complete verification</li>
+                        <li>Legal or regulatory requirements</li>
+                        <li>Extended account inactivity</li>
+                    </ul>
+                    
+                    <h6>Effects of Termination</h6>
+                    <ul>
+                        <li>Access to platform will be revoked</li>
+                        <li>Active investments will be completed</li>
+                        <li>Pending withdrawals will be processed</li>
+                        <li>Referral commissions may be forfeited</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Governing Law -->
+            <div class="card mb-4" id="governing-law">
+                <div class="card-header">
+                    <h3><i class="fas fa-gavel"></i> 12. Governing Law and Dispute Resolution</h3>
+                </div>
+                <div class="card-body">
+                    <h6>Applicable Law</h6>
+                    <ul>
+                        <li>These Terms are governed by Philippine law</li>
+                        <li>All disputes subject to Philippine jurisdiction</li>
+                        <li>Compliance with BSP and SEC regulations</li>
+                    </ul>
+                    
+                    <h6>Dispute Resolution Process</h6>
+                    <ol>
+                        <li><strong>Direct Communication:</strong> Contact our support team first</li>
+                        <li><strong>Mediation:</strong> Attempt resolution through mediation</li>
+                        <li><strong>Arbitration:</strong> Binding arbitration in Metro Manila</li>
+                        <li><strong>Court Proceedings:</strong> Philippine courts as last resort</li>
+                    </ol>
+                    
+                    <h6>Contact for Disputes</h6>
+                    <ul>
+                        <li>Email: legal@investph.com</li>
+                        <li>Phone: +63 2 1234 5678</li>
+                        <li>Address: 123 Investment St., Makati City</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="card mb-4" id="contact">
+                <div class="card-header">
+                    <h3><i class="fas fa-envelope"></i> Contact Information</h3>
+                </div>
+                <div class="card-body">
+                    <p>For questions about these Terms and Conditions, please contact us:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>General Support</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-envelope text-primary"></i> support@investph.com</li>
+                                <li><i class="fas fa-phone text-primary"></i> +63 2 1234 5678</li>
+                                <li><i class="fas fa-comments text-primary"></i> Live chat available 24/7</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Legal Department</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-gavel text-success"></i> legal@investph.com</li>
+                                <li><i class="fas fa-building text-success"></i> Business hours: 9 AM - 6 PM</li>
+                                <li><i class="fas fa-file-alt text-success"></i> <a href="{% url 'support' %}">Submit Legal Inquiry</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agreement Section -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5>Agreement Confirmation</h5>
+                    <p class="mb-3">By using InvestPH, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.</p>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus"></i> I Agree - Create Account
+                        </a>
+                    {% else %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-tachometer-alt"></i> Continue to Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Highlight current section in navigation
+window.addEventListener('scroll', function() {
+    const sections = document.querySelectorAll('.card[id]');
+    const navLinks = document.querySelectorAll('a[href^="#"]');
+    
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 100) {
+            current = section.getAttribute('id');
+        }
+    });
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active', 'fw-bold');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active', 'fw-bold');
+        }
+    });
+});
+
+// Print terms functionality
+function printTerms() {
+    window.print();
+}
+
+// Copy terms URL
+function copyTermsURL() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        alert('Terms URL copied to clipboard');
+    });
+}
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+a.active {
+    color: #0d6efd !important;
+    font-weight: bold;
+}
+
+.table th {
+    border-top: none;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+</style>
+{% endblock %}

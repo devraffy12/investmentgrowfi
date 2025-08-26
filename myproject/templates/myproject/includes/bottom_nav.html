@@ -1,0 +1,83 @@
+<!-- Bottom Navigation -->
+<div class="bottom-navigation">
+    <div class="bottom-nav-container">
+        <a href="{% url 'dashboard' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{% url 'investment_plans' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'investment_plans' %}active{% endif %}">
+            <i class="fas fa-chart-line"></i>
+            <span>Investments</span>
+        </a>
+        <a href="{% url 'deposit' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'deposit' %}active{% endif %}">
+            <i class="fas fa-plus-circle"></i>
+            <span>Invest</span>
+        </a>
+        <a href="{% url 'transaction_history' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'transaction_history' %}active{% endif %}">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+        </a>
+        <a href="{% url 'profile' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <i class="fas fa-user"></i>
+            <span>Me</span>
+        </a>
+    </div>
+</div>
+
+<style>
+/* Bottom Navigation Styles */
+.bottom-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 0.5rem 0;
+}
+
+.bottom-nav-container {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    min-width: 60px;
+}
+
+.bottom-nav-item.active {
+    color: #ff6b35;
+}
+
+.bottom-nav-item:hover {
+    color: #ff6b35;
+    text-decoration: none;
+}
+
+.bottom-nav-item i {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.bottom-nav-item span {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* Add bottom padding to content to avoid overlap with fixed navigation */
+body {
+    padding-bottom: 80px;
+}
+</style>

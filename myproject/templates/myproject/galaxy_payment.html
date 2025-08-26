@@ -1,0 +1,1101 @@
+{% extends "myproject/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Complete Your Payment{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-wrapper">
+        <div class="payment-card">
+            <!-- Header Section -->
+            <div class="payment-header">
+                <div class="header-content">
+                    <div class="payment-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h1 class="payment-title">{{ payment_method|title }} Payment</h1>
+                    {% if channel_type == 'backup' or channel_type == 'emergency_backup' %}
+                    <div class="backup-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        Backup Channel Active
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="payment-body">
+                {% if channel_type == 'backup' or channel_type == 'emergency_backup' %}
+                <div class="backup-notice">
+                    <div class="notice-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="notice-content">
+                        <h3>Backup Payment Method</h3>
+                        <p>Primary channel unavailable. Using backup {{ backup_method|default:"GCASH" }} payment.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Amount Display -->
+                <div class="amount-section">
+                    <div class="amount-display">
+                        <span class="currency">₱</span>
+                        <span class="amount">{{ amount }}</span>
+                    </div>
+                    <div class="payment-details">
+                        <div class="detail-item">
+                            <span class="label">Order ID:</span>
+                            <span class="value">{{ order_id }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Reference:</span>
+                            <span class="value">{{ reference_id }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if gcashqr %}
+                <!-- QR Code Section -->
+                <div class="qr-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-qrcode"></i>
+                        Scan QR Code
+                    </h3>
+                    <div class="qr-container">
+                        <div class="qr-frame">
+                            <img src="data:image/png;base64,{{ gcashqr }}" 
+                                 alt="{{ payment_method|title }} QR Code" 
+                                 class="qr-image">
+                        </div>
+                        <p class="qr-instruction">
+                            Open your {{ payment_method|title }} app and scan this QR code
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if redirect_url %}
+                <!-- Payment Button Section -->
+                <div class="payment-action">
+                    <h3 class="section-title">
+                        <i class="fas fa-mobile-alt"></i>
+                        Quick Payment
+                    </h3>
+                    <div class="payment-button-container">
+                        <button type="button" 
+                                class="payment-button" 
+                                id="paymentButton"
+                                onclick="openPaymentApp()"
+                                style="cursor: pointer; pointer-events: auto;">
+                            <div class="button-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="button-content">
+                                <span class="button-text">PAY WITH {{ payment_method|upper }}</span>
+                                <span class="button-amount">₱{{ amount }}</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Payment Status -->
+                <div class="status-section">
+                    <div class="status-container" id="paymentStatus">
+                        <div class="status-icon">
+                            <div class="loading-spinner" id="loadingSpinner"></div>
+                        </div>
+                        <div class="status-content">
+                            <h4 class="status-title">Waiting for Payment</h4>
+                            <p class="status-message">Complete your payment to continue</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-list-ol"></i>
+                        How to Pay
+                    </h3>
+                    <div class="instruction-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Open {{ payment_method|title }} App</h4>
+                                <p>Use the button above or scan the QR code</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Confirm Amount</h4>
+                                <p>Verify the payment amount is ₱{{ amount }}</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Complete Payment</h4>
+                                <p>Follow the app instructions to finish</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-section">
+                    <button onclick="checkPaymentStatus()" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i>
+                        Check Status
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+(function() {
+    'use strict';
+    
+    let paymentCheckInterval = null;
+    let checkCount = 0;
+    const maxChecks = 60;
+    let isPaymentCompleted = false;
+    
+    function log(message, data = null) {
+        try {
+            if (data) console.log(message, data);
+            else console.log(message);
+        } catch (e) {}
+    }
+    
+    function getElement(id) {
+        try {
+            return document.getElementById(id);
+        } catch (e) {
+            log('Error getting element:', e);
+            return null;
+        }
+    }
+    
+    // 🔹 Get CSRF Cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // 🔹 Enable Payment Button
+    function enablePaymentButton() {
+        try {
+            const button = getElement('paymentButton');
+            const paymentMethod = "{{ payment_method|upper }}";
+            const amount = "{{ amount }}";
+            
+            if (button) {
+                button.disabled = false;
+                button.style.backgroundColor = '#28a745';
+                button.innerHTML = `
+                    <div class="button-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <div class="button-content">
+                        <span class="button-text">PAY WITH ${paymentMethod}</span>
+                        <span class="button-amount">₱${amount}</span>
+                    </div>
+                `;
+                button.classList.remove('loading');
+                updateStatus('waiting', 'Ready to Pay', 'Click the button above to pay with ' + paymentMethod);
+            }
+        } catch (error) {
+            log('Error enabling button:', error);
+        }
+    }
+    
+    // 🔹 Open Payment App - Calls LA2568 API for real redirect URL
+    window.openPaymentApp = function() {
+        try {
+            const paymentMethod = "{{ payment_method|upper }}";
+            const amount = "{{ amount }}";
+            const button = getElement('paymentButton');
+            
+            console.log('🚀 Starting LA2568 payment:', { paymentMethod, amount });
+
+            // Show loading state
+            if (button) {
+                button.style.backgroundColor = '#6c757d';
+                button.innerHTML = `
+                    <div class="button-icon"><i class="fas fa-spinner fa-spin"></i></div>
+                    <div class="button-content">
+                        <span class="button-text">Connecting to ${paymentMethod}...</span>
+                    </div>
+                `;
+                button.disabled = true;
+            }
+
+            // Call LA2568 API to get real redirect URL
+            fetch('/payment/api/deposit/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({  
+                    amount: parseFloat(amount),
+                    payment_method: paymentMethod.toLowerCase()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ LA2568 API Response:', data);
+                
+                if (data.success && data.redirect_url) {
+                    // Got valid redirect URL from LA2568 - redirect to real GCash
+                    console.log('🔗 Redirecting to:', data.redirect_url);
+                    updateStatus('processing', 'Redirecting to GCash', 'Please complete your payment...');
+                    
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1000);
+                } else {
+                    // API call failed or no redirect URL
+                    console.error('❌ No redirect URL from LA2568:', data);
+                    const errorMsg = data.error || 'Payment gateway did not return a valid redirect link';
+                    alert(`Payment Error: ${errorMsg}\n\nPlease try again.`);
+                    enablePaymentButton();
+                }
+            })
+            .catch(error => {
+                console.error('❌ LA2568 API Error:', error);
+                alert(`Connection Error: ${error.message}\n\nPlease check your internet connection and try again.`);
+                enablePaymentButton();
+            });
+
+        } catch (error) {
+            console.error('❌ Error in openPaymentApp:', error);
+            alert('Unexpected Error: ' + error.message);
+            enablePaymentButton();
+        }
+    };
+    
+    // 🔹 Check Payment Status
+    window.checkPaymentStatus = function() {
+        try {
+            const referenceId = "{{ reference_id|escapejs }}";
+            if (!referenceId) {
+                log('No reference ID available');
+                return;
+            }
+            
+            fetch(`https://investmentgrowfi.onrender.com/api/payment-status/${referenceId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                return response.json();
+            })
+            .then(data => {
+                log('Payment status response:', data);
+                handlePaymentStatus(data.status, data);
+            })
+            .catch(error => {
+                log('Payment status check error:', error);
+                if (checkCount < 5) {
+                    updateStatus('checking', 'Checking Payment', 'Verifying your payment status...');
+                }
+            });
+        } catch (error) {
+            log('Error in checkPaymentStatus:', error);
+        }
+    };
+    
+    // 🔹 Handle Payment Status
+    function handlePaymentStatus(status, data) {
+        try {
+            const normalized = (status || "").toLowerCase();
+            log('Handling payment status:', normalized);
+            
+            switch (normalized) {
+                case 'completed':
+                case 'success':
+                    isPaymentCompleted = true;
+                    updateStatus('success', 'Payment Successful!', 'Redirecting to dashboard...');
+                    stopStatusCheck();
+                    setTimeout(() => {
+                        try {
+                            window.location.href = '{% url "dashboard" %}';
+                        } catch (e) {
+                            log('Redirect error:', e);
+                            showSuccess('Payment completed! Please return to dashboard.');
+                        }
+                    }, 2000);
+                    break;
+                    
+                case 'failed':
+                case 'error':
+                    updateStatus('error', 'Payment Failed', 'Please try again or contact support.');
+                    stopStatusCheck();
+                    enablePaymentButton();
+                    break;
+                    
+                case 'pending':
+                case 'processing':
+                    updateStatus('processing', 'Payment Processing', 'Please wait while we confirm your payment...');
+                    break;
+                    
+                default:
+                    updateStatus('waiting', 'Waiting for Payment', 'Complete your payment to continue');
+                    break;
+            }
+        } catch (error) {
+            log('Error handling payment status:', error);
+        }
+    }
+    
+    // 🔹 Update Status Display
+    function updateStatus(type, title, message) {
+        try {
+            const statusContainer = getElement('paymentStatus');
+            const spinner = getElement('loadingSpinner');
+            if (!statusContainer) return;
+            
+            statusContainer.className = `status-container status-${type}`;
+            const titleElement = statusContainer.querySelector('.status-title');
+            const messageElement = statusContainer.querySelector('.status-message');
+            if (titleElement) titleElement.textContent = title;
+            if (messageElement) messageElement.textContent = message;
+            
+            if (spinner) spinner.style.display = (type === 'success' || type === 'error') ? 'none' : 'block';
+        } catch (error) {
+            log('Error updating status:', error);
+        }
+    }
+    
+    function showSuccess(message) { updateStatus('success', 'Success', message); }
+    
+    // 🔹 Interval Status Checking
+    function startPaymentStatusCheck(interval = 5000) {
+        try {
+            stopStatusCheck();
+            checkCount = 0;
+            paymentCheckInterval = setInterval(() => {
+                if (isPaymentCompleted) { stopStatusCheck(); return; }
+                checkCount++;
+                if (checkCount >= maxChecks) {
+                    stopStatusCheck();
+                    updateStatus('timeout', 'Check Timeout', 'Please verify your payment manually or contact support.');
+                    return;
+                }
+                checkPaymentStatus();
+            }, interval);
+        } catch (error) {
+            log('Error starting status check:', error);
+        }
+    }
+    function stopStatusCheck() {
+        try {
+            if (paymentCheckInterval) {
+                clearInterval(paymentCheckInterval);
+                paymentCheckInterval = null;
+            }
+        } catch (error) {
+            log('Error stopping status check:', error);
+        }
+    }
+    
+    // 🔹 Init
+    function initializePage() {
+        try {
+            log('Initializing payment page');
+            setTimeout(() => { if (!isPaymentCompleted) checkPaymentStatus(); }, 1000);
+            startPaymentStatusCheck();
+        } catch (error) {
+            log('Error initializing page:', error);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', initializePage);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) stopStatusCheck();
+        else if (!isPaymentCompleted) startPaymentStatusCheck();
+    });
+    window.addEventListener('beforeunload', stopStatusCheck);
+    window.addEventListener('error', function(e) {
+        log('Global error:', e.error);
+        return true;
+    });
+})();
+</script>
+
+
+<style>
+/* Clean White Payment UI Styles */
+* {
+    box-sizing: border-box;
+}
+
+.payment-container {
+    min-height: 100vh;
+    background: #f8f9fa;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-wrapper {
+    width: 100%;
+    max-width: 480px;
+}
+
+.payment-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header Section */
+.payment-header {
+    background: #ffffff;
+    padding: 32px 24px;
+    text-align: center;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.header-content {
+    position: relative;
+}
+
+.payment-icon {
+    width: 64px;
+    height: 64px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    border: 2px solid #e9ecef;
+}
+
+.payment-icon i {
+    font-size: 24px;
+    color: #495057;
+}
+
+.payment-title {
+    color: #212529;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.5px;
+}
+
+.backup-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff3cd;
+    color: #856404;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #ffeaa7;
+}
+
+/* Payment Body */
+.payment-body {
+    padding: 32px 24px;
+    background: #ffffff;
+}
+
+/* Backup Notice */
+.backup-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.notice-icon {
+    width: 40px;
+    height: 40px;
+    background: #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #856404;
+    flex-shrink: 0;
+}
+
+.notice-content h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #856404;
+}
+
+.notice-content p {
+    margin: 0;
+    color: #856404;
+    font-size: 14px;
+}
+
+/* Amount Section */
+.amount-section {
+    background: #ffffff;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.amount-display {
+    margin-bottom: 24px;
+}
+
+.currency {
+    font-size: 32px;
+    font-weight: 300;
+    color: #28a745;
+    vertical-align: top;
+}
+
+.amount {
+    font-size: 48px;
+    font-weight: 800;
+    color: #28a745;
+    letter-spacing: -1px;
+}
+
+.payment-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.label {
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.value {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Section Titles */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0 0 20px;
+}
+
+.section-title i {
+    color: #007bff;
+}
+
+/* QR Section */
+.qr-section {
+    margin-bottom: 32px;
+}
+
+.qr-container {
+    text-align: center;
+}
+
+.qr-frame {
+    display: inline-block;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 2px solid #e9ecef;
+    margin-bottom: 16px;
+}
+
+.qr-image {
+    max-width: 240px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.qr-instruction {
+    color: #6c757d;
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Payment Action */
+.payment-action {
+    margin-bottom: 32px;
+}
+
+.payment-button-container {
+    text-align: center;
+}
+
+.payment-button {
+    width: 100%;
+    height: 80px;
+    background: #28a745 !important;
+    border: none;
+    border-radius: 12px;
+    color: #ffffff !important;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer !important;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+    position: relative;
+    pointer-events: auto !important;
+    z-index: 999;
+}
+
+.payment-button:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.3);
+}
+
+.payment-button:active {
+    transform: translateY(0);
+}
+
+.payment-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    background: #6c757d;
+}
+
+.payment-button.loading {
+    background: #6c757d;
+}
+
+.button-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+}
+
+.button-icon i {
+    font-size: 18px;
+}
+
+.button-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.button-text {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.button-amount {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* Status Section */
+.status-section {
+    margin-bottom: 32px;
+}
+
+.status-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.status-container.status-success {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.status-container.status-success .status-title {
+    color: #155724;
+}
+
+.status-container.status-success .status-message {
+    color: #155724;
+}
+
+.status-container.status-error {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.status-container.status-error .status-title {
+    color: #721c24;
+}
+
+.status-container.status-error .status-message {
+    color: #721c24;
+}
+
+.status-container.status-processing {
+    background: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+.status-container.status-processing .status-title {
+    color: #0c5460;
+}
+
+.status-container.status-processing .status-message {
+    color: #0c5460;
+}
+
+.status-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e9ecef;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.status-content {
+    flex: 1;
+}
+
+.status-title {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.status-message {
+    margin: 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Instructions */
+.instructions-section {
+    margin-bottom: 32px;
+}
+
+.instruction-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    background: #007bff;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.step-content p {
+    margin: 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Action Section */
+.action-section {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: #ffffff;
+    border: 1px solid #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: #ffffff;
+    border: 1px solid #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 576px) {
+    .payment-container {
+        padding: 12px;
+    }
+    
+    .payment-header {
+        padding: 24px 20px;
+    }
+    
+    .payment-body {
+        padding: 24px 20px;
+    }
+    
+    .payment-title {
+        font-size: 20px;
+    }
+    
+    .amount {
+        font-size: 36px;
+    }
+    
+    .currency {
+        font-size: 24px;
+    }
+    
+    .qr-image {
+        max-width: 200px;
+    }
+    
+    .payment-button {
+        height: 72px;
+        font-size: 14px;
+    }
+    
+    .action-section {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .instruction-steps {
+        gap: 12px;
+    }
+    
+    .step {
+        padding: 12px;
+    }
+}
+
+/* Focus states for keyboard navigation */
+.payment-button:focus,
+.btn:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .payment-button {
+        border: 2px solid #000000;
+    }
+    
+    .btn {
+        border: 2px solid #000000;
+    }
+    
+    .payment-card {
+        border: 2px solid #000000;
+    }
+}
+
+/* Clean, minimal alert styles */
+.alert {
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+/* Remove any remaining gradients and colors */
+.payment-card,
+.payment-header,
+.payment-body,
+.amount-section,
+.qr-frame,
+.step {
+    background: #ffffff !important;
+}
+
+.payment-container {
+    background: #f8f9fa !important;
+}
+
+.status-container {
+    background: #f8f9fa !important;
+}
+</style>
+{% endblock %}

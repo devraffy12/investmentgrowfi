@@ -1,0 +1,1311 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+{% load investment_extras %}
+
+{% block title %}Withdraw Funds GrowFi{% endblock %}
+
+{% block content %}
+<!-- Withdraw Header -->
+<div class="withdraw-header">
+    <div class="container">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="header-text">
+                    <h1 class="page-title">Withdraw Funds</h1>
+                    <p class="page-subtitle">Cashout your earnings instantly to your preferred payment method</p>
+                </div>
+            </div>
+            <div class="balance-card">
+                <div class="balance-label">Withdrawable Balance</div>
+                <div class="balance-amount">₱{{ withdrawable_amount|floatformat:2 }}</div>
+                <div class="balance-note">Registration bonus cannot be withdrawn</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Grid -->
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon wallet">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">₱{{ withdrawable_amount|floatformat:2 }}</div>
+                <div class="stat-label">Available to Withdraw</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon fee">
+                <i class="fas fa-ban"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">0%</div>
+                <div class="stat-label">Processing Fee</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon time">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">1</div>
+                <div class="stat-label">Minute Process</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon minimum">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-number">₱100</div>
+                <div class="stat-label">Minimum Amount</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="container">
+    <div class="main-grid">
+        <!-- Withdrawal Form -->
+        <div class="form-section">
+            <div class="form-card">
+                <div class="form-header">
+                    <div class="form-header-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="form-header-text">
+                        <h2>Withdrawal Request</h2>
+                        <p>Enter your withdrawal details below</p>
+                    </div>
+                </div>
+                
+                <form method="post" class="withdrawal-form" id="withdrawalForm">
+                    {% csrf_token %}
+                    
+                    <!-- Amount Section -->
+                    <div class="input-section">
+                        <div class="section-header">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Withdrawal Amount</span>
+                        </div>
+                        
+                        <div class="amount-input-container">
+                            <div class="amount-input-wrapper">
+                                <span class="currency">₱</span>
+                                <input type="number" 
+                                       name="amount" 
+                                       id="amount" 
+                                       class="amount-input" 
+                                       placeholder="0.00" 
+                                       min="100" 
+                                       max="{{ profile.balance }}"
+                                       step="0.01" 
+                                       required>
+                                <button type="button" class="max-btn" onclick="setMaxAmount()">MAX</button>
+                            </div>
+                            
+                            <div class="quick-amounts">
+                                <button type="button" class="quick-btn" onclick="setAmount(500)">₱500</button>
+                                <button type="button" class="quick-btn" onclick="setAmount(1000)">₱1K</button>
+                                <button type="button" class="quick-btn" onclick="setAmount(2000)">₱2K</button>
+                                <button type="button" class="quick-btn" onclick="setAmount(5000)">₱5K</button>
+                            </div>
+                        </div>
+                        
+                        <div class="amount-breakdown">
+                            <div class="breakdown-row">
+                                <span>Withdrawal Amount:</span>
+                                <span id="withdrawAmount">₱0.00</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span>Processing Fee (10%):</span>
+                                <span id="processingFee">₱0.00</span>
+                            </div>
+                            <div class="breakdown-row total">
+                                <span>Total Deduction:</span>
+                                <span id="totalDeduction">₱0.00</span>
+                            </div>
+                            <div class="breakdown-row final">
+                                <span>You Will Receive:</span>
+                                <span id="netAmount">₱0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method Section -->
+                    <div class="input-section">
+                        <div class="section-header">
+                            <i class="fas fa-university"></i>
+                            <span>Payment Method</span>
+                        </div>
+                        
+                        {% if user.bank_accounts.all %}
+                            <div class="payment-methods">
+                                {% for account in user.bank_accounts.all %}
+                                    {% if account.is_active %}
+                                    <label class="payment-option {% if account.is_primary %}primary{% endif %}">
+                                        <input type="radio" 
+                                               name="bank_account" 
+                                               value="{{ account.id }}" 
+                                               {% if account.is_primary %}checked{% endif %}
+                                               required>
+                                        <div class="option-content">
+                                            <div class="option-icon {{ account.account_type }}">
+                                                {% if account.account_type == 'gcash' %}
+                                                    <img src="{% static 'gcash.jpg' %}" alt="GCash" class="payment-logo">
+                                                {% elif account.account_type == 'paymaya' %}
+                                                    <img src="{% static 'maya.jpg' %}" alt="PayMaya" class="payment-logo">
+                                                {% else %}
+                                                    <i class="fas fa-university"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="option-details">
+                                                <div class="option-name">{{ account.account_name }}</div>
+                                                <div class="option-type">{{ account.get_account_type_display }}</div>
+                                                <div class="option-number">**** {{ account.account_number|slice:"-4:" }}</div>
+                                            </div>
+                                            {% if account.is_primary %}
+                                                <div class="primary-badge">
+                                                    <i class="fas fa-star"></i>
+                                                    <span>Primary</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </label>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="manage-methods">
+                                <a href="{% url 'bank_accounts' %}" class="manage-link">
+                                    <i class="fas fa-cog"></i>
+                                    Manage Payment Methods
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="no-methods">
+                                <div class="no-methods-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <h4>No Payment Methods</h4>
+                                <p>Add a payment method to withdraw funds</p>
+                                <a href="{% url 'bank_accounts' %}" class="add-method-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Add Payment Method
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Security Info -->
+                    <div class="security-section">
+                        <div class="security-header">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Security & Processing</span>
+                        </div>
+                        <div class="security-items">
+                            <div class="security-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Account verified and secure</span>
+                            </div>
+                            <div class="security-item">
+                                <i class="fas fa-lock"></i>
+                                <span>All transactions encrypted</span>
+                            </div>
+                            <div class="security-item">
+                                <i class="fas fa-flash"></i>
+                                <span>Instant processing in 1 minute</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <div class="btn-content">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Submit Withdrawal Request</span>
+                        </div>
+                        <div class="btn-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Processing...</span>
+                        </div>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Info Sidebar -->
+        <div class="info-section">
+            <!-- Withdrawal Info Card -->
+            <div class="info-card">
+                <div class="info-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Withdrawal Guide</h3>
+                </div>
+                <div class="info-content">
+                    <div class="info-item">
+                        <div class="info-icon coins">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="info-text">
+                            <h4>Minimum Amount</h4>
+                            <p>₱100 minimum withdrawal required</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon percent">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="info-text">
+                            <h4>Processing Fee</h4>
+                            <p>10% fee applies to all withdrawals</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon clock">
+                            <i class="fas fa-flash"></i>
+                        </div>
+                        <div class="info-text">
+                            <h4>Processing Time</h4>
+                            <p>Instant processing within 1 minute</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon shield">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="info-text">
+                            <h4>Security</h4>
+                            <p>Admin approval for verification</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Supported Methods Card -->
+            <div class="methods-card">
+                <div class="methods-header">
+                    <h4>Supported Methods</h4>
+                </div>
+                <div class="methods-grid">
+                    <div class="method-item gcash">
+                        <img src="{% static 'gcash.jpg' %}" alt="GCash" class="method-logo">
+                        <span>GCash</span>
+                    </div>
+                    <div class="method-item paymaya">
+                        <img src="{% static 'maya.jpg' %}" alt="PayMaya" class="method-logo">
+                        <span>PayMaya</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header Section */
+.withdraw-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 40px 0;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.withdraw-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    transform: rotate(45deg);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    gap: 30px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.header-icon {
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    backdrop-filter: blur(10px);
+}
+
+.page-title {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 16px;
+}
+
+.balance-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px 25px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    max-width: 320px;
+}
+
+.balance-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.balance-amount {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.balance-note {
+    font-size: 12px;
+    color: #e53e3e;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.stat-icon.wallet { background: linear-gradient(135deg, #28a745, #20c997); }
+.stat-icon.fee { background: linear-gradient(135deg, #ff6b6b, #ff5252); }
+.stat-icon.time { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+.stat-icon.minimum { background: linear-gradient(135deg, #ffa726, #ff8a65); }
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Main Grid Layout */
+.main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Form Section */
+.form-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.form-header-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.form-header h2 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.form-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.withdrawal-form {
+    padding: 35px;
+}
+
+.input-section {
+    margin-bottom: 35px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.section-header i {
+    color: #28a745;
+    font-size: 16px;
+}
+
+/* Amount Input */
+.amount-input-container {
+    margin-bottom: 25px;
+}
+
+.amount-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.amount-input-wrapper:focus-within {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.currency {
+    padding: 18px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.amount-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 18px 15px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    outline: none;
+}
+
+.amount-input::placeholder {
+    color: #adb5bd;
+}
+
+.max-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 8px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.max-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.quick-amounts {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.quick-btn {
+    background: rgba(40, 167, 69, 0.1);
+    border: 2px solid rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-btn:hover {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Amount Breakdown */
+.amount-breakdown {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(32, 201, 151, 0.05));
+    border: 2px solid rgba(40, 167, 69, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+}
+
+.breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 15px;
+    color: #333;
+}
+
+.breakdown-row:last-child {
+    margin-bottom: 0;
+}
+
+.breakdown-row.total {
+    padding-top: 12px;
+    border-top: 1px solid rgba(40, 167, 69, 0.2);
+    font-weight: 600;
+}
+
+.breakdown-row.final {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-top: 15px;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Payment Methods */
+.payment-methods {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.payment-option {
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+    position: relative;
+}
+
+.payment-option:hover {
+    border-color: #28a745;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.15);
+}
+
+.payment-option.primary {
+    border-color: #28a745;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(32, 201, 151, 0.05));
+}
+
+.payment-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.payment-option input:checked + .option-content {
+    color: #28a745;
+}
+
+.option-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.option-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.option-icon.gcash { background: linear-gradient(135deg, #007FFF, #0066CC); }
+.option-icon.paymaya { background: linear-gradient(135deg, #00D632, #00B029); }
+.option-icon.bpi { background: linear-gradient(135deg, #FF6B35, #E55527); }
+.option-icon.bdo { background: linear-gradient(135deg, #1e3d72, #0f2a5a); }
+.option-icon.unionbank { background: linear-gradient(135deg, #ed1c24, #c81e2b); }
+.option-icon.metrobank { background: linear-gradient(135deg, #ffa500, #ff8c00); }
+
+.payment-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.method-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.option-details {
+    flex: 1;
+}
+
+.option-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.option-type {
+    font-size: 13px;
+    color: #28a745;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.option-number {
+    font-size: 14px;
+    color: #666;
+    font-family: monospace;
+}
+
+.primary-badge {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.manage-methods {
+    text-align: center;
+}
+
+.manage-link {
+    color: #28a745;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.manage-link:hover {
+    color: #20c997;
+    transform: translateY(-1px);
+}
+
+/* No Methods */
+.no-methods {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(32, 201, 151, 0.05));
+    border: 2px dashed rgba(40, 167, 69, 0.3);
+    border-radius: 15px;
+}
+
+.no-methods-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+    color: white;
+}
+
+.no-methods h4 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.no-methods p {
+    margin: 0 0 25px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.add-method-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    text-decoration: none;
+    padding: 12px 25px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.add-method-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+/* Security Section */
+.security-section {
+    margin-bottom: 30px;
+}
+
+.security-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.security-header i {
+    color: #28a745;
+}
+
+.security-items {
+    display: grid;
+    gap: 12px;
+}
+
+.security-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(32, 201, 151, 0.05));
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.security-item i {
+    color: #28a745;
+    width: 18px;
+}
+
+/* Submit Button */
+.submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+}
+
+.submit-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-content,
+.btn-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Info Section */
+.info-section {
+    display: grid;
+    gap: 25px;
+    height: fit-content;
+}
+
+/* Info Card */
+.info-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.info-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.info-header i {
+    font-size: 20px;
+}
+
+.info-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.info-content {
+    padding: 25px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.info-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.info-icon.coins { background: linear-gradient(135deg, #ffa726, #ff8a65); }
+.info-icon.percent { background: linear-gradient(135deg, #ff6b6b, #ff5252); }
+.info-icon.clock { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+.info-icon.shield { background: linear-gradient(135deg, #667eea, #764ba2); }
+
+.info-text h4 {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.info-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* Methods Card */
+.methods-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.1);
+    padding: 25px;
+}
+
+.methods-header h4 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.methods-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.method-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 12px;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.method-item:hover {
+    border-color: #28a745;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.15);
+}
+
+.method-item i {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.method-item img {
+    margin-bottom: 5px;
+}
+
+.method-item.gcash i { color: #007FFF; }
+.method-item.paymaya i { color: #00D632; }
+.method-item.bank i { color: #FF6B35; }
+
+.method-item span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .info-section {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 25px;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .withdrawal-form {
+        padding: 25px 20px;
+    }
+    
+    .quick-amounts {
+        justify-content: center;
+    }
+    
+    .methods-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .method-item {
+        padding: 15px 8px;
+    }
+}
+
+/* Added breakpoint & wrap fixes so balance card doesn't get cut off on medium widths */
+@media (max-width: 1100px) {
+    .header-content { flex-wrap: wrap; justify-content: flex-start; }
+    .header-left { flex: 1 1 100%; }
+    .balance-card { 
+        flex: 1 1 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+        max-width: 100%;
+        margin-top: 15px;
+        padding: 18px 22px;
+    }
+    .balance-label { margin: 0; }
+    .balance-amount { font-size: 30px; }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .withdrawal-form {
+        padding: 20px 15px;
+    }
+    
+    .methods-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .method-item {
+        padding: 12px 6px;
+        font-size: 12px;
+    }
+    
+    .method-item i {
+        font-size: 18px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('amount');
+    const withdrawAmountSpan = document.getElementById('withdrawAmount');
+    const processingFeeSpan = document.getElementById('processingFee');
+    const totalDeductionSpan = document.getElementById('totalDeduction');
+    const netAmountSpan = document.getElementById('netAmount');
+    const submitBtn = document.getElementById('submitBtn');
+    const withdrawalForm = document.getElementById('withdrawalForm');
+    const maxBalance = {{ profile.balance }};
+
+    // Payment method selection
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                
+                // Update visual selection
+                paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            }
+        });
+    });
+
+    // Amount calculation
+    function updateCalculations() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const fee = amount * 0.10; // 10% fee
+        const totalDeduction = amount + fee;
+        const netAmount = amount - fee;
+
+        withdrawAmountSpan.textContent = `₱${amount.toFixed(2)}`;
+        processingFeeSpan.textContent = `₱${fee.toFixed(2)}`;
+        totalDeductionSpan.textContent = `₱${totalDeduction.toFixed(2)}`;
+        netAmountSpan.textContent = `₱${netAmount.toFixed(2)}`;
+
+        // Validation
+        const isValid = amount >= 100 && totalDeduction <= maxBalance;
+        submitBtn.disabled = !isValid;
+
+        if (amount > 0 && amount < 100) {
+            showError('Minimum withdrawal amount is ₱100');
+        } else if (totalDeduction > maxBalance) {
+            showError('Insufficient balance for withdrawal and fees');
+        } else {
+            hideError();
+        }
+    }
+
+    function showError(message) {
+        let errorDiv = document.querySelector('.amount-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'amount-error';
+            errorDiv.style.cssText = `
+                background: linear-gradient(135deg, #ff6b6b, #ff5252);
+                color: white;
+                padding: 12px 18px;
+                border-radius: 10px;
+                margin-top: 12px;
+                font-size: 14px;
+                font-weight: 500;
+                text-align: center;
+            `;
+            amountInput.closest('.amount-input-container').appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+        amountInput.style.borderColor = '#ff6b6b';
+    }
+
+    function hideError() {
+        const errorDiv = document.querySelector('.amount-error');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+        amountInput.style.borderColor = '';
+    }
+
+    // Set amount functions
+    window.setAmount = function(amount) {
+        if (amount <= maxBalance) {
+            amountInput.value = amount;
+            updateCalculations();
+        }
+    };
+
+    window.setMaxAmount = function() {
+        // Set to max available considering the 10% fee
+        // If balance is B, and we want to withdraw X, then X + 0.1X <= B
+        // So 1.1X <= B, therefore X <= B/1.1
+        const maxWithdrawable = Math.floor(maxBalance / 1.1);
+        amountInput.value = maxWithdrawable;
+        updateCalculations();
+    };
+
+    // Event listeners
+    amountInput.addEventListener('input', updateCalculations);
+    amountInput.addEventListener('change', updateCalculations);
+
+    // Form submission
+    withdrawalForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Show loading state
+        const btnContent = submitBtn.querySelector('.btn-content');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        btnContent.style.display = 'none';
+        btnLoading.style.display = 'flex';
+        submitBtn.disabled = true;
+
+        // Submit form
+        setTimeout(() => {
+            this.submit();
+        }, 1000);
+    });
+
+    // Quick amount buttons
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const text = this.textContent.replace('₱', '').replace(',', '');
+            let amount;
+            if (text.includes('K')) {
+                amount = parseInt(text.replace('K', '')) * 1000;
+            } else {
+                amount = parseInt(text);
+            }
+            setAmount(amount);
+        });
+    });
+
+    // Initialize calculations
+    updateCalculations();
+
+    console.log('Withdrawal page loaded successfully');
+});
+</script>
+{% endblock %}

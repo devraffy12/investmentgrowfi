@@ -1,0 +1,801 @@
+{% extends 'myproject/base.html' %}
+{% load static %}
+
+{% block title %}Join GrowFi - Start Your Investment Journey{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#6366f1',
+                    'primary-dark': '#4f46e5',
+                    'primary-light': '#818cf8',
+                    success: '#10b981',
+                    danger: '#ef4444',
+                    warning: '#f59e0b',
+                    'gradient-start': '#667eea',
+                    'gradient-end': '#764ba2',
+                }
+            }
+        }
+    }
+</script>
+<style>
+/* Enhanced Font System */
+body {
+    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url("{% static '2.jpg' %}") no-repeat center center fixed;
+    background-size: cover;
+}
+
+.app-content {
+    min-height: 100vh;
+    background: url("{% static '2.jpg' %}") no-repeat center center fixed;
+    background-size: cover;
+}
+
+.font-poppins {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Advanced Animations */
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px) rotate(0deg); 
+        opacity: 0.7;
+    }
+    50% { 
+        transform: translateY(-15px) rotate(5deg); 
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+    }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Animation Classes */
+.animate-fade-in-up {
+    animation: fadeInUp 1s ease-out;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.8s ease-out;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.8s ease-out;
+}
+
+.floating-shape {
+    animation: float 8s ease-in-out infinite;
+}
+
+.animate-pulse-custom {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-glow {
+    animation: glow 3s ease-in-out infinite;
+}
+
+/* Enhanced Background */
+.gradient-bg {
+    background-size: 300% 300%;
+    animation: gradientShift 8s ease infinite;
+}
+
+/* Enhanced Container */
+.main-container {
+    /* Removed backdrop-filter blur effects */
+}
+
+/* Logo Enhancement */
+.logo-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.logo-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 3s infinite;
+    border-radius: inherit;
+}
+
+/* Enhanced Input Styling */
+.input-group {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group:focus-within .input-icon {
+    color: #6366f1;
+    transform: scale(1.15) rotate(5deg);
+}
+
+.input-group:focus-within input {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.input-group input {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Phone Input - Desktop */
+.phone-container {
+    position: relative;
+    display: flex;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background: white;
+    min-height: 56px;
+    align-items: stretch;
+}
+
+.phone-container:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.phone-prefix {
+    background: #f9fafb;
+    color: #374151;
+    padding: 16px 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+    font-size: 16px;
+    min-width: 80px;
+    max-width: 80px;
+    width: 80px;
+    user-select: none;
+    pointer-events: none;
+    border-right: 1px solid #e5e7eb;
+}
+
+.phone-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 16px 18px;
+    font-size: 16px;
+    font-weight: 500;
+    background: transparent;
+    color: #111827;
+}
+
+.phone-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+/* Enhanced Button Styles */
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    min-height: 56px;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
+    background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:active {
+    transform: translateY(-1px) scale(1.01);
+    transition: all 0.1s ease;
+}
+
+.btn-outline {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(55, 65, 81, 0.8);
+    color: #374151 !important;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 56px;
+}
+
+.btn-outline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    transition: width 0.4s ease;
+    z-index: -1;
+}
+
+.btn-outline:hover {
+    color: white;
+    border-color: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.btn-outline:hover::before {
+    width: 100%;
+}
+
+/* Enhanced Form Card */
+.form-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.form-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #ec4899);
+    background-size: 300% 100%;
+    animation: gradientShift 3s ease infinite;
+}
+
+/* Password Toggle Enhancement */
+.password-toggle {
+    transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+    transform: scale(1.1);
+    color: #6366f1;
+}
+
+/* Hide browser styling */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+    display: none !important;
+}
+
+/* Enhanced autocomplete styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.95) inset !important;
+    -webkit-text-fill-color: #374151 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Enhanced transparent form styling */
+.card input::placeholder {
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.card input:focus {
+    color: #000000 !important;
+}
+
+.card .border-bottom:focus-within {
+    border-bottom-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Hover effects for inputs */
+.card input:hover {
+    color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* MOBILE RESPONSIVE FIXES */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 16px;
+        margin: 0;
+        max-width: 100%;
+    }
+    
+    .form-card {
+        padding: 32px 24px;
+        border-radius: 24px;
+        margin-bottom: 24px;
+    }
+    
+    /* Header adjustments for mobile */
+    h1.font-poppins {
+        font-size: 2.5rem;
+        line-height: 1.2;
+        margin-bottom: 16px;
+    }
+    
+    .logo-container {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 24px;
+    }
+    
+    /* Enhanced phone input for mobile */
+    .phone-container {
+        border-radius: 16px;
+        min-height: 64px;
+        border: 1px solid #d1d5db;
+    }
+    
+    .phone-prefix {
+        padding: 18px 20px;
+        font-size: 17px;
+        min-width: 85px;
+        background: #f9fafb;
+        color: #374151;
+        border-right: 1px solid #e5e7eb;
+    }
+    
+    .phone-input {
+        padding: 18px 20px;
+        font-size: 18px;
+        font-weight: 500;
+    }
+    
+    /* Enhanced password input for mobile */
+    .input-group input {
+        padding: 18px 20px;
+        padding-right: 60px;
+        font-size: 18px;
+        border-radius: 16px;
+        min-height: 64px;
+        box-sizing: border-box;
+        border: 1px solid #d1d5db;
+    }
+    
+    .input-group input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .password-toggle {
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    /* Enhanced buttons for mobile */
+    button[type="submit"] {
+        padding: 18px 24px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 16px;
+        min-height: 64px;
+    }
+    
+    /* Label improvements */
+    label {
+        font-size: 16px;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen gradient-bg py-4 sm:py-6 px-2 sm:px-4 flex items-center justify-center relative overflow-hidden">
+    <!-- Main Content Container -->
+    <div class="main-container w-full max-w-md mx-auto relative z-10 px-4 sm:px-0">
+        <!-- Enhanced Header Section -->
+        <div class="text-center mb-6 sm:mb-8 animate-fade-in-up">
+            <!-- Premium Logo Design -->
+            <div class="logo-container w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                <div class="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center">
+                    <img src="{% static 'GrowFi.png' %}" alt="GrowFi Logo" class="w-12 h-12 object-contain">
+                </div>
+            </div>
+            
+            <!-- Enhanced Typography -->
+            <h1 class="font-poppins text-4xl font-bold text-black mb-3 tracking-tight">
+                Join 
+                <span class="text-black font-bold animate-pulse-custom">
+                    GrowFi
+                </span>
+            </h1>
+            <p class="text-black text-lg font-medium mb-4">Start Your Investment Journey</p>
+        </div>
+
+        <!-- Enhanced Error Messages -->
+        {% if form.errors %}
+            <div class="mb-6 p-4 rounded-2xl bg-red-50/90 backdrop-blur-sm border border-red-200 animate-slide-in-left">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-sm"></i>
+                    </div>
+                    <span class="text-red-700 font-medium">Please correct the errors below.</span>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-6 p-4 rounded-2xl bg-blue-50/90 backdrop-blur-sm border border-blue-200 animate-slide-in-left">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-info-circle text-blue-500 text-sm"></i>
+                        </div>
+                        <span class="text-blue-700 font-medium">{{ message }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Registration Form Card -->
+        <div class="card border-0" style="width: 350px; background: transparent;">
+            <div class="card-body p-4">
+                <form id="registerForm" method="post" action="{% url 'register' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Phone Number -->
+                    <div class="mb-3">
+                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Phone Number</label>
+                        <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-flag me-2 text-dark opacity-75"></i>
+                                <span class="fw-bold me-2 text-dark">+63</span>
+                                <input 
+                                    class="border-0 text-dark flex-grow-1 p-0" 
+                                    style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
+                                    placeholder="9XX XXX XXXX"
+                                    id="phone" 
+                                    name="phone" 
+                                    required 
+                                    maxlength="13"
+                                    autocomplete="tel"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Create Password</label>
+                        <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+                            <input 
+                                class="border-0 text-dark w-100 p-0 pe-5" 
+                                style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
+                                placeholder="Choose a strong password"
+                                id="password" 
+                                name="password" 
+                                required
+                                autocomplete="new-password"
+                            >
+                            <button 
+                                type="button" 
+                                class="position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent text-dark opacity-75 p-2 me-2"
+                                onclick="togglePassword()"
+                                style="cursor: pointer;"
+                            >
+                                <i id="password-icon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-3">
+                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Confirm Password</label>
+                        <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+                            <input 
+                                class="border-0 text-dark w-100 p-0 pe-5" 
+                                style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
+                                placeholder="Confirm your password"
+                                id="confirm_password" 
+                                name="confirm_password" 
+                                required
+                                autocomplete="new-password"
+                                type"password"
+                            >
+                            <button 
+                                type="button" 
+                                class="position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent text-dark opacity-75 p-2 me-2"
+                                onclick="toggleConfirmPassword()"
+                                style="cursor: pointer;"
+                            >
+                                <i id="confirm-password-icon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Referral Code -->
+                    <div class="mb-4">
+                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Referral Code (Optional)</label>
+                        <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+                            <input 
+                                class="border-0 text-dark w-100 p-0" 
+                                style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
+                                placeholder="Enter referral code"
+                                id="referral_code" 
+                                name="referral_code" 
+                                value="{{ referral_code }}"
+                                autocomplete="off"
+
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Create Account Button -->
+                    <button 
+                        type="submit" 
+                        class="btn w-100 text-white fw-bold py-3 rounded-pill border-0"
+                        style="background: linear-gradient(135deg, #dc2545 0%, #6f42c1 100%); font-size: 16px; min-height: 56px;"
+                    >
+                        START INVESTING WITH ₱100 BONUS
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Enhanced Login Link -->
+        <div class="text-center mt-4">
+            <a 
+                href="{% url 'login' %}" 
+                class="inline-flex items-center justify-center w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 border-2 border-white/30 hover:border-white/50 hover:bg-white/10"
+                style="text-decoration: none;"
+            >
+                <span class="flex items-center gap-3">
+                    <i class="fas fa-sign-in-alt text-lg"></i>
+                    <span>Already have an account? Sign In</span>
+                    <i class="fas fa-external-link-alt text-sm opacity-70"></i>
+                </span>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Password toggle functions
+function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const passwordIcon = document.getElementById('password-icon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        passwordIcon.classList.remove('fa-eye');
+        passwordIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        passwordIcon.classList.remove('fa-eye-slash');
+        passwordIcon.classList.add('fa-eye');
+    }
+}
+
+function toggleConfirmPassword() {
+    const confirmField = document.getElementById('confirm_password');
+    const confirmIcon = document.getElementById('confirm-password-icon');
+    
+    if (confirmField.type === 'password') {
+        confirmField.type = 'text';
+        confirmIcon.classList.remove('fa-eye');
+        confirmIcon.classList.add('fa-eye-slash');
+    } else {
+        confirmField.type = 'password';
+        confirmIcon.classList.remove('fa-eye-slash');
+        confirmIcon.classList.add('fa-eye');
+    }
+}
+
+// Form submission handling
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const phoneDigits = phone.replace(/\D/g, '');
+    
+    // Validate phone number
+    if (!phoneDigits.startsWith('9') || phoneDigits.length !== 10) {
+        e.preventDefault();
+        alert('Please enter a valid Philippine phone number (9XX XXX XXXX)');
+        return;
+    }
+    
+    // Validate password match
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        alert('Passwords do not match. Please check and try again.');
+        return;
+    }
+    
+    // Validate password strength
+    if (password.length < 8) {
+        e.preventDefault();
+        alert('Password must be at least 8 characters long.');
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    
+    // Loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Creating Account...';
+    
+    // Convert formatted phone to clean format for submission
+    document.getElementById('phone').value = phoneDigits;
+});
+
+// Phone number formatting
+document.getElementById('phone').addEventListener('input', function() {
+    let value = this.value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    
+    // Ensure it starts with 9
+    if (value.length > 0 && !value.startsWith('9')) {
+        if (value.startsWith('09')) {
+            value = value.substring(1);
+        }
+    }
+    
+    // Format with spacing: 9XX XXX XXXX
+    let formattedValue = '';
+    if (value.length > 0) {
+        formattedValue = value;
+        
+        if (value.length > 3) {
+            formattedValue = value.substring(0, 3) + ' ' + value.substring(3);
+        }
+        if (value.length > 6) {
+            formattedValue = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6);
+        }
+    }
+    
+    this.value = formattedValue;
+});
+
+// Real-time password match validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    const container = this.parentElement;
+    
+    if (confirmPassword.length > 0) {
+        if (password === confirmPassword) {
+            container.style.borderColor = '#10b981';
+        } else {
+            container.style.borderColor = '#ef4444';
+        }
+    } else {
+        container.style.borderColor = 'rgba(0,0,0,0.1)';
+    }
+});
+
+// Prevent zoom on iOS when focusing inputs
+if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    const viewport = document.querySelector('meta[name=viewport]');
+    if (viewport) {
+        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends 'myproject/dashboard_base.html' %}
+
+{% block title %}Deposit Funds InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Deposit Form -->
+            <div class="card shadow">
+                <div class="card-header bg-gradient text-white">
+                    <h4 class="mb-0"><i class="fas fa-wallet"></i> Deposit Funds</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Current Balance -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-wallet"></i> Current Balance</h6>
+                                <h4 class="text-primary mb-0">₱{{ profile.balance|floatformat:2 }}</h4>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-info-circle"></i> Deposit Limits</h6>
+                                <p class="mb-0">
+                                    <strong>Minimum:</strong> ₱300<br>
+                                    <strong>Maximum:</strong> ₱50,000 per transaction
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" id="depositForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="amount" class="form-label">Deposit Amount (₱)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₱</span>
+                                        <input type="number" class="form-control" id="amount" name="amount" 
+                                               min="300" max="50000" step="0.01" required>
+                                    </div>
+                                    <small class="text-muted">Minimum: ₱300, Maximum: ₱50,000</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="gcash_number" class="form-label">Your GCash Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
+                                        <input type="tel" class="form-control" id="gcash_number" name="gcash_number" 
+                                               placeholder="09XXXXXXXXX" pattern="[0-9]{11}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="gcash_reference" class="form-label">GCash Reference Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                <input type="text" class="form-control" id="gcash_reference" name="gcash_reference" 
+                                       placeholder="Enter GCash transaction reference" required>
+                            </div>
+                            <small class="text-muted">Enter the reference number from your GCash transaction</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="proof_of_payment" class="form-label">Upload Proof of Payment</label>
+                            <input type="file" class="form-control" id="proof_of_payment" name="proof_of_payment" 
+                                   accept="image/*" required>
+                            <small class="text-muted">Upload screenshot of your GCash payment (JPG, PNG format)</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirm_payment" required>
+                                <label class="form-check-label" for="confirm_payment">
+                                    I confirm that I have sent the payment via GCash and uploaded the correct proof of payment
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-paper-plane"></i> Submit Deposit Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Deposit Instructions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Deposit Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-mobile-alt text-primary"></i> GCash Payment Details</h6>
+                            <div class="alert alert-light border">
+                                <strong>GCash Number:</strong> 09XX-XXX-XXXX<br>
+                                <strong>Account Name:</strong> InvestPH Official<br>
+                                <strong>Account Type:</strong> Personal
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-list-ol text-success"></i> How to Deposit</h6>
+                            <ol class="list-group list-group-numbered">
+                                <li class="list-group-item">Send money to our GCash number</li>
+                                <li class="list-group-item">Take screenshot of payment</li>
+                                <li class="list-group-item">Fill out the form above</li>
+                                <li class="list-group-item">Upload proof of payment</li>
+                                <li class="list-group-item">Wait for admin approval</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock"></i> Processing Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-clock fa-2x text-info"></i>
+                            </div>
+                            <h6>Processing Time</h6>
+                            <p class="text-muted">5-15 minutes during business hours</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-shield-alt fa-2x text-success"></i>
+                            </div>
+                            <h6>Secure</h6>
+                            <p class="text-muted">All transactions are verified manually</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-bell fa-2x text-warning"></i>
+                            </div>
+                            <h6>Notifications</h6>
+                            <p class="text-muted">You'll receive updates via notifications</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Deposit History -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between">
+                    <h5><i class="fas fa-history"></i> Recent Deposits</h5>
+                    <a href="{% url 'transaction_history' %}" class="btn btn-outline-primary btn-sm">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_deposits %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Reference</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for deposit in recent_deposits %}
+                                    <tr>
+                                        <td>{{ deposit.created_at|date:"M d, Y" }}</td>
+                                        <td>₱{{ deposit.amount|floatformat:2 }}</td>
+                                        <td>{{ deposit.gcash_reference }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if deposit.status == 'completed' %}bg-success
+                                                {% elif deposit.status == 'pending' %}bg-warning
+                                                {% elif deposit.status == 'rejected' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ deposit.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No deposits yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Amount input validation
+document.getElementById('amount').addEventListener('input', function() {
+    const amount = parseFloat(this.value);
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    if (amount < 300) {
+        this.setCustomValidity('Minimum deposit amount is ₱300');
+        submitBtn.disabled = true;
+    } else if (amount > 50000) {
+        this.setCustomValidity('Maximum deposit amount is ₱50,000');
+        submitBtn.disabled = true;
+    } else {
+        this.setCustomValidity('');
+        submitBtn.disabled = false;
+    }
+});
+
+// GCash number formatting
+document.getElementById('gcash_number').addEventListener('input', function() {
+    let value = this.value.replace(/\D/g, ''); // Remove non-digits
+    if (value.length > 11) {
+        value = value.substring(0, 11);
+    }
+    this.value = value;
+});
+
+// File upload preview
+document.getElementById('proof_of_payment').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Create preview if it doesn't exist
+            let preview = document.getElementById('imagePreview');
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.id = 'imagePreview';
+                preview.className = 'img-thumbnail mt-2';
+                preview.style.maxWidth = '200px';
+                document.getElementById('proof_of_payment').parentNode.appendChild(preview);
+            }
+            preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Form submission confirmation
+document.getElementById('depositForm').addEventListener('submit', function(e) {
+    const amount = document.getElementById('amount').value;
+    const gcashNumber = document.getElementById('gcash_number').value;
+    const gcashRef = document.getElementById('gcash_reference').value;
+    
+    if (!confirm(`Confirm deposit of ₱${amount} from GCash ${gcashNumber}?`)) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

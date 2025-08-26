@@ -1,0 +1,1683 @@
+{% extends 'myproject/dashboard_base.html' %}
+
+{% block title %}My Investments - GrowFi{% endblock %}
+
+{% block content %}
+<!-- Enhanced Page Header with Modern Design -->
+<div class="investments-header">
+    <div class="header-background">
+        <div class="bg-wave wave-1"></div>
+        <div class="bg-wave wave-2"></div>
+        <div class="bg-wave wave-3"></div>
+    </div>
+    <div class="header-content">
+        <div class="header-main">
+            <div class="header-icon">
+                <div class="icon-container">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="icon-glow"></div>
+                </div>
+            </div>
+            <div class="header-text">
+                <h1 class="header-title">
+                    My Investments
+                    <span class="title-accent"></span>
+                </h1>
+                <p class="header-subtitle">
+                    Track your portfolio performance and growth
+                </p>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="header-quick-stats">
+            <div class="quick-stat">
+                <div class="stat-icon">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value">{{ investments|length }}</span>
+                    <span class="stat-label">Active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if investments %}
+    <!-- Portfolio Overview Cards -->
+    <div class="portfolio-overview">
+        <div class="overview-grid">
+            <!-- Total Invested -->
+            <div class="overview-card primary">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="card-badge">
+                        <i class="fas fa-peso-sign"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">₱{{ total_invested|floatformat:0 }}</div>
+                    <div class="card-label">Total Invested</div>
+                    <div class="card-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+15%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Investments -->
+            <div class="overview-card success">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-badge">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">{{ investments|length }}</div>
+                    <div class="card-label">Active Plans</div>
+                    <div class="card-trend positive">
+                        <i class="fas fa-trending-up"></i>
+                        <span>Growing</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Average Return -->
+            <div class="overview-card warning">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="card-badge">
+                        <i class="fas fa-percent"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">4.2%</div>
+                    <div class="card-label">Avg Return</div>
+                    <div class="card-trend positive">
+                        <i class="fas fa-star"></i>
+                        <span>Daily</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Portfolio Value -->
+            <div class="overview-card info">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="card-badge">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">₱{{ total_invested|floatformat:0 }}</div>
+                    <div class="card-label">Portfolio Value</div>
+                    <div class="card-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Growing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Cards Container -->
+    <div class="investments-container">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-briefcase"></i>
+                Your Active Investments
+            </h2>
+            <div class="section-actions">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-list"></i>
+                    All
+                </button>
+                <button class="filter-btn" data-filter="active">
+                    <i class="fas fa-play-circle"></i>
+                    Active
+                </button>
+            </div>
+        </div>
+
+        <div class="investments-grid">
+            {% for investment in investments %}
+            <div class="investment-card" data-status="active">
+                <!-- Card Header -->
+                <div class="investment-header">
+                    <div class="investment-brand">
+                        <div class="brand-logo">
+                            <img src="{% load static %}{% static 'images/Growfi1.jpg' %}" alt="GrowFi" onerror="this.style.display='none'">
+                            <div class="logo-fallback">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                        </div>
+                        <div class="brand-info">
+                            <h3 class="brand-name">GROWFI</h3>
+                            <span class="investment-id">#{{ investment.id|stringformat:"04d" }}</span>
+                        </div>
+                    </div>
+                    <div class="investment-status">
+                        <div class="status-badge active">
+                            <i class="fas fa-circle"></i>
+                            <span>ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Stats -->
+                <div class="investment-stats">
+                    <div class="stat-row primary">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Investment Amount</span>
+                            <span class="stat-value primary">₱{{ investment.amount|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-row success">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Earned</span>
+                            <span class="stat-value success">₱{{ investment.total_earned|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-row warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Daily Return</span>
+                            <span class="stat-value warning">₱{{ investment.daily_return|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="investment-progress">
+                    <div class="progress-header">
+                        <span class="progress-title">
+                            <i class="fas fa-clock"></i>
+                            Progress
+                        </span>
+                        <span class="progress-percentage">
+                            {% widthratio investment.days_completed investment.plan.duration_days 100 %}%
+                        </span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" 
+                             style="width: {% widthratio investment.days_completed investment.plan.duration_days 100 %}%"
+                             data-progress="{% widthratio investment.days_completed investment.plan.duration_days 100 %}">
+                            <div class="progress-glow"></div>
+                        </div>
+                    </div>
+                    <div class="progress-details">
+                        <span class="days-info">
+                            <i class="fas fa-calendar-check"></i>
+                            {{ investment.days_completed }} / {{ investment.plan.duration_days }} days
+                        </span>
+                        <span class="remaining-info">
+                            <i class="fas fa-hourglass-half"></i>
+                            Remaining days
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card Actions -->
+                <div class="investment-actions">
+                    <button class="action-btn primary">
+                        <i class="fas fa-eye"></i>
+                        <span>View Details</span>
+                    </button>
+                    <button class="action-btn secondary">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <!-- Enhanced Empty State -->
+    <div class="empty-state-container">
+        <div class="empty-state-content">
+            <!-- Animated Icon -->
+            <div class="empty-icon-animation">
+                <div class="icon-circle">
+                    <div class="icon-main">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="icon-orbit">
+                        <div class="orbit-item orbit-1">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="orbit-item orbit-2">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="orbit-item orbit-3">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="empty-text">
+                <h2 class="empty-title">
+                    Start Your <span class="gradient-text">Investment Journey</span>
+                </h2>
+                <p class="empty-description">
+                    Join thousands of smart investors who are already building wealth with GrowFi. 
+                    Start with any amount and watch your money grow with guaranteed daily returns.
+                </p>
+            </div>
+
+            <!-- Feature Highlights -->
+            <div class="feature-highlights">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h5>100% Secure</h5>
+                        <p>Bank-grade security</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h5>Daily Returns</h5>
+                        <p>Consistent profits</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h5>Mobile First</h5>
+                        <p>Invest anywhere</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h5>24/7 Support</h5>
+                        <p>Expert assistance</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Call to Action -->
+            <div class="empty-cta">
+                <a href="{% url 'investment_plans' %}" class="cta-button">
+                    <div class="button-content">
+                        <i class="fas fa-rocket"></i>
+                        <span>Start Investing Today</span>
+                    </div>
+                    <div class="button-glow"></div>
+                </a>
+                
+                <div class="cta-info">
+                    <div class="info-item">
+                        <i class="fas fa-users"></i>
+                        <span>10,000+ Investors</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-star"></i>
+                        <span>4.9/5 Rating</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+/* Modern Investment Page Styling */
+:root {
+    --primary-color: #8B5CF6;
+    --primary-light: #A78BFA;
+    --primary-dark: #7C3AED;
+    --success-color: #10B981;
+    --success-light: #34D399;
+    --warning-color: #F59E0B;
+    --warning-light: #FBBF24;
+    --info-color: #06B6D4;
+    --info-light: #22D3EE;
+    --danger-color: #EF4444;
+    
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-300: #CBD5E1;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1E293B;
+    --gray-900: #0F172A;
+    
+    --white: #FFFFFF;
+    --black: #000000;
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-2xl: 2rem;
+    
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--gray-800);
+    line-height: 1.6;
+}
+
+/* Header Styling */
+.investments-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: var(--white);
+    padding: 2rem 1.5rem;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.header-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.1;
+}
+
+.bg-wave {
+    position: absolute;
+    background: var(--white);
+    border-radius: 50%;
+    filter: blur(40px);
+    animation: float 8s ease-in-out infinite;
+}
+
+.wave-1 {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    right: -50px;
+    animation-delay: 0s;
+}
+
+.wave-2 {
+    width: 150px;
+    height: 150px;
+    bottom: -25px;
+    left: -25px;
+    animation-delay: 2s;
+}
+
+.wave-3 {
+    width: 100px;
+    height: 100px;
+    top: 30%;
+    left: 30%;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-20px) scale(1.05); }
+}
+
+.header-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-icon {
+    position: relative;
+}
+
+.icon-container {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.icon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+.header-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    position: relative;
+}
+
+.title-accent {
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--warning-color), var(--success-color));
+    border-radius: 2px;
+    animation: expandWidth 1s ease-out;
+}
+
+@keyframes expandWidth {
+    0% { width: 0; }
+    100% { width: 60px; }
+}
+
+.header-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+.header-quick-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.quick-stat {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 100px;
+}
+
+.quick-stat .stat-icon {
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    display: block;
+}
+
+/* Portfolio Overview */
+.portfolio-overview {
+    margin-bottom: 2rem;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.overview-card {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.overview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.overview-card.primary::before { background: linear-gradient(90deg, var(--primary-color), var(--primary-light)); }
+.overview-card.success::before { background: linear-gradient(90deg, var(--success-color), var(--success-light)); }
+.overview-card.warning::before { background: linear-gradient(90deg, var(--warning-color), var(--warning-light)); }
+.overview-card.info::before { background: linear-gradient(90deg, var(--info-color), var(--info-light)); }
+
+.overview-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.card-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.overview-card.primary .card-icon { background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); }
+.overview-card.success .card-icon { background: linear-gradient(135deg, var(--success-color), #059669); }
+.overview-card.warning .card-icon { background: linear-gradient(135deg, var(--warning-color), #D97706); }
+.overview-card.info .card-icon { background: linear-gradient(135deg, var(--info-color), #0891B2); }
+
+.card-badge {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.card-content {
+    text-align: left;
+}
+
+.card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--gray-800);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.card-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.card-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.card-trend.positive {
+    color: var(--success-color);
+}
+
+.card-trend.negative {
+    color: var(--danger-color);
+}
+
+/* Investments Container */
+.investments-container {
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--gray-300);
+    background: var(--white);
+    color: var(--gray-600);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+/* Investment Cards */
+.investments-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.investment-card {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: var(--transition);
+    border: 1px solid var(--gray-200);
+}
+
+.investment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.investment-header {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.investment-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.brand-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+}
+
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logo-fallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.2rem;
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.brand-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--gray-800);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.investment-id {
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    background: var(--gray-200);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.investment-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+    background: var(--success-color);
+    color: var(--white);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.status-badge i {
+    animation: pulse 2s infinite;
+}
+
+/* Investment Stats */
+.investment-stats {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.stat-row {
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.stat-row:hover {
+    background: var(--gray-100);
+    transform: translateX(2px);
+}
+
+.stat-row .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-row.primary .stat-icon { background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); }
+.stat-row.success .stat-icon { background: linear-gradient(135deg, var(--success-color), #059669); }
+.stat-row.warning .stat-icon { background: linear-gradient(135deg, var(--warning-color), #D97706); }
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.stat-content .stat-label {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    font-weight: 600;
+}
+
+.stat-content .stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.stat-value.primary { color: var(--primary-color); }
+.stat-value.success { color: var(--success-color); }
+.stat-value.warning { color: var(--warning-color); }
+
+/* Progress Section */
+.investment-progress {
+    padding: 1.5rem;
+    background: var(--gray-50);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.progress-title {
+    font-weight: 700;
+    color: var(--gray-800);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-percentage {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.progress-bar-container {
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    border-radius: 4px;
+    transition: width 1s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    font-weight: 600;
+}
+
+.days-info,
+.remaining-info {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Investment Actions */
+.investment-actions {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+}
+
+.action-btn.primary {
+    background: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.action-btn.primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+.action-btn.secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.action-btn.secondary:hover {
+    background: var(--gray-200);
+    transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem;
+}
+
+.empty-state-content {
+    text-align: center;
+    max-width: 500px;
+}
+
+.empty-icon-animation {
+    margin-bottom: 2rem;
+}
+
+.icon-circle {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.icon-main {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--white);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: var(--shadow-lg);
+    animation: pulse 3s infinite;
+}
+
+.icon-orbit {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border: 2px dashed var(--gray-300);
+    border-radius: 50%;
+    animation: rotate 20s linear infinite;
+}
+
+.orbit-item {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    box-shadow: var(--shadow-md);
+    animation: counterRotate 20s linear infinite;
+}
+
+.orbit-1 {
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--success-color);
+}
+
+.orbit-2 {
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--warning-color);
+}
+
+.orbit-3 {
+    top: 50%;
+    right: -12px;
+    transform: translateY(-50%);
+    color: var(--info-color);
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes counterRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+.empty-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.empty-description {
+    color: var(--gray-600);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.feature-highlights {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.feature-item {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    transition: var(--transition);
+}
+
+.feature-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.feature-text h5 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.25rem;
+}
+
+.feature-text p {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.empty-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.cta-button {
+    position: relative;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: var(--white);
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: var(--transition);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+    overflow: hidden;
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(139, 92, 246, 0.4);
+    color: var(--white);
+}
+
+.button-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 2;
+}
+
+.button-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: buttonShine 3s infinite;
+}
+
+@keyframes buttonShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.cta-info {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    font-weight: 600;
+}
+
+.info-item i {
+    color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+    .overview-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .header-content {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .investments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .investments-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+    }
+    
+    .overview-grid {
+        gap: 0.75rem;
+    }
+    
+    .overview-card {
+        padding: 1rem;
+    }
+    
+    .card-value {
+        font-size: 1.25rem;
+    }
+    
+    .investment-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .investment-stats {
+        padding: 1rem;
+    }
+    
+    .investment-progress {
+        padding: 1rem;
+    }
+    
+    .investment-actions {
+        padding: 1rem;
+        flex-direction: column;
+    }
+    
+    .feature-highlights {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .cta-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .overview-card {
+        padding: 0.75rem;
+    }
+    
+    .card-value {
+        font-size: 1.1rem;
+    }
+    
+    .investment-header {
+        padding: 0.75rem;
+    }
+    
+    .investment-stats {
+        padding: 0.75rem;
+    }
+    
+    .investment-progress {
+        padding: 0.75rem;
+    }
+    
+    .investment-actions {
+        padding: 0.75rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize page animations
+    initializeAnimations();
+    
+    // Initialize filter functionality
+    initializeFilters();
+    
+    // Initialize progress bars
+    initializeProgressBars();
+    
+    // Initialize touch interactions for mobile
+    initializeTouchInteractions();
+});
+
+function initializeAnimations() {
+    // Staggered animation for overview cards
+    const overviewCards = document.querySelectorAll('.overview-card');
+    overviewCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Investment cards animation
+    const investmentCards = document.querySelectorAll('.investment-card');
+    investmentCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(-20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateX(0)';
+        }, 600 + (index * 150));
+    });
+    
+    // Header animation
+    const header = document.querySelector('.investments-header');
+    if (header) {
+        header.style.opacity = '0';
+        header.style.transform = 'translateY(-30px)';
+        
+        setTimeout(() => {
+            header.style.transition = 'all 1s cubic-bezier(0.4, 0, 0.2, 1)';
+            header.style.opacity = '1';
+            header.style.transform = 'translateY(0)';
+        }, 200);
+    }
+}
+
+function initializeFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const investmentCards = document.querySelectorAll('.investment-card');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter cards
+            investmentCards.forEach(card => {
+                const status = card.dataset.status;
+                
+                if (filter === 'all' || status === filter) {
+                    card.style.display = 'block';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    }, 50);
+                } else {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+    });
+}
+
+function initializeProgressBars() {
+    const progressBars = document.querySelectorAll('.progress-bar');
+    
+    // Animate progress bars on load
+    progressBars.forEach(bar => {
+        const finalWidth = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.transition = 'width 2s cubic-bezier(0.4, 0, 0.2, 1)';
+            bar.style.width = finalWidth;
+        }, 1000);
+    });
+    
+    // Observer for progress bars that come into view
+    const progressObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const bar = entry.target;
+                const finalWidth = bar.dataset.progress ? `${bar.dataset.progress}%` : bar.style.width;
+                
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                    bar.style.width = finalWidth;
+                }, 200);
+                
+                progressObserver.unobserve(bar);
+            }
+        });
+    }, { threshold: 0.3 });
+    
+    progressBars.forEach(bar => {
+        progressObserver.observe(bar);
+    });
+}
+
+function initializeTouchInteractions() {
+    // Add touch feedback for cards
+    const cards = document.querySelectorAll('.overview-card, .investment-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+            this.style.transition = 'transform 0.1s ease';
+        });
+        
+        card.addEventListener('touchend', function() {
+            this.style.transform = '';
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        });
+        
+        card.addEventListener('touchcancel', function() {
+            this.style.transform = '';
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        });
+    });
+    
+    // Add haptic feedback for buttons (if supported)
+    const actionButtons = document.querySelectorAll('.action-btn, .filter-btn');
+    
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Haptic feedback for supported devices
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+            
+            // Visual feedback
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 100);
+        });
+    });
+}
+
+// Counter animation for stats
+function animateCounters() {
+    const counters = document.querySelectorAll('.card-value');
+    
+    counters.forEach(counter => {
+        const target = parseFloat(counter.textContent.replace(/[^0-9.-]/g, ''));
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            
+            // Format number with proper currency symbol
+            const formatted = current.toLocaleString('en-PH', {
+                style: 'currency',
+                currency: 'PHP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+            
+            counter.textContent = formatted;
+        }, 16);
+    });
+}
+
+// Initialize counters when cards are visible
+const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            setTimeout(animateCounters, 500);
+            statsObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.5 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const overviewSection = document.querySelector('.portfolio-overview');
+    if (overviewSection) {
+        statsObserver.observe(overviewSection);
+    }
+});
+
+// Handle action button clicks
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.action-btn')) {
+        e.preventDefault();
+        
+        const button = e.target.closest('.action-btn');
+        const action = button.textContent.trim();
+        
+        if (action.includes('View Details')) {
+            // Show investment details modal or navigate to details page
+            console.log('View Details clicked');
+            // You can add modal functionality here
+        } else if (action.includes('Analytics')) {
+            // Show analytics modal or navigate to analytics page
+            console.log('Analytics clicked');
+            // You can add analytics functionality here
+        }
+    }
+});
+
+// Responsive adjustments
+function handleResize() {
+    const isMobile = window.innerWidth <= 768;
+    const investmentCards = document.querySelectorAll('.investment-card');
+    
+    investmentCards.forEach(card => {
+        if (isMobile) {
+            card.style.margin = '0 0 1rem 0';
+        } else {
+            card.style.margin = '';
+        }
+    });
+}
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', function() {
+    setTimeout(handleResize, 100);
+});
+
+// Performance optimization - lazy load images
+if ('IntersectionObserver' in window) {
+    const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src || img.src;
+                img.classList.remove('lazy');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    document.querySelectorAll('img[data-src]').forEach(img => {
+        imageObserver.observe(img);
+    });
+}
+
+// Add smooth scrolling
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,603 @@
+
+{% extends 'myproject/base.html' %}
+
+{% block title %}Referral Link InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-link"></i> Referral Links & Sharing
+            </h1>
+            <p class="text-muted">Share your referral link and start earning commissions</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'referral_dashboard' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{% url 'referral_history' %}" class="btn btn-outline-info">
+                <i class="fas fa-history"></i> History
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Referral Link -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-star"></i> Your Main Referral Link</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-lg" 
+                                       id="mainReferralLink" 
+                                       value="{{ referral_link }}" 
+                                       readonly>
+                                <button class="btn btn-success" onclick="copyToClipboard('mainReferralLink')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <small class="text-muted">Share this link to earn commissions from referrals</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div id="mainQRCode" class="border rounded p-2"></div>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="downloadQR('mainQRCode', 'referral-qr.png')">
+                                <i class="fas fa-download"></i> Download QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Share Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-share-alt"></i> Quick Share Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-2 col-6 mb-3">
+                            <button class="btn btn-primary w-100" onclick="shareOnFacebook()">
+                                <i class="fab fa-facebook-f fa-2x"></i>
+                                <div class="small mt-1">Facebook</div>
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <button class="btn btn-info w-100" onclick="shareOnTwitter()">
+                                <i class="fab fa-twitter fa-2x"></i>
+                                <div class="small mt-1">Twitter</div>
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <button class="btn btn-success w-100" onclick="shareOnWhatsApp()">
+                                <i class="fab fa-whatsapp fa-2x"></i>
+                                <div class="small mt-1">WhatsApp</div>
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <button class="btn btn-dark w-100" onclick="shareOnTikTok()">
+                                <i class="fab fa-tiktok fa-2x"></i>
+                                <div class="small mt-1">TikTok</div>
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <button class="btn btn-warning w-100" onclick="shareViaEmail()">
+                                <i class="fas fa-envelope fa-2x"></i>
+                                <div class="small mt-1">Email</div>
+                            </button>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <button class="btn btn-secondary w-100" onclick="shareViaSMS()">
+                                <i class="fas fa-sms fa-2x"></i>
+                                <div class="small mt-1">SMS</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Link Generator -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-tools"></i> Custom Link Generator</h5>
+                </div>
+                <div class="card-body">
+                    <form id="customLinkForm">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Campaign Name</label>
+                                <input type="text" class="form-control" name="campaign" placeholder="e.g., facebook-post">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Source</label>
+                                <select class="form-select" name="source">
+                                    <option value="facebook">Facebook</option>
+                                    <option value="instagram">Instagram</option>
+                                    <option value="twitter">Twitter</option>
+                                    <option value="whatsapp">WhatsApp</option>
+                                    <option value="email">Email</option>
+                                    <option value="sms">SMS</option>
+                                    <option value="youtube">YouTube</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Medium</label>
+                                <select class="form-select" name="medium">
+                                    <option value="social">Social Media</option>
+                                    <option value="email">Email</option>
+                                    <option value="paid">Paid Ads</option>
+                                    <option value="organic">Organic</option>
+                                    <option value="referral">Referral</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Generated Link</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="customGeneratedLink" readonly>
+                                    <button type="button" class="btn btn-success" onclick="copyToClipboard('customGeneratedLink')">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="button" class="btn btn-primary w-100" onclick="generateCustomLink()">
+                                        <i class="fas fa-magic"></i> Generate Link
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics & Performance -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Link Performance Analytics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-center">
+                            <div class="h3 text-primary">{{ analytics.total_clicks|default:"0" }}</div>
+                            <div class="text-muted">Total Clicks</div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h3 text-success">{{ analytics.conversions|default:"0" }}</div>
+                            <div class="text-muted">Conversions</div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h3 text-info">{{ analytics.conversion_rate|default:"0" }}%</div>
+                            <div class="text-muted">Conversion Rate</div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="h3 text-warning">₱{{ analytics.total_commissions|default:"0" }}</div>
+                            <div class="text-muted">Total Earnings</div>
+                        </div>
+                    </div>
+                    
+                    <canvas id="clicksChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-trophy"></i> Top Sources</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for source in top_sources %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                            <div>
+                                <i class="fab fa-{{ source.icon }}"></i> {{ source.name }}
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">{{ source.clicks }}</div>
+                                <small class="text-muted">{{ source.conversions }} conv.</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                            <div>No data yet</div>
+                            <small>Start sharing to see analytics</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sharing Templates -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-file-alt"></i> Ready-to-Use Sharing Templates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>Social Media Post</h6>
+                                <textarea class="form-control mb-2" rows="4" id="socialTemplate">🚀 Start your investment journey with InvestPH! 
+
+Earn daily returns from as low as ₱300 investment.
+✅ Daily payouts
+✅ Secure platform
+✅ Easy withdrawal
+
+Join through my link: {{ referral_link }}
+
+#InvestPH #Investment #Philippines #PassiveIncome</textarea>
+                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('socialTemplate')">
+                                    <i class="fas fa-copy"></i> Copy Template
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>WhatsApp Message</h6>
+                                <textarea class="form-control mb-2" rows="4" id="whatsappTemplate">Hi! 👋
+
+I've been using InvestPH and earning daily returns. You can start with just ₱300!
+
+✅ Daily payouts directly to your account
+✅ Transparent and secure platform
+✅ Multiple investment plans available
+
+Use my referral link to get started: {{ referral_link }}
+
+Let me know if you have questions! 😊</textarea>
+                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('whatsappTemplate')">
+                                    <i class="fas fa-copy"></i> Copy Template
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>Email Template</h6>
+                                <textarea class="form-control mb-2" rows="5" id="emailTemplate">Subject: Earn Daily Returns with InvestPH
+
+Hi!
+
+I wanted to share an investment opportunity that's been working well for me. InvestPH offers daily returns on investments starting from just ₱300.
+
+What I like about it:
+- Daily payouts
+- Multiple investment plans
+- Easy withdrawal process
+- Secure platform
+
+If you're interested in growing your money, you can check it out using my referral link: {{ referral_link }}
+
+Feel free to reach out if you have any questions!
+
+Best regards</textarea>
+                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('emailTemplate')">
+                                    <i class="fas fa-copy"></i> Copy Template
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>YouTube Description</h6>
+                                <textarea class="form-control mb-2" rows="5" id="youtubeTemplate">🔥 INVESTMENT OPPORTUNITY: InvestPH
+
+In this video, I'm sharing my experience with InvestPH, a platform where you can earn daily returns starting with just ₱300.
+
+💰 Why I recommend InvestPH:
+✅ Daily payouts
+✅ Multiple investment plans (₱300-₱3000)
+✅ Secure and transparent
+✅ Easy withdrawal process
+
+🎯 START INVESTING: {{ referral_link }}
+
+⏰ TIMESTAMPS:
+00:00 Introduction
+02:30 Platform Overview
+05:15 Investment Plans
+08:00 Daily Payouts
+10:30 My Results
+
+#InvestPH #Investment #DailyReturns #Philippines</textarea>
+                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('youtubeTemplate')">
+                                    <i class="fas fa-copy"></i> Copy Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-activity"></i> Recent Link Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Source</th>
+                                    <th>Clicks</th>
+                                    <th>Registrations</th>
+                                    <th>Investments</th>
+                                    <th>Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activity %}
+                                <tr>
+                                    <td>{{ activity.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <i class="fab fa-{{ activity.source_icon }}"></i>
+                                        {{ activity.source }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ activity.clicks }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ activity.registrations }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">{{ activity.investments }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">₱{{ activity.commission }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
+                                        <div class="text-muted">No activity yet</div>
+                                        <small>Start sharing your links to see performance data</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+// Generate QR Code for main referral link
+document.addEventListener('DOMContentLoaded', function() {
+    generateQRCode('{{ referral_link }}', 'mainQRCode');
+    loadClicksChart();
+});
+
+function generateQRCode(text, containerId) {
+    const qr = qrcode(0, 'L');
+    qr.addData(text);
+    qr.make();
+    
+    const qrElement = document.getElementById(containerId);
+    qrElement.innerHTML = qr.createImgTag(4, 4);
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        showToast('Copied to clipboard!', 'success');
+    } catch (err) {
+        navigator.clipboard.writeText(element.value).then(() => {
+            showToast('Copied to clipboard!', 'success');
+        }).catch(() => {
+            showToast('Failed to copy', 'error');
+        });
+    }
+}
+
+function shareOnFacebook() {
+    const url = encodeURIComponent('{{ referral_link }}');
+    const text = encodeURIComponent('Join InvestPH and start earning daily returns! Start with just ₱300 investment.');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank', 'width=600,height=400');
+}
+
+function shareOnTwitter() {
+    const url = encodeURIComponent('{{ referral_link }}');
+    const text = encodeURIComponent('🚀 Start earning daily returns with InvestPH! Join through my link and grow your money. #InvestPH #Investment');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
+}
+
+function shareOnWhatsApp() {
+    const message = encodeURIComponent(`Hi! 👋\n\nI've been using InvestPH and earning daily returns. You can start with just ₱300!\n\n✅ Daily payouts\n✅ Secure platform\n✅ Multiple investment plans\n\nJoin through my link: {{ referral_link }}\n\nLet me know if you have questions! 😊`);
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+}
+
+function shareOnTikTok() {
+    const url = encodeURIComponent('{{ referral_link }}');
+    showToast('Copy your referral link and create a TikTok video about InvestPH!', 'info');
+    copyToClipboard('mainReferralLink');
+}
+
+function shareViaEmail() {
+    const subject = encodeURIComponent('Earn Daily Returns with InvestPH');
+    const body = encodeURIComponent(`Hi!\n\nI wanted to share an investment opportunity that's been working well for me. InvestPH offers daily returns on investments starting from just ₱300.\n\nWhat I like about it:\n- Daily payouts\n- Multiple investment plans\n- Easy withdrawal process\n- Secure platform\n\nIf you're interested, you can check it out using my referral link: {{ referral_link }}\n\nFeel free to reach out if you have any questions!\n\nBest regards`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+}
+
+function shareViaSMS() {
+    const message = encodeURIComponent(`InvestPH: Earn daily returns starting with ₱300! Join through my link: {{ referral_link }}`);
+    window.open(`sms:?body=${message}`);
+}
+
+function generateCustomLink() {
+    const form = document.getElementById('customLinkForm');
+    const formData = new FormData(form);
+    const baseUrl = '{{ referral_link }}';
+    
+    const campaign = formData.get('campaign') || 'custom';
+    const source = formData.get('source') || 'other';
+    const medium = formData.get('medium') || 'referral';
+    
+    const customUrl = `${baseUrl}&utm_campaign=${campaign}&utm_source=${source}&utm_medium=${medium}`;
+    document.getElementById('customGeneratedLink').value = customUrl;
+    
+    showToast('Custom link generated!', 'success');
+}
+
+function downloadQR(containerId, filename) {
+    const qrImg = document.querySelector(`#${containerId} img`);
+    if (qrImg) {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = qrImg.src;
+        link.click();
+    }
+}
+
+function loadClicksChart() {
+    const ctx = document.getElementById('clicksChart').getContext('2d');
+    
+    fetch('/api/referral-analytics/')
+        .then(response => response.json())
+        .then(data => {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{
+                        label: 'Clicks',
+                        data: data.clicks,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Conversions',
+                        data: data.conversions,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading analytics:', error));
+}
+
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastElement.role = 'alert';
+    toastElement.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toastElement);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1080';
+    document.body.appendChild(container);
+    return container;
+}
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.btn i.fab, .btn i.fas {
+    margin-bottom: 0.25rem;
+}
+
+.list-group-item {
+    border-left: none !important;
+    border-right: none !important;
+}
+
+.form-control[readonly] {
+    background-color: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .btn .small {
+        font-size: 0.7rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+</style>
+{% endblock %}

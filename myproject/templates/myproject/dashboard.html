@@ -1,0 +1,2389 @@
+{% extends 'myproject/dashboard_base.html' %}
+
+{% block title %}Dashboard GrowFi{% endblock %}
+
+{% block content %}
+<!-- Enhanced Live Transaction Banner -->
+<div class="transaction-banner-modern">
+    <div class="transaction-icon-enhanced">     
+        <i class="fas fa-exchange-alt"></i>
+    </div>  
+    <div class="transaction-content-enhanced">
+        <span class="live-indicator">
+            <span class="live-dot"></span>
+            <span class="live-text">LIVE</span>
+        </span>
+        <div class="tx-line-wrapper-enhanced">
+            <div id="txLine" class="tx-line-enhanced">
+                Loading recent transactions...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Welcome Section with Gradient Animation -->    
+<div class="welcome-section-enhanced">
+    <div class="welcome-background-pattern"></div>
+    <div class="welcome-content-enhanced">
+        <div class="welcome-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="welcome-text">
+            <h1 class="welcome-title-enhanced">
+                Welcome back, 
+                <span class="user-name-enhanced">{{ user.first_name|default:"User" }}!</span>
+            </h1>
+            <p class="welcome-subtitle-enhanced">Here's what's happening with your investments today</p>
+            <div class="welcome-badges">
+                <span class="badge-status active">Active Investor</span>
+                <span class="badge-streak">5 Day Streak</span>
+            </div>
+        </div>
+    </div>
+    <div class="welcome-actions">
+        <a href="{% url 'investment_plans' %}" class="btn-quick-invest">
+            <i class="fas fa-bolt"></i>
+            Quick Invest
+        </a>
+        <a href="{% url 'my_investments' %}" class="btn-portfolio">
+            <i class="fas fa-chart-pie"></i>
+            Portfolio
+        </a>
+    </div>
+</div>
+
+<!-- Enhanced Stats Grid with Mobile-First Design -->
+<div class="stats-grid-mobile">
+    <div class="stats-row-top">
+        <div class="stat-card-modern live-stat">
+            <div class="stat-icon-wrapper">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ active_investments|length }}</div>
+                <div class="stat-label">ACTIVE<br>INVESTMENTS</div>
+            </div>
+        </div>
+        
+        <div class="stat-card-modern balance-stat">
+            <div class="stat-icon-wrapper">
+                <div class="stat-icon">
+                    <i class="fas fa-peso-sign"></i>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">₱{{ user.userprofile.total_invested|default:"0" }}</div>
+                <div class="stat-percentage">+15%</div>
+                <div class="stat-label">TOTAL<br>INVESTED</div>
+            </div>
+        </div>
+        
+        <div class="stat-card-modern return-stat">
+            <div class="stat-icon-wrapper">
+                <div class="stat-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ user.userprofile.roi_percentage|default:"15" }}%</div>
+                <div class="stat-label">AVERAGE<br>RETURN</div>
+            </div>
+        </div>
+        
+        <div class="stat-card-modern duration-stat">
+            <div class="stat-icon-wrapper">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">45</div>
+                <div class="stat-label">AVG<br>DURATION</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Investment Card -->
+{% if active_investments %}
+    {% for investment in active_investments|slice:":1" %}
+    <div class="investment-card-main">
+        <div class="investment-header">
+            <div class="investment-title">
+                <span class="plan-name">{{ investment.plan.name }}</span>
+                <span class="plan-id">#INV-{{ investment.id|stringformat:"04d" }}</span>
+            </div>
+            <div class="daily-return-badge">
+                <span class="return-label">DAILY RETURN</span>
+                <span class="return-amount">₱{{ investment.daily_return|floatformat:2 }}</span>
+            </div>
+            <button class="action-button active-btn">
+                <i class="fas fa-play"></i>
+                ACTIVE
+            </button>
+        </div>
+        
+        <div class="investment-details">
+            <div class="detail-item">
+                <div class="detail-icon investment-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="detail-content">
+                    <div class="detail-label">Investment</div>
+                    <div class="detail-value">₱{{ investment.amount|floatformat:2 }}</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon earnings-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="detail-content">
+                    <div class="detail-label">Total Earned</div>
+                    <div class="detail-value">₱{{ investment.total_earned|default:"0.00" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-label">Progress</span>
+                <span class="progress-percentage">{% widthratio investment.days_completed investment.plan.duration_days 100 %}%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-modern">
+                    <div class="progress-fill-modern" style="width: {% widthratio investment.days_completed investment.plan.duration_days 100 %}%"></div>
+                </div>
+            </div>
+            <div class="progress-timeline">
+                <span class="timeline-current">{{ investment.days_completed }}</span>
+                <span class="timeline-separator">/</span>
+                <span class="timeline-total">{{ investment.plan.duration_days }} days</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Enhanced Content Grid -->
+<div class="content-grid-enhanced">
+    <!-- Enhanced Active Investments -->
+    <div class="content-card-enhanced investments-card">
+        <div class="card-header-enhanced">
+            <div class="card-title-group">
+                <div class="card-icon-enhanced">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div>
+                    <h5 class="card-title-enhanced">Active Investments</h5>
+                    <p class="card-subtitle-enhanced">{{ active_investments|length }} active plans</p>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn-card-action">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <a href="{% url 'my_investments' %}" class="btn-outline-enhanced">View All</a>
+            </div>
+        </div>
+        <div class="card-body-enhanced">
+            {% if active_investments %}
+                <div class="activity-list-enhanced">
+                    {% for investment in active_investments|slice:":3" %}
+                    <div class="activity-item-enhanced investment-item">
+                        <div class="activity-icon-enhanced investment-icon">
+                            <i class="fas fa-chart-line"></i>
+                            <div class="icon-pulse"></div>
+                        </div>
+                        <div class="activity-content-enhanced">
+                            <div class="activity-header">
+                                <div class="activity-title-enhanced">{{ investment.plan.name }}</div>
+                                <div class="activity-amount-enhanced">
+                                    <span class="amount-main currency-format">{{ investment.amount|floatformat:0 }}</span>
+                                    <small class="amount-sub">+₱{{ investment.daily_return|floatformat:2 }}/day</small>
+                                </div>
+                            </div>
+                            <div class="activity-progress">
+                                <div class="progress-container-enhanced">
+                                    <div class="progress-bar-enhanced">
+                                        <div class="progress-fill-enhanced" 
+                                             style="width: {% widthratio investment.days_completed investment.plan.duration_days 100 %}%"
+                                             data-progress="{% widthratio investment.days_completed investment.plan.duration_days 100 %}">
+                                        </div>
+                                    </div>
+                                    <div class="progress-info">
+                                        <span class="progress-text-enhanced">{{ investment.days_completed }}/{{ investment.plan.duration_days }} days</span>
+                                        <span class="progress-percentage">{% widthratio investment.days_completed investment.plan.duration_days 100 %}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-status">
+                            <span class="status-badge active">Active</span>
+                        </div>
+                    </div>  
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-enhanced">
+                    <div class="empty-icon-enhanced">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h5 class="empty-title">No Active Investments</h5>
+                    <p class="empty-subtitle">Start investing today to grow your wealth</p>
+                    <a href="{% url 'investment_plans' %}" class="btn-primary-enhanced">
+                        <i class="fas fa-plus"></i>
+                        Start Investing
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Enhanced Recent Activity -->
+    <div class="content-card-enhanced activity-card">
+        <div class="card-header-enhanced">
+            <div class="card-title-group">
+                <div class="card-icon-enhanced">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div>
+                    <h5 class="card-title-enhanced">Recent Activity</h5>
+                    <p class="card-subtitle-enhanced">Last 7 days</p>
+                </div>
+            </div>
+            <div class="card-actions">
+                <div class="activity-filter">
+                    <select class="filter-select">
+                        <option>All Types</option>
+                        <option>Deposits</option>
+                        <option>Withdrawals</option>
+                        <option>Investments</option>
+                    </select>
+                </div>
+                <a href="{% url 'transaction_history' %}" class="btn-outline-enhanced">View All</a>
+            </div>
+        </div>
+        <div class="card-body-enhanced">
+            {% if recent_transactions %}
+                <div class="activity-list-enhanced">
+                    {% for transaction in recent_transactions|slice:":4" %}
+                    <div class="activity-item-enhanced transaction-item">
+                        <div class="activity-icon-enhanced {{ transaction.transaction_type }}-icon">
+                            {% if transaction.transaction_type == 'deposit' %}
+                                <i class="fas fa-plus"></i>
+                            {% elif transaction.transaction_type == 'withdrawal' %}
+                                <i class="fas fa-minus"></i>
+                            {% elif transaction.transaction_type == 'investment' %}
+                                <i class="fas fa-chart-line"></i>
+                            {% elif transaction.transaction_type == 'daily_payout' %}
+                                <i class="fas fa-money-bill-wave"></i>
+                            {% endif %}
+                            <div class="icon-ripple"></div>
+                        </div>
+                        <div class="activity-content-enhanced">
+                            <div class="activity-header">
+                                <div class="activity-title-enhanced">{{ transaction.get_transaction_type_display }}</div>
+                                <div class="activity-amount-enhanced">
+                                    <span class="amount-main currency-format">{{ transaction.amount|floatformat:0 }}</span>
+                                </div>
+                            </div>
+                            <div class="activity-meta">
+                                <span class="activity-time-enhanced">{{ transaction.created_at|date:"M d, g:i A" }}</span>
+                                <span class="activity-status-enhanced success">Completed</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-enhanced">
+                    <div class="empty-icon-enhanced">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h5 class="empty-title">No transactions yet</h5>
+                    <p class="empty-subtitle">Your transaction history will appear here</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Enhanced Notifications with Smart Features -->
+    {% if notifications %}
+    <div class="content-card-enhanced notifications-card">
+        <div class="card-header-enhanced">
+            <div class="card-title-group">
+                <div class="card-icon-enhanced">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">{{ notifications|length }}</span>
+                </div>
+                <div>
+                    <h5 class="card-title-enhanced">Smart Notifications</h5>
+                    <p class="card-subtitle-enhanced">AI-powered alerts</p>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn-card-action" onclick="markAllRead()">
+                    <i class="fas fa-check-double"></i>
+                </button>
+                <a href="{% url 'notifications' %}" class="btn-outline-enhanced">View All</a>
+            </div>
+        </div>
+        <div class="card-body-enhanced">
+            <div class="activity-list-enhanced">
+                {% for notification in notifications|slice:":3" %}
+                <div class="activity-item-enhanced notification-item">
+                    <div class="activity-icon-enhanced notification-icon">
+                        {% if notification.notification_type == 'investment' %}
+                            <i class="fas fa-chart-line"></i>
+                        {% elif notification.notification_type == 'payout' %}
+                            <i class="fas fa-money-bill-wave"></i>
+                        {% elif notification.notification_type == 'system' %}
+                            <i class="fas fa-info-circle"></i>
+                        {% else %}
+                            <i class="fas fa-bell"></i>
+                        {% endif %}
+                        <div class="notification-glow"></div>
+                    </div>
+                    <div class="activity-content-enhanced">
+                        <div class="activity-header">
+                            <div class="activity-title-enhanced">{{ notification.title|truncatewords:4 }}</div>
+                            <div class="notification-priority high">
+                                <i class="fas fa-exclamation"></i>
+                            </div>
+                        </div>
+                        <div class="activity-meta">
+                            <span class="activity-time-enhanced">{{ notification.created_at|timesince }} ago</span>
+                            <span class="notification-type">{{ notification.notification_type|title }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Performance Analytics Card - Always show -->
+    <div class="content-card-enhanced analytics-card">
+        <div class="card-header-enhanced">
+            <div class="card-title-group">
+                <div class="card-icon-enhanced">
+                    <i class="fas fa-analytics"></i>
+                </div>
+                <div>
+                    <h5 class="card-title-enhanced">Performance Analytics</h5>
+                    {% if performance_analytics %}
+                        <p class="card-subtitle-enhanced">Based on your {{ performance_analytics.total_investments }} investment{{ performance_analytics.total_investments|pluralize }}</p>
+                    {% else %}
+                        <p class="card-subtitle-enhanced">Start investing to see analytics</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-actions">
+                <div class="time-filter">
+                    <button class="time-btn active" data-period="7d">7D</button>
+                    <button class="time-btn" data-period="30d">30D</button>
+                    <button class="time-btn" data-period="90d">90D</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body-enhanced">
+            {% if performance_analytics %}
+                <!-- Show real analytics for users with investments -->
+                <div class="analytics-grid">
+                    <div class="analytics-item">
+                        <div class="analytics-label">ROI</div>
+                        <div class="analytics-value {% if performance_analytics.roi_percentage > 0 %}positive{% elif performance_analytics.roi_percentage < 0 %}negative{% else %}neutral{% endif %}">
+                            {% if performance_analytics.roi_percentage > 0 %}+{% endif %}{{ performance_analytics.roi_percentage }}%
+                        </div>
+                        <div class="analytics-chart">
+                            <canvas id="roiChart" width="60" height="30"></canvas>
+                        </div>
+                        <div class="analytics-meta">
+                            <small>Total Earned: ₱{{ total_earnings|floatformat:2 }}</small>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-label">Risk Score</div>
+                        <div class="analytics-value {% if performance_analytics.risk_score == 'Low' %}good{% elif performance_analytics.risk_score == 'Medium' %}medium{% else %}high{% endif %}">
+                            {{ performance_analytics.risk_score }}
+                        </div>
+                        <div class="risk-indicator">
+                            <div class="risk-bar" style="--risk: {{ performance_analytics.risk_percentage }}%"></div>
+                        </div>
+                        <div class="analytics-meta">
+                            <small>{{ performance_analytics.total_investments }} active investments</small>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-label">Diversification</div>
+                        <div class="analytics-value {% if performance_analytics.diversification == 'Excellent' or performance_analytics.diversification == 'Good' %}good{% else %}medium{% endif %}">
+                            {{ performance_analytics.diversification }}
+                        </div>
+                        <div class="diversification-chart">
+                            <div class="pie-segment" style="--angle: 120deg; --color: var(--primary)"></div>
+                            <div class="pie-segment" style="--angle: 90deg; --color: var(--success)"></div>
+                            <div class="pie-segment" style="--angle: 150deg; --color: var(--warning)"></div>
+                        </div>
+                        <div class="analytics-meta">
+                            <small>{{ performance_analytics.unique_plans }} different plan{{ performance_analytics.unique_plans|pluralize }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional insights for users with investments -->
+                <div class="analytics-insights">
+                    <div class="insight-item">
+                        <div class="insight-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-label">Average Daily Earnings</div>
+                            <div class="insight-value">₱{{ performance_analytics.avg_daily_earnings|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-label">Total Days Invested</div>
+                            <div class="insight-value">{{ performance_analytics.days_invested }} day{{ performance_analytics.days_invested|pluralize }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Show placeholder analytics for users without investments -->
+                <div class="analytics-grid">
+                    <div class="analytics-item">
+                        <div class="analytics-label">ROI</div>
+                        <div class="analytics-value neutral">0.0%</div>
+                        <div class="analytics-chart">
+                            <canvas id="roiChart" width="60" height="30"></canvas>
+                        </div>
+                        <div class="analytics-meta">
+                            <small>Start investing to track ROI</small>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-label">Risk Score</div>
+                        <div class="analytics-value medium">Not Available</div>
+                        <div class="risk-indicator">
+                            <div class="risk-bar" style="--risk: 0%"></div>
+                        </div>
+                        <div class="analytics-meta">
+                            <small>No active investments</small>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-label">Diversification</div>
+                        <div class="analytics-value medium">Not Available</div>
+                        <div class="diversification-chart">
+                            <div class="pie-segment" style="--angle: 360deg; --color: var(--border)"></div>
+                        </div>
+                        <div class="analytics-meta">
+                            <small>No investment plans yet</small>
+                        </div>
+                    </div>
+                </div>
+                
+            
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced JavaScript with More Features -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Enhanced Transaction Feed
+    const API_URL = '/api/deposits-withdrawals/?limit=60&minutes=1440';
+    const lineEl = document.getElementById('txLine');
+    let items = [];
+    let idx = 0;
+
+    function maskIfNeeded(phone) {
+        if (!phone) return '';
+        if (phone.includes('*')) return phone;
+        const digits = phone.replace(/[^0-9]/g,'');
+        if (digits.length >= 10) {
+            const core = digits.length === 10 && digits.startsWith('9') ? '0'+digits : digits;
+            if (core.length >= 11) {
+                return core.slice(0,2) + '*'.repeat(core.length-5) + core.slice(-3);
+            }
+        }
+        return phone;
+    }
+
+    function formatAmount(val) {
+        return '₱' + Number(val).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+
+    function dedupe(arr) {
+        const seen = new Set();
+        return arr.filter(tx => {
+            const d = new Date(tx.created_at);
+            const key = [tx.phone || tx.user, tx.type, tx.amount, d.getHours(), d.getMinutes()].join('|');
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }
+
+    function renderCurrent() {
+        if (!items.length) {
+            lineEl.innerHTML = '<span class="no-data">No recent transactions</span>';
+            return;
+        }
+        const tx = items[idx];
+        const isDep = tx.type === 'deposit';
+        lineEl.classList.remove('fade-in');
+        void lineEl.offsetWidth;
+        const phoneMasked = maskIfNeeded(tx.phone || tx.user);
+        lineEl.innerHTML = `
+            <span class="tx-user">${phoneMasked}</span>
+            <span class="tx-action">${isDep ? 'deposited' : 'withdrew'}</span>
+            <span class="tx-amount ${isDep ? 'deposit' : 'withdrawal'}">${formatAmount(tx.amount)}</span>
+        `;
+        lineEl.classList.add('fade-in');
+        idx = (idx + 1) % items.length;
+    }
+
+    async function fetchData() {
+        try {
+            const res = await fetch(API_URL, {cache:'no-store'});
+            if (!res.ok) throw new Error(res.status);
+            let data = (await res.json()).results || [];
+            data.forEach(tx => { tx.phone = maskIfNeeded(tx.phone || tx.user); });
+            items = data.length ? dedupe(data) : [];
+            if (idx >= items.length) idx = 0;
+            renderCurrent();
+        } catch (e) {
+            console.warn('Feed error', e);
+            if (!items.length) {
+                lineEl.innerHTML = '<span class="error">Unable to load transactions</span>';
+            }
+        }
+    }
+
+    fetchData();
+    setInterval(renderCurrent, 5000);
+    setInterval(fetchData, 15000);
+
+    // Enhanced Animations
+    function animateStatsCards() {
+        const cards = document.querySelectorAll('.stats-card-enhanced');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.animation = 'slideInUp 0.6s ease forwards';
+            }, index * 100);
+        });
+    }
+
+    function initProgressAnimations() {
+        const progressBars = document.querySelectorAll('.progress-fill-enhanced');
+        progressBars.forEach(bar => {
+            const progress = bar.dataset.progress;
+            setTimeout(() => {
+                bar.style.width = progress + '%';
+            }, 500);
+        });
+    }
+
+    // Mini Charts
+    function createSparkline(canvasId, data, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        
+        const max = Math.max(...data);
+        const min = Math.min(...data);
+        const range = max - min;
+        
+        ctx.beginPath();
+        data.forEach((value, index) => {
+            const x = (index / (data.length - 1)) * width;
+            const y = height - ((value - min) / range) * height;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        ctx.stroke();
+    }
+
+    // Initialize everything
+    animateStatsCards();
+    initProgressAnimations();
+    
+    // Sample data for charts
+    const sampleData = [10, 15, 13, 17, 19, 16, 21, 18, 22, 20];
+    createSparkline('todayChart', sampleData, '#10b981');
+    createSparkline('investedChart', sampleData.map(x => x * 1.2), '#3b82f6');
+    
+    // Create ROI chart with real data if analytics are available
+    {% if performance_analytics %}
+    const roiData = [
+        {% for i in "0123456"|make_list %}
+            {{ performance_analytics.roi_percentage|add:i|add:'-3' }},
+        {% endfor %}
+        {{ performance_analytics.roi_percentage }}
+    ];
+    createSparkline('roiChart', roiData, '#8b5cf6');
+    {% else %}
+    createSparkline('roiChart', sampleData.map(x => x * 0.8), '#8b5cf6');
+    {% endif %}
+
+    // Interactive features
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelector('.time-btn.active')?.classList.remove('active');
+            this.classList.add('active');
+        });
+    });
+});
+
+// Utility functions
+function markAllRead() {
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.classList.add('read');
+    });
+}
+</script>
+
+<style>
+/* Enhanced Modern Dashboard Styles - Mobile-First Design */
+:root {
+    --primary: #4F46E5;
+    --primary-light: #EEF2FF;
+    --primary-dark: #3730A3;
+    --success: #10B981;
+    --success-light: #D1FAE5;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEE2E2;
+    --info: #06B6D4;
+    --info-light: #CFFAFE;
+    --orange: #FF8C00;
+    --orange-light: #FFF4E6;
+    --dark: #1F2937;
+    --light: #F9FAFB;
+    --white: #FFFFFF;
+    --border: #E5E7EB;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --radius: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --gradient-primary: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    --gradient-orange: linear-gradient(135deg, #FF8C00 0%, #FF6B35 100%);
+    --gradient-info: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+}
+
+/* Mobile-First Stats Grid */
+.stats-grid-mobile {
+    margin-bottom: 2rem;
+}
+
+.stats-row-top {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card-modern {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.live-stat::before {
+    background: var(--gradient-primary);
+}
+
+.balance-stat::before {
+    background: var(--gradient-success);
+}
+
+.return-stat::before {
+    background: var(--gradient-orange);
+}
+
+.duration-stat::before {
+    background: var(--gradient-info);
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.stat-icon-wrapper {
+    margin-bottom: 0.75rem;
+}
+
+.stat-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    margin: 0 auto;
+    box-shadow: var(--shadow);
+}
+
+.live-stat .stat-icon {
+    background: var(--gradient-primary);
+}
+
+.balance-stat .stat-icon {
+    background: var(--gradient-success);
+}
+
+.return-stat .stat-icon {
+    background: var(--gradient-orange);
+}
+
+.duration-stat .stat-icon {
+    background: var(--gradient-info);
+}
+
+.stat-content {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    line-height: 1;
+}
+
+.stat-percentage {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--success);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+}
+
+/* Main Investment Card */
+.investment-card-main {
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.investment-card-main:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.investment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.investment-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.plan-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.plan-id {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.daily-return-badge {
+    background: var(--gradient-success);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+}
+
+.return-label {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+    margin-bottom: 0.25rem;
+}
+
+.return-amount {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.action-button {
+    background: var(--gradient-success);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.action-button:hover::before {
+    left: 100%;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.action-button i {
+    animation: pulse 2s infinite;
+}
+
+.investment-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    background: var(--light);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.detail-item:hover {
+    background: white;
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+    transform: translateY(-1px);
+}
+
+.detail-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
+    box-shadow: var(--shadow);
+}
+
+.investment-icon {
+    background: var(--gradient-primary);
+}
+
+.earnings-icon {
+    background: var(--gradient-info);
+}
+
+.detail-content {
+    flex: 1;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.progress-section {
+    background: var(--light);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.progress-percentage {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--info);
+}
+
+.progress-bar-container {
+    margin-bottom: 0.75rem;
+}
+
+.progress-bar-modern {
+    width: 100%;
+    height: 0.75rem;
+    background: var(--border);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill-modern {
+    height: 100%;
+    background: var(--gradient-info);
+    border-radius: 9999px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-fill-modern::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-timeline {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.timeline-current {
+    color: var(--info);
+    font-weight: 700;
+}
+
+.timeline-separator {
+    margin: 0 0.25rem;
+    color: var(--text-secondary);
+}
+
+.timeline-total {
+    color: var(--text-secondary);
+}
+
+/* Enhanced Transaction Banner */
+.transaction-banner-modern {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.transaction-banner-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 49%, rgba(59, 130, 246, 0.03) 50%, transparent 51%);
+    pointer-events: none;
+}
+
+.transaction-banner-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.transaction-icon-enhanced {
+    width: 3rem;
+    height: 3rem;
+    background: var(--gradient-primary);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: var(--shadow-lg);
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+}
+
+.transaction-content-enhanced {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--success-light);
+    color: var(--success);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.live-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.tx-line-wrapper-enhanced {
+    flex: 1;
+    min-height: 1.5rem;
+}
+
+.tx-line-enhanced {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.4s ease;
+}
+
+.tx-line-enhanced.fade-in {
+    animation: slideInRight 0.5s ease;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.tx-user {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.tx-action {
+    color: var(--text-secondary);
+}
+
+.tx-amount {
+    font-weight: 600;
+}
+
+.tx-amount.deposit {
+    color: var(--success);
+}
+
+.tx-amount.withdrawal {
+    color: var(--danger);
+}
+
+.tx-time {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    background: var(--light);
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.transaction-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stats-item {
+    text-align: center;
+}
+
+.stats-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.stats-value {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Enhanced Welcome Section */
+.welcome-section-enhanced {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.welcome-background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><circle fill="rgba(255,255,255,0.1)" cx="30" cy="30" r="2"/></g></svg>');
+    opacity: 0.6;
+}
+
+.welcome-content-enhanced {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-avatar {
+    width: 4rem;
+    height: 4rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.welcome-text {
+    flex: 1;
+}
+
+.welcome-title-enhanced {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    line-height: 1.2;
+}
+
+.user-name-enhanced {
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+.welcome-subtitle-enhanced {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+}
+
+.welcome-badges {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.badge-status {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.badge-streak {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.btn-quick-invest, .btn-portfolio {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-quick-invest:hover, .btn-portfolio:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* Enhanced Stats Grid */
+.stats-grid-enhanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stats-card-enhanced {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border);
+}
+
+.stats-card-enhanced:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.stats-card-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.stats-pattern {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    opacity: 0.1;
+    transition: all 0.3s ease;
+}
+
+.balance-card .stats-pattern {
+    background: var(--gradient-primary);
+}
+
+.invested-card .stats-pattern {
+    background: var(--gradient-success);
+}
+
+.earnings-card .stats-pattern {
+    background: var(--gradient-warning);
+}
+
+.today-card .stats-pattern {
+    background: var(--gradient-danger);
+}
+
+.stats-card-enhanced:hover .stats-pattern {
+    transform: scale(1.2) rotate(45deg);
+    opacity: 0.15;
+}
+
+.stats-card-content-enhanced {
+    padding: 1.5rem;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.stats-icon-enhanced {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: var(--shadow-lg);
+    flex-shrink: 0;
+}
+
+.balance-icon {
+    background: var(--gradient-primary);
+}
+
+.invested-icon {
+    background: var(--gradient-success);
+}
+
+.earnings-icon {
+    background: var(--gradient-warning);
+}
+
+.today-icon {
+    background: var(--gradient-danger);
+}
+
+.stats-info-enhanced {
+    flex: 1;
+}
+
+.stats-label-enhanced {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.stats-value-enhanced {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stats-change {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.stats-change.positive {
+    color: var(--success);
+}
+
+.stats-change.negative {
+    color: var(--danger);
+}
+
+.stats-action {
+    padding: 0 1.5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.btn-stats-action {
+    width: 100%;
+    background: var(--light);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-stats-action:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    text-decoration: none;
+}
+
+.stats-chart, .stats-progress, .stats-sparkline {
+    padding: 0 1.5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.progress-ring {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+.progress-ring-svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 4;
+}
+
+.progress-ring-circle {
+    fill: none;
+    stroke: var(--warning);
+    stroke-width: 4;
+    stroke-dasharray: 125.6;
+    stroke-dashoffset: calc(125.6 - (125.6 * var(--progress)) / 100);
+    transition: stroke-dashoffset 1s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--warning);
+}
+
+/* Enhanced Content Grid */
+.content-grid-enhanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.content-card-enhanced {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.content-card-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header-enhanced {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+}
+
+.card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.card-icon-enhanced {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    background: var(--danger);
+    color: white;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    min-width: 1.25rem;
+    text-align: center;
+}
+
+.card-title-enhanced {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.card-subtitle-enhanced {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-card-action {
+    width: 2rem;
+    height: 2rem;
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.btn-card-action:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-outline-enhanced {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-enhanced:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.card-body-enhanced {
+    padding: 1.5rem;
+}
+
+/* Enhanced Activity Lists */
+.activity-list-enhanced {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item-enhanced {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--light);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.activity-item-enhanced:hover {
+    background: white;
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+    transform: translateX(4px);
+}
+
+.activity-icon-enhanced {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.investment-icon {
+    background: var(--gradient-success);
+}
+
+.deposit-icon {
+    background: var(--gradient-primary);
+}
+
+.withdrawal-icon {
+    background: var(--gradient-danger);
+}
+
+.daily_payout-icon {
+    background: var(--gradient-warning);
+}
+
+.notification-icon {
+    background: var(--gradient-primary);
+}
+
+.icon-pulse, .icon-ripple, .notification-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple 2s infinite;
+    opacity: 0.3;
+}
+
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+.activity-content-enhanced {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.activity-title-enhanced {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    line-height: 1.2;
+}
+
+.activity-amount-enhanced {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.amount-main {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.amount-sub {
+    color: var(--success);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.activity-progress {
+    margin-top: 0.75rem;
+}
+
+.progress-container-enhanced {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-bar-enhanced {
+    width: 100%;
+    height: 0.5rem;
+    background: var(--border);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill-enhanced {
+    height: 100%;
+    background: var(--gradient-success);
+    border-radius: 9999px;
+    transition: width 1s ease;
+    position: relative;
+}
+
+.progress-fill-enhanced::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-text-enhanced {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.progress-percentage {
+    font-size: 0.75rem;
+    color: var(--success);
+    font-weight: 600;
+}
+
+.activity-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.activity-time-enhanced {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.activity-status-enhanced {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.activity-status-enhanced.success {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.status-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-badge.active {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.notification-priority {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    font-size: 0.625rem;
+}
+
+.notification-priority.high {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.notification-type {
+    background: var(--info-light);
+    color: var(--info);
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Enhanced Empty States */
+.empty-state-enhanced {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-icon-enhanced {
+    width: 4rem;
+    height: 4rem;
+    background: var(--light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin: 0 auto 1rem;
+    border: 1px solid var(--border);
+}
+
+.empty-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary-enhanced {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.btn-primary-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    color: white;
+}
+
+/* Analytics Card Styles */
+.analytics-card {
+    grid-column: span 2;
+}
+
+.time-filter {
+    display: flex;
+    background: var(--light);
+    border-radius: var(--radius);
+    padding: 0.25rem;
+}
+
+.time-btn {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: calc(var(--radius) - 0.125rem);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.time-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.analytics-item {
+    background: var(--light);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+}
+
+.analytics-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.analytics-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.analytics-value.positive {
+    color: var(--success);
+}
+
+.analytics-value.negative {
+    color: var(--danger);
+}
+
+.analytics-value.neutral {
+    color: var(--text-secondary);
+}
+
+.analytics-value.medium {
+    color: var(--warning);
+}
+
+.analytics-value.good {
+    color: var(--success);
+}
+
+.analytics-value.high {
+    color: var(--danger);
+}
+
+.analytics-meta {
+    margin-top: 0.5rem;
+}
+
+.analytics-meta small {
+    color: var(--text-secondary);
+    font-size: 0.625rem;
+}
+
+.analytics-insights {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.insight-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--light);
+    border-radius: var(--radius);
+}
+
+.insight-icon {
+    width: 2rem;
+    height: 2rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.insight-content {
+    flex: 1;
+}
+
+.insight-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.insight-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.analytics-cta {
+    margin-top: 1.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--light) 100%);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.cta-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.cta-icon {
+    width: 4rem;
+    height: 4rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.cta-text h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.cta-text p {
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.cta-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.risk-indicator {
+    width: 100%;
+    height: 0.5rem;
+    background: var(--border);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.risk-bar {
+    height: 100%;
+    width: var(--risk);
+    background: var(--gradient-warning);
+    border-radius: 9999px;
+    transition: width 1s ease;
+}
+
+.activity-filter select.filter-select {
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stats-row-top {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card-modern {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    .stat-number {
+        font-size: 1.25rem;
+    }
+    
+    .stat-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+    
+    .investment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .daily-return-badge {
+        align-self: stretch;
+        text-align: center;
+    }
+    
+    .action-button {
+        align-self: stretch;
+        justify-content: center;
+    }
+    
+    .investment-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .welcome-section-enhanced {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .welcome-actions {
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .content-grid-enhanced {
+        grid-template-columns: 1fr;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .analytics-insights {
+        grid-template-columns: 1fr;
+    }
+    
+    .analytics-cta {
+        padding: 1.5rem;
+    }
+    
+    .cta-content {
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cta-icon {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.25rem;
+    }
+    
+    .analytics-card {
+        grid-column: span 1;
+    }
+    
+    .transaction-banner-modern {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .transaction-stats {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-row-top {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-card-modern {
+        padding: 1rem 0.5rem;
+    }
+    
+    .stat-number {
+        font-size: 1.125rem;
+    }
+    
+    .stat-label {
+        font-size: 0.5rem;
+    }
+    
+    .plan-name {
+        font-size: 1.125rem;
+    }
+    
+    .return-amount {
+        font-size: 1rem;
+    }
+    
+    .investment-card-main {
+        padding: 1.25rem;
+    }
+    
+    .progress-section {
+        padding: 1rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* Currency format styling */
+.currency-format::before {
+    content: '₱';
+    color: var(--success);
+    font-weight: 600;
+}
+
+/* Additional utility classes */
+.text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+</style>
+{% endblock %}

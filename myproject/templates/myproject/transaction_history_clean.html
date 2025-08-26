@@ -1,0 +1,574 @@
+{% extends 'myproject/base.html' %}
+{% load static %}
+{% load investment_extras %}
+
+{% block title %}Team GrowFi{% endblock %}
+
+{% block content %}
+<!-- Team Header -->
+<div class="team-header">
+    <h2 class="page-title">Team</h2>
+</div>
+
+<!-- Team Stats Summary -->
+<div class="team-stats">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ team_data.total_members|default:"0" }}</div>
+            <div class="stat-label">Members</div>
+            <div class="stat-badge level-3">3</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">0.00</div>
+            <div class="stat-label">Commission 1%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">0.00</div>
+            <div class="stat-label">Investment</div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Your Referral Link Section -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-share-alt section-icon"></i>
+        <h3 class="section-title">Share Your Referral Link</h3>
+    </div>
+    
+    <div class="referral-info">
+        <div class="referral-item">
+            <div class="referral-label">Invitation code</div>
+            <div class="referral-value">
+                <i class="fas fa-credit-card"></i>
+                <span class="referral-code">{{ user.userprofile.referral_code|default:"30770" }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ user.userprofile.referral_code|default:"30770" }}')">Copy</button>
+            </div>
+        </div>
+        
+        <div class="referral-item">
+            <div class="referral-label">Invitation link</div>
+            <div class="referral-value">
+                <i class="fas fa-link"></i>
+                <span class="referral-link">https://ph.mtz-audio.com/#/reg...</span>
+                <button class="copy-btn" onclick="copyToClipboard('https://ph.mtz-audio.com/#/register?ref={{ user.userprofile.referral_code|default:"30770" }}')">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rules Section -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-list-alt section-icon"></i>
+        <h3 class="section-title">Rules</h3>
+    </div>
+    
+    <div class="rules-content">
+        <div class="rule-item">
+            <div class="rule-title">Level 1 users</div>
+            <div class="rule-description">Users who register through your invitation link are your Level 1 users.</div>
+            <div class="rule-commission">You will receive <span class="commission-rate">35%</span> commission of their investment amount.</div>
+        </div>
+        
+        <div class="rule-item">
+            <div class="rule-title">Level 2 users</div>
+            <div class="rule-description">Users who register through your Level 1 users' invitation link are your Level 2 users.</div>
+            <div class="rule-commission">You will receive <span class="commission-rate">2%</span> commission of their investment amount.</div>
+        </div>
+        
+        <div class="rule-item">
+            <div class="rule-title">Level 3 users</div>
+            <div class="rule-description">Users who register through your Level 2 users' invitation link are your Level 3 users.</div>
+            <div class="rule-commission">You will receive <span class="commission-rate">1%</span> commission of their investment amount.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Details Section -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-users section-icon"></i>
+        <h3 class="section-title">Team details</h3>
+    </div>
+    
+    <div class="team-overview">
+        <div class="team-overview-grid">
+            <div class="overview-card">
+                <div class="overview-number">0</div>
+                <div class="overview-label">Total people</div>
+            </div>
+            <div class="overview-card">
+                <div class="overview-number">0</div>
+                <div class="overview-label">Total investment</div>
+            </div>
+            <div class="overview-card">
+                <div class="overview-number">0</div>
+                <div class="overview-label">Total income</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Info Section -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-info-circle section-icon"></i>
+        <h3 class="section-title">Team info</h3>
+        <span class="section-subtitle">Refer friends to get rewards</span>
+    </div>
+    
+    <!-- Level 1 Team -->
+    <div class="team-level">
+        <div class="level-header">
+            <h4 class="level-title">-- LEVEL 1 TEAM</h4>
+        </div>
+        <div class="level-stats">
+            <div class="level-stat">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Members</div>
+                <div class="level-badge level-1">1</div>
+            </div>
+            <div class="level-stat">
+                <div class="stat-number">0.00</div>
+                <div class="stat-label">Commission 35%</div>
+            </div>
+            <div class="level-stat">
+                <div class="stat-number">0.00</div>
+                <div class="stat-label">Investment</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Level 2 Team -->
+    <div class="team-level">
+        <div class="level-header">
+            <h4 class="level-title">-- LEVEL 2 TEAM</h4>
+        </div>
+        <div class="level-stats">
+            <div class="level-stat">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Members</div>
+                <div class="level-badge level-2">2</div>
+            </div>
+            <div class="level-stat">
+                <div class="stat-number">0.00</div>
+                <div class="stat-label">Commission 2%</div>
+            </div>
+            <div class="level-stat">
+                <div class="stat-number">0.00</div>
+                <div class="stat-label">Investment</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Level 3 Team -->
+    <div class="team-level">
+        <div class="level-header">
+            <h4 class="level-title">-- LEVEL 3 TEAM</h4>
+        </div>
+        <div class="level-stats">
+            <div class="level-stat">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Members</div>
+                <div class="level-badge level-3">3</div>
+            </div>
+            <div class="level-stat">
+                <div class="stat-number">0.00</div>
+                <div class="stat-label">Commission 1%</div>
+            </div>
+            <div class="level-stat">
+                <div class="stat-number">0.00</div>
+                <div class="stat-label">Investment</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Referral Link Again (Bottom) -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-share-alt section-icon"></i>
+        <h3 class="section-title">Share Your Referral Link</h3>
+    </div>
+    
+    <div class="referral-info">
+        <div class="referral-item">
+            <div class="referral-label">Invitation code</div>
+            <div class="referral-value">
+                <i class="fas fa-credit-card"></i>
+                <span class="referral-code">{{ user.userprofile.referral_code|default:"30770" }}</span>
+                <button class="copy-btn" onclick="copyToClipboard('{{ user.userprofile.referral_code|default:"30770" }}')">Copy</button>
+            </div>
+        </div>
+        
+        <div class="referral-item">
+            <div class="referral-label">Invitation link</div>
+            <div class="referral-value">
+                <i class="fas fa-link"></i>
+                <span class="referral-link">https://ph.mtz-audio.com/#/reg...</span>
+                <button class="copy-btn" onclick="copyToClipboard('https://ph.mtz-audio.com/#/register?ref={{ user.userprofile.referral_code|default:"30770" }}')">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Team Page Styles */
+.team-header {
+    padding: 20px;
+    text-align: center;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.team-stats {
+    padding: 0 20px 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.stat-card {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.stat-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.level-1 { background: #ff9800; }
+.level-2 { background: #2196f3; }
+.level-3 { background: #f44336; }
+
+.section-card {
+    background: white;
+    margin: 0 20px 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.section-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-icon {
+    color: #ff9800;
+    font-size: 16px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.section-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+.referral-info {
+    padding: 20px;
+}
+
+.referral-item {
+    margin-bottom: 20px;
+}
+
+.referral-item:last-child {
+    margin-bottom: 0;
+}
+
+.referral-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.referral-value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.referral-value i {
+    color: var(--text-secondary);
+}
+
+.referral-code, .referral-link {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.copy-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.rules-content {
+    padding: 20px;
+}
+
+.rule-item {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.rule-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.rule-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.rule-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.rule-commission {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.commission-rate {
+    color: #ff9800;
+    font-weight: 600;
+}
+
+.team-overview {
+    padding: 20px;
+}
+
+.team-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.overview-card {
+    background: #1a1a1a;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.overview-number {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.overview-label {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.team-level {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.team-level:last-child {
+    border-bottom: none;
+}
+
+.level-header {
+    margin-bottom: 15px;
+}
+
+.level-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.level-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.level-stat {
+    text-align: center;
+    position: relative;
+}
+
+.level-badge {
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .stats-grid, .team-overview-grid, .level-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .section-card {
+        margin: 0 15px 15px;
+    }
+    
+    .stat-number, .overview-number {
+        font-size: 16px;
+    }
+    
+    .stat-label, .overview-label {
+        font-size: 11px;
+    }
+}
+</style>
+
+<script>
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Show success message
+            showToast('Copied to clipboard!');
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        fallbackCopyTextToClipboard(text);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        var successful = document.execCommand('copy');
+        if (successful) {
+            showToast('Copied to clipboard!');
+        }
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showToast(message) {
+    // Create and show a simple toast notification
+    var toast = document.createElement('div');
+    toast.innerHTML = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        z-index: 9999;
+        animation: fadeInOut 2s ease-in-out;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(function() {
+        document.body.removeChild(toast);
+    }, 2000);
+}
+
+// Add fadeInOut animation
+var style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -1,0 +1,410 @@
+{% extends 'myproject/dashboard_base.html' %}
+
+{% load investment_extras %}
+{% block title %}InvestPH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="sidebar p-3">
+                <h5 class="text-white mb-4">
+                    <i class="fas fa-chart-pie"></i> Investments
+                </h5>
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="{% url 'active_investments' %}">
+                        <i class="fas fa-play-circle"></i> Active Investments
+                    </a>
+                    <a class="nav-link" href="{% url 'my_investments' %}">
+                        <i class="fas fa-list"></i> All Investments
+                    </a>
+                    <a class="nav-link" href="{% url 'investment_plans' %}">
+                        <i class="fas fa-plus-circle"></i> New Investment
+                    </a>
+                    <a class="nav-link" href="{% url 'investment_performance' %}">
+                        <i class="fas fa-chart-line"></i> Performance
+                    </a>
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="main-content p-4">
+                <!-- Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2><i class="fas fa-play-circle"></i> Active Investments</h2>
+                                <p class="text-muted">Monitor your running investment plans</p>
+                            </div>
+                            <div>
+                                <a href="{% url 'investment_plans' %}" class="btn btn-gradient">
+                                    <i class="fas fa-plus"></i> New Investment
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-play-circle fa-2x text-success mb-2"></i>
+                                <h5>Active Investments</h5>
+                                <h3 class="text-success">{{ active_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-money-bill-wave fa-2x text-primary mb-2"></i>
+                                <h5>Total Invested</h5>
+                                <h3 class="text-primary">₱{{ total_invested|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                                <h5>Expected Daily</h5>
+                                <h3 class="text-warning">₱{{ expected_daily|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+                                <h5>Expected Total</h5>
+                                <h3 class="text-info">₱{{ expected_total|floatformat:2 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Investments List -->
+                <div class="row">
+                    <div class="col-12">
+                        {% if active_investments %}
+                            <div class="row g-4">
+                                {% for investment in active_investments %}
+                                <div class="col-lg-6 col-xl-4">
+                                    <div class="card investment-card text-white h-100">
+                                        <div class="card-header d-flex justify-content-between">
+                                            <h6 class="mb-0">{{ investment.plan.name }}</h6>
+                                            <span class="badge bg-light text-dark">Day {{ investment.days_completed }}/30</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row mb-3">
+                                                <div class="col-6">
+                                                    <small class="text-light">Investment Amount</small>
+                                                    <h5 class="mb-0">₱{{ investment.amount|floatformat:2 }}</h5>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-light">Daily Return</small>
+                                                    <h5 class="mb-0">₱{{ investment.daily_return|floatformat:2 }}</h5>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-6">
+                                                    <small class="text-light">Total Earned</small>
+                                                    <h6 class="mb-0">₱{{ investment.total_return|floatformat:2 }}</h6>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-light">Remaining Days</small>
+                                                    <h6 class="mb-0">{{ investment.plan.duration_days|sub:investment.days_completed }} days</h6>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Progress Bar -->
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <small class="text-light">Progress</small>
+                                                    <small class="text-light">{{ investment.days_completed|div:30|mul:100|floatformat:0 }}%</small>
+                                                </div>
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-warning" style="width: 0%;" data-progress="{{ investment.days_completed|div:30|mul:100|floatformat:0 }}"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Dates -->
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <small class="text-light">Started</small><br>
+                                                    <small>{{ investment.start_date|date:"M d, Y" }}</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-light">Ends</small><br>
+                                                    <small>{{ investment.end_date|date:"M d, Y" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <a href="{% url 'investment_detail' investment.id %}" 
+                                                       class="btn btn-light btn-sm w-100">
+                                                        <i class="fas fa-eye"></i> Details
+                                                    </a>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button class="btn btn-outline-light btn-sm w-100" data-reinvest-id="{{ investment.id }}">
+                                                        <i class="fas fa-redo"></i> Reinvest
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                        {% else %}
+                            <div class="card">
+                                <div class="card-body text-center py-5">
+                                    <i class="fas fa-chart-pie fa-4x text-muted mb-4"></i>
+                                    <h4>No Active Investments</h4>
+                                    <p class="text-muted mb-4">You don't have any active investments at the moment.</p>
+                                    <a href="{% url 'investment_plans' %}" class="btn btn-gradient btn-lg">
+                                        <i class="fas fa-plus"></i> Start Your First Investment
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <a href="{% url 'investment_plans' %}" class="btn btn-gradient w-100">
+                                            <i class="fas fa-plus-circle"></i><br>
+                                            New Investment
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'deposit' %}" class="btn btn-success w-100">
+                                            <i class="fas fa-wallet"></i><br>
+                                            Add Funds
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'daily_earnings' %}" class="btn btn-info w-100">
+                                            <i class="fas fa-chart-bar"></i><br>
+                                            Earnings Report
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'calculator' %}" class="btn btn-warning w-100">
+                                            <i class="fas fa-calculator"></i><br>
+                                            Calculator
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reinvestment Modal -->
+<div class="modal fade" id="reinvestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-redo"></i> Reinvestment Calculator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reinvestCalculation"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="proceedToReinvest()">Proceed to Invest</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Calculate reinvestment potential
+function calculateReinvestment(investmentId) {
+    // This would typically fetch data via AJAX
+    fetch(`/investment/reinvest-calculation/${investmentId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const calculation = `
+                <div class="alert alert-info">
+                    <h6>Current Investment Details</h6>
+                    <p><strong>Plan:</strong> ${data.plan_name}</p>
+                    <p><strong>Amount:</strong> ₱${data.current_amount}</p>
+                    <p><strong>Total Earned:</strong> ₱${data.total_earned}</p>
+                </div>
+                
+                <div class="alert alert-success">
+                    <h6>Reinvestment Opportunity</h6>
+                    <p><strong>Available for Reinvestment:</strong> ₱${data.available_amount}</p>
+                    <p><strong>Recommended Plan:</strong> ${data.recommended_plan}</p>
+                    <p><strong>New Daily Return:</strong> ₱${data.new_daily_return}</p>
+                </div>
+            `;
+            
+            document.getElementById('reinvestCalculation').innerHTML = calculation;
+            new bootstrap.Modal(document.getElementById('reinvestModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error calculating reinvestment. Please try again.');
+        });
+}
+
+// Proceed to reinvest
+function proceedToReinvest() {
+    window.location.href = '{% url "investment_plans" %}';
+}
+
+// Auto-refresh investment data every 30 seconds
+setInterval(function() {
+    // Only refresh if user is actively viewing the page
+    if (!document.hidden) {
+        location.reload();
+    }
+}, 30000);
+
+// Investment countdown timers
+function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(function(element) {
+        const endDate = new Date(element.dataset.endDate);
+        const now = new Date();
+        const timeLeft = endDate - now;
+        
+        if (timeLeft > 0) {
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            
+            element.textContent = `${days}d ${hours}h ${minutes}m`;
+        } else {
+            element.textContent = 'Completed';
+            element.classList.add('text-success');
+        }
+    });
+}
+
+// Update countdowns every minute
+setInterval(updateCountdowns, 60000);
+updateCountdowns(); // Initial call
+
+// Investment card hover effects
+document.querySelectorAll('.investment-card').forEach(function(card) {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+        this.style.transition = 'all 0.3s ease';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+    });
+});
+
+// Initialize progress bars and reinvest buttons after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.progress-bar[data-progress]').forEach(function(bar) {
+        var pct = parseInt(bar.getAttribute('data-progress') || '0', 10);
+        if (isNaN(pct) || pct < 0) pct = 0;
+        if (pct > 100) pct = 100;
+        bar.style.width = pct + '%';
+    });
+
+    document.querySelectorAll('[data-reinvest-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-reinvest-id');
+            if (id) {
+                calculateReinvestment(id);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.investment-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.investment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.progress {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.sidebar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: calc(100vh - 76px);
+}
+
+.main-content {
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 76px);
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s;
+}
+</style>
+{% endblock %}

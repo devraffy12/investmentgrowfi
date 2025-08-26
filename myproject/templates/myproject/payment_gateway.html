@@ -1,0 +1,505 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Payment Gateway - GrowFi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .payment-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .payment-header {
+        margin-bottom: 30px;
+    }
+    
+    .payment-amount {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #28a745;
+        margin: 20px 0;
+    }
+    
+    .payment-method {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin: 25px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .payment-method img {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+    }
+    
+    .qr-code-section {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .qr-code {
+        max-width: 250px;
+        margin: 0 auto 20px;
+    }
+    
+    .qr-code img {
+        width: 100%;
+        height: auto;
+        border: 5px solid white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .payment-url {
+        background: #fff;
+        border: 2px solid #28a745;
+        border-radius: 8px;
+        padding: 15px;
+        word-break: break-all;
+        font-family: monospace;
+        font-size: 0.9rem;
+        margin: 20px 0;
+    }
+    
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 30px 0;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .status-section {
+        background: #e7f3ff;
+        border: 2px solid #007bff;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 30px 0;
+    }
+    
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 600;
+        color: #007bff;
+        margin-bottom: 10px;
+    }
+    
+    .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #007bff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .order-details {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding: 5px 0;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .detail-value {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .copy-btn {
+        background: #17a2b8;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+    
+    .copy-btn:hover {
+        background: #138496;
+    }
+    
+    .instructions {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .instructions h5 {
+        color: #856404;
+        margin-bottom: 15px;
+    }
+    
+    .instructions ol {
+        color: #856404;
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .instructions li {
+        margin-bottom: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .payment-container {
+            padding: 10px;
+        }
+        
+        .payment-card {
+            padding: 25px 20px;
+        }
+        
+        .payment-amount {
+            font-size: 2.5rem;
+        }
+        
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+        
+        .qr-code {
+            max-width: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <h2>💳 Complete Your Payment</h2>
+            <p class="text-muted">Your payment is being processed automatically</p>
+        </div>
+        
+        <div class="payment-amount">₱{{ amount|floatformat:2 }}</div>
+        
+        <div class="payment-method">
+            {% if payment_method == 'GCASH' %}
+                <img src="{% static 'gcash.jpg' %}" alt="GCash">
+                <div>
+                    <h5>GCash Payment</h5>
+                    <small class="text-muted">Secure & Instant</small>
+                </div>
+            {% elif payment_method == 'PAYMAYA' %}
+                <img src="{% static 'maya.jpg' %}" alt="PayMaya">
+                <div>
+                    <h5>PayMaya Payment</h5>
+                    <small class="text-muted">Secure & Instant</small>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- QR Code Section -->
+        {% if qr_code %}
+        <div class="qr-code-section">
+            <h5>📱 Scan QR Code</h5>
+            <div class="qr-code">
+                <img src="{{ qr_code }}" alt="Payment QR Code">
+            </div>
+            <p class="text-muted">Scan this QR code with your {{ payment_method }} app</p>
+        </div>
+        {% endif %}
+        
+        <!-- Payment URL -->
+        {% if payment_url %}
+        <div class="action-buttons">
+            <a href="{{ payment_url }}" target="_blank" class="btn-primary">
+                <i class="fas fa-external-link-alt"></i>
+                Open Payment Gateway
+            </a>
+            <button onclick="copyPaymentUrl()" class="btn-secondary">
+                <i class="fas fa-copy"></i>
+                Copy Payment Link
+            </button>
+        </div>
+        
+        <div class="payment-url" id="paymentUrl">{{ payment_url }}</div>
+        {% endif %}
+        
+        <!-- Order Details -->
+        <div class="order-details">
+            <h5>📋 Order Details</h5>
+            <div class="detail-row">
+                <span class="detail-label">Order ID:</span>
+                <span class="detail-value">
+                    {{ order_id }}
+                    <button onclick="copyToClipboard('{{ order_id }}')" class="copy-btn">Copy</button>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount:</span>
+                <span class="detail-value">₱{{ amount|floatformat:2 }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Payment Method:</span>
+                <span class="detail-value">{{ payment_method }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">{{ transaction.status|title }}</span>
+            </div>
+        </div>
+        
+        <!-- Status Section -->
+        <div class="status-section">
+            <div class="status-indicator">
+                <div class="spinner"></div>
+                <span>Waiting for payment confirmation...</span>
+            </div>
+            <p class="mb-0">Your balance will be updated automatically once payment is confirmed</p>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="instructions">
+            <h5>📝 Payment Instructions</h5>
+            <ol>
+                <li>Click "Open Payment Gateway" to proceed with payment</li>
+                <li>Complete the payment using your {{ payment_method }} account</li>
+                <li>Keep this page open for automatic status updates</li>
+                <li>Your balance will be credited automatically upon successful payment</li>
+                <li>You'll receive a notification once the payment is confirmed</li>
+            </ol>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{% url 'transaction_history' %}" class="btn-secondary">
+                <i class="fas fa-history"></i>
+                View Transactions
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn-primary">
+                <i class="fas fa-home"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh payment status
+let statusCheckInterval;
+let checkAttempts = 0;
+const maxAttempts = 20; // Check for 10 minutes
+
+function startStatusCheck() {
+    statusCheckInterval = setInterval(checkPaymentStatus, 30000); // Check every 30 seconds
+}
+
+function checkPaymentStatus() {
+    checkAttempts++;
+    
+    if (checkAttempts >= maxAttempts) {
+        clearInterval(statusCheckInterval);
+        showStatusMessage('Payment status check timeout. Please refresh the page to check status.', 'warning');
+        return;
+    }
+    
+    fetch(`/api/payment/status/{{ order_id }}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed') {
+                clearInterval(statusCheckInterval);
+                showPaymentSuccess();
+            } else if (data.status === 'failed') {
+                clearInterval(statusCheckInterval);
+                showPaymentFailed();
+            }
+        })
+        .catch(error => {
+            console.error('Status check error:', error);
+        });
+}
+
+function showPaymentSuccess() {
+    const statusSection = document.querySelector('.status-section');
+    statusSection.innerHTML = `
+        <div class="status-indicator" style="color: #28a745;">
+            <i class="fas fa-check-circle"></i>
+            <span>Payment Successful!</span>
+        </div>
+        <p class="mb-0">Your balance has been updated. Redirecting to dashboard...</p>
+    `;
+    statusSection.style.background = '#d4edda';
+    statusSection.style.borderColor = '#28a745';
+    
+    // Redirect after 3 seconds
+    setTimeout(() => {
+        window.location.href = "{% url 'dashboard' %}";
+    }, 3000);
+}
+
+function showPaymentFailed() {
+    const statusSection = document.querySelector('.status-section');
+    statusSection.innerHTML = `
+        <div class="status-indicator" style="color: #dc3545;">
+            <i class="fas fa-times-circle"></i>
+            <span>Payment Failed</span>
+        </div>
+        <p class="mb-0">Please try again or contact support if the issue persists.</p>
+    `;
+    statusSection.style.background = '#f8d7da';
+    statusSection.style.borderColor = '#dc3545';
+}
+
+function showStatusMessage(message, type) {
+    const statusSection = document.querySelector('.status-section');
+    const colors = {
+        'warning': { bg: '#fff3cd', border: '#ffc107', color: '#856404' },
+        'error': { bg: '#f8d7da', border: '#dc3545', color: '#721c24' }
+    };
+    
+    statusSection.innerHTML = `
+        <div class="status-indicator" style="color: ${colors[type].color};">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    statusSection.style.background = colors[type].bg;
+    statusSection.style.borderColor = colors[type].border;
+}
+
+function copyPaymentUrl() {
+    const paymentUrl = document.getElementById('paymentUrl').textContent;
+    copyToClipboard(paymentUrl);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const notification = document.createElement('div');
+        notification.innerHTML = '✅ Copied to clipboard!';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: fadeInOut 2s ease-in-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+        alert('Could not copy to clipboard');
+    });
+}
+
+// Add CSS for fadeInOut animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(-20px); }
+        20% { opacity: 1; transform: translateY(0); }
+        80% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-20px); }
+    }
+`;
+document.head.appendChild(style);
+
+// Start status checking when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startStatusCheck();
+});
+
+// Handle page visibility change
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        clearInterval(statusCheckInterval);
+    } else {
+        startStatusCheck();
+    }
+});
+</script>
+{% endblock %}

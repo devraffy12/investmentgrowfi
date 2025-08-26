@@ -1,0 +1,971 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+{% load investment_extras %}
+
+{% block title %}Bank Accounts{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/bank_accounts.css' %}">
+
+
+<style>
+/* Additional styles for modal and navigation interaction */
+body.modal-open {
+    overflow: hidden !important;
+}
+
+/* Hide mobile bottom navigation when modal is open */
+.mobile-bottom-nav.modal-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(100%) !important;
+}
+
+/* Modal overlay to ensure it covers navigation */
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 1000000 !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+/* Full screen modal container */
+.modal-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 1000001 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+}
+
+/* Payment icon image styles */
+.payment-icon-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Enhanced option icon container for images */
+.option-icon {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    border: 2px solid #e2e8f0 !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Hover effects for payment options with images */
+.payment-option:hover .option-icon {
+    transform: scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    border-color: #8B5CF6 !important;
+}
+
+.payment-option.selected .option-icon {
+    border-color: #8B5CF6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+    transform: scale(1.05) !important;
+}
+
+.payment-option:hover .payment-icon-img {
+    transform: scale(1.1) !important;
+}
+
+.payment-option.selected .payment-icon-img {
+    transform: scale(1.1) !important;
+}
+</style>
+
+
+<div class="bank-header">
+    <div class="header-content">
+        <div class="header-icon">
+            <i class="fas fa-university"></i>
+        </div>
+        <div class="header-text">
+            <h1 class="page-title">Bank Accounts</h1>
+            <p class="page-subtitle">Manage your withdrawal payment methods</p>
+        </div>
+        <button class="add-account-btn" id="addAccountBtn">
+            <i class="fas fa-plus"></i>
+            Add Account
+        </button>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="stats-section">
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-credit-card"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ accounts.count }}</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{% for account in accounts %}{% if account.is_primary %}1{% endif %}{% empty %}0{% endfor %}</div>
+                <div class="stat-label">Primary Account</div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ accounts.count }}</div>
+                <div class="stat-label">Verified Accounts</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Types Guide -->
+<div class="guide-section">
+    <h3>Supported Payment Methods</h3>
+    <div class="payment-methods">
+        <div class="method-item">
+            <div class="method-icon gcash">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <span>GCash</span>
+        </div>
+        
+        <div class="method-item">
+            <div class="method-icon paymaya">
+                <i class="fas fa-credit-card"></i>
+            </div>
+            <span>PayMaya</span>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Bank Accounts List -->
+<div class="accounts-section">
+    {% if accounts %}
+        <div class="accounts-container">
+            {% for account in accounts %}
+            <div class="account-card">
+                <div class="account-header">
+                    <div class="account-type-icon {{ account.account_type }}">
+                        {% if account.account_type == 'gcash' %}
+                            <i class="fas fa-mobile-alt"></i>
+                        {% elif account.account_type == 'paymaya' %}
+                            <i class="fas fa-credit-card"></i>
+                        {% elif account.account_type == 'paypal' %}
+                            <i class="fab fa-paypal"></i>
+                        {% elif account.account_type == 'crypto' %}
+                            <i class="fab fa-bitcoin"></i>
+                        {% else %}
+                            <i class="fas fa-wallet"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="account-info">
+                        <div class="account-name">{{ account.account_name }}</div>
+                        <div class="account-type">{{ account.get_account_type_display }}</div>
+                        <div class="account-number">{{ account.account_number }}</div>
+                    </div>
+                    
+                    {% if account.is_primary %}
+                        <div class="primary-badge">
+                            <i class="fas fa-star"></i>
+                            Primary
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="account-actions">
+                    {% if not account.is_primary %}
+                        <button class="action-btn primary-btn" data-primary-id="{{ account.id }}">
+                            <i class="fas fa-star"></i>
+                            Set as Primary
+                        </button>
+                    {% endif %}
+                    
+                    <button class="action-btn delete-btn" data-delete-id="{{ account.id }}">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-university"></i>
+            </div>
+            <h3>No Payment Methods</h3>
+            <p>Add your first payment method to receive withdrawals</p>
+            <button class="add-first-account-btn" id="addFirstAccountBtn">
+                <i class="fas fa-plus-circle"></i>
+                Add Your First Account
+            </button>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add Account Modal -->
+<div class="modal-overlay" id="addAccountModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title-section">
+                <div class="modal-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="modal-title-text">
+                    <h2>Add Payment Method</h2>
+                    <p>Set up your withdrawal account securely</p>
+                </div>
+            </div>
+            <button class="modal-close" type="button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="addAccountForm" method="POST" action="{% url 'add_bank_account' %}">
+                {% csrf_token %}
+                
+                <!-- Payment Type Selection -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-credit-card"></i>
+                        Choose Payment Method
+                    </h3>
+                    
+                    <div class="payment-type-selector">
+                        <div class="payment-option" data-type="gcash" tabindex="0" role="button" aria-label="Select GCash">
+                            <div class="option-icon gcash-gradient">
+                                <img src="{% static 'gcash.jpg' %}" alt="GCash" class="payment-icon-img">
+                            </div>
+                            <div class="option-content">
+                                <div class="option-title">GCash</div>
+                                <div class="option-subtitle">Mobile wallet • Instant transfers</div>
+                            </div>
+                            <div class="option-radio">
+                                <input type="radio" name="payment_type" value="gcash" id="type-gcash">
+                                <label for="type-gcash"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-option" data-type="paymaya" tabindex="0" role="button" aria-label="Select PayMaya">
+                            <div class="option-icon paymaya-gradient">
+                                <img src="{% static 'maya.jpg' %}" alt="PayMaya" class="payment-icon-img">
+                            </div>
+                            <div class="option-content">
+                                <div class="option-title">PayMaya</div>
+                                <div class="option-subtitle">Digital wallet • Fast withdrawals</div>
+                            </div>
+                            <div class="option-radio">
+                                <input type="radio" name="payment_type" value="paymaya" id="type-paymaya">
+                                <label for="type-paymaya"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Account Details -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Account Information
+                    </h3>
+                    
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <div class="input-label">
+                                <i class="fas fa-user"></i>
+                                Account Holder Name
+                            </div>
+                            <input type="text" name="account_name" id="account_name" class="form-input" 
+                                   placeholder="Enter full name as registered" 
+                                   autocomplete="name" 
+                                   required>
+                            <div class="input-border"></div>
+                            <div class="input-help">Enter your full name exactly as it appears on your account</div>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <div class="input-label">
+                                <i class="fas fa-hashtag"></i>
+                                Account Number
+                            </div>
+                            <input type="text" name="account_number" id="account_number" class="form-input" 
+                                   placeholder="Enter account number" 
+                                   autocomplete="off" 
+                                   required>
+                            <div class="input-border"></div>
+                            <div class="input-help">Enter your mobile number for e-wallets or account number for banks</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Account Settings -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-star"></i>
+                        Account Settings
+                    </h3>
+                    
+                    <div class="primary-toggle">
+                        <div class="toggle-content">
+                            <div class="toggle-info">
+                                <h4>Set as Primary Account</h4>
+                                <p>This will be your default withdrawal method for all transactions</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="is_primary" id="is_primary">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Notice -->
+                <div class="security-notice">
+                    <div class="security-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="security-content">
+                        <h4>Your data is secure</h4>
+                        <p>We use bank-level encryption to protect your payment information. Your account details are never shared with third parties.</p>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+            </button>
+            <button type="submit" form="addAccountForm" class="btn-primary" id="submitAddAccount">
+                <i class="fas fa-plus"></i>
+                Add Payment Method
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteConfirmModal">
+    <div class="modal-backdrop"></div>
+    <div class="confirm-modal">
+        <div class="confirm-header">
+            <div class="confirm-icon-wrapper">
+                <div class="confirm-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+            </div>
+            <h3>Delete Account</h3>
+            <p>Are you sure you want to delete this payment method? This action cannot be undone.</p>
+        </div>
+        
+        <div class="confirm-footer">
+            <button type="button" class="btn-cancel">
+                <i class="fas fa-times"></i>
+                Cancel
+            </button>
+            <button type="button" class="btn-danger" id="confirmDelete">
+                <i class="fas fa-trash"></i>
+                Delete Account
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced Modal and Form Interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure mobile bottom navigation is visible on page load
+    const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
+    if (mobileBottomNav) {
+        mobileBottomNav.style.display = 'block';
+        mobileBottomNav.style.visibility = 'visible';
+        mobileBottomNav.style.opacity = '1';
+        mobileBottomNav.style.pointerEvents = 'auto';
+        mobileBottomNav.classList.remove('modal-hidden');
+    }
+    
+    // Modal management
+    const modals = document.querySelectorAll('.modal-overlay');
+    const addAccountBtn = document.getElementById('addAccountBtn');
+    const addFirstAccountBtn = document.getElementById('addFirstAccountBtn');
+    const addAccountModal = document.getElementById('addAccountModal');
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    const addAccountForm = document.getElementById('addAccountForm');
+    let accountToDelete = null;
+
+    // Enhanced modal opening with animation
+    function openModal(modal) {
+        if (modal) {
+            console.log('Opening modal:', modal.id);
+            
+            // Add modal-open class to body to prevent scrolling
+            document.body.classList.add('modal-open');
+            
+            // Hide mobile bottom navigation when modal is open
+            const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
+            if (mobileBottomNav) {
+                mobileBottomNav.style.display = 'none';
+                mobileBottomNav.style.visibility = 'hidden';
+                mobileBottomNav.style.opacity = '0';
+                mobileBottomNav.style.pointerEvents = 'none';
+                mobileBottomNav.classList.add('modal-hidden');
+            }
+            
+            // Ensure modal is visible
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            
+            // Force reflow to ensure display changes are applied
+            modal.offsetHeight;
+            
+            modal.classList.add('active');
+            
+            // Force scroll to top of modal
+            setTimeout(() => {
+                const modalContainer = modal.querySelector('.modal-container');
+                if (modalContainer) {
+                    modalContainer.scrollTop = 0;
+                }
+                
+                // Focus management for accessibility
+                const firstInput = modal.querySelector('input, select, button');
+                if (firstInput && firstInput.focus) {
+                    firstInput.focus();
+                }
+            }, 100);
+            
+            console.log('Modal opened successfully:', modal.id);
+        }
+    }
+
+    // Enhanced modal closing with animation
+    function closeModal(modal) {
+        if (modal) {
+            console.log('Closing modal:', modal.id);
+            
+            // Remove modal-open class from body
+            document.body.classList.remove('modal-open');
+            
+            // Show mobile bottom navigation when modal is closed
+            const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
+            if (mobileBottomNav) {
+                mobileBottomNav.style.display = 'block';
+                mobileBottomNav.style.visibility = 'visible';
+                mobileBottomNav.style.opacity = '1';
+                mobileBottomNav.style.pointerEvents = 'auto';
+                mobileBottomNav.classList.remove('modal-hidden');
+            }
+            
+            modal.classList.remove('active');
+            
+            // Wait for animation to complete before hiding
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+            }, 300);
+            
+            // Reset form if it's the add account modal
+            if (modal === addAccountModal && addAccountForm) {
+                resetAddAccountForm();
+            }
+            
+            console.log('Modal closed successfully:', modal.id);
+        }
+    }
+
+    // Add account button click handlers with error checking
+    if (addAccountBtn) {
+        addAccountBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add account button clicked');
+            if (addAccountModal) {
+                openModal(addAccountModal);
+            } else {
+                console.error('Add account modal not found');
+            }
+        });
+    }
+    
+    if (addFirstAccountBtn) {
+        addFirstAccountBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Add first account button clicked');
+            if (addAccountModal) {
+                openModal(addAccountModal);
+            } else {
+                console.error('Add account modal not found');
+            }
+        });
+    }
+
+    // Close modal handlers
+    modals.forEach(modal => {
+        const closeBtn = modal.querySelector('.modal-close');
+        const cancelBtn = modal.querySelector('.btn-secondary, .btn-cancel');
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal(modal);
+            });
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal(modal);
+            });
+        }
+        
+        // Close on backdrop click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal(modal);
+            }
+        });
+    });
+
+    // Enhanced payment type selection
+    const paymentOptions = document.querySelectorAll('.payment-option');
+
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Check the corresponding radio button
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                
+                // Trigger change event for form validation
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            // Add subtle animation
+            this.style.transform = 'translateY(-3px) scale(1.02)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
+        });
+        
+        // Keyboard navigation support
+        option.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+
+    // Form validation and submission
+    function validateForm() {
+        console.log('Starting form validation...');
+        
+        const paymentType = document.querySelector('input[name="payment_type"]:checked');
+        const accountName = document.getElementById('account_name');
+        const accountNumber = document.getElementById('account_number');
+        
+        let isValid = true;
+        let errorMessages = [];
+        
+        // Reset previous error states
+        [accountName, accountNumber].forEach(field => {
+            if (field) {
+                field.style.borderColor = '';
+            }
+        });
+        
+        // Validate payment type
+        if (!paymentType) {
+            errorMessages.push('Please select a payment type');
+            isValid = false;
+            console.log('Payment type validation failed');
+        } else {
+            console.log('Payment type selected:', paymentType.value);
+        }
+        
+        // Validate account name
+        if (!accountName || accountName.value.trim() === '') {
+            errorMessages.push('Account name is required');
+            if (accountName) {
+                accountName.style.borderColor = '#ff6b6b';
+                accountName.focus();
+            }
+            isValid = false;
+            console.log('Account name validation failed');
+        } else {
+            console.log('Account name:', accountName.value);
+        }
+        
+        // Validate account number
+        if (!accountNumber || accountNumber.value.trim() === '') {
+            errorMessages.push('Account number is required');
+            if (accountNumber) {
+                accountNumber.style.borderColor = '#ff6b6b';
+                if (!accountName || accountName.value.trim() !== '') {
+                    accountNumber.focus();
+                }
+            }
+            isValid = false;
+            console.log('Account number validation failed');
+        } else {
+            console.log('Account number:', accountNumber.value);
+        }
+        
+        if (!isValid) {
+            showValidationError(errorMessages.join(', '));
+        }
+        
+        console.log('Form validation result:', isValid);
+        return isValid;
+    }
+
+    function showValidationError(message) {
+        // Create or update error message
+        let errorDiv = document.querySelector('.validation-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'validation-error';
+            errorDiv.style.cssText = `
+                background: linear-gradient(135deg, #ff6b6b, #ff5252);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                font-size: 14px;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: shake 0.5s ease-in-out;
+            `;
+            
+            const modalBody = addAccountModal.querySelector('.modal-body');
+            modalBody.insertBefore(errorDiv, modalBody.firstChild);
+        }
+        
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            if (errorDiv && errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+
+    function resetAddAccountForm() {
+        // Reset form fields
+        if (addAccountForm) {
+            addAccountForm.reset();
+        }
+        
+        // Reset payment type selection
+        paymentOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Reset input styles
+        const formInputs = document.querySelectorAll('.form-input');
+        formInputs.forEach(input => {
+            input.style.borderColor = '';
+            input.parentElement?.classList.remove('focused');
+        });
+        
+        // Remove error messages
+        const errorDiv = document.querySelector('.validation-error');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+
+    // Enhanced form submission
+    if (addAccountForm) {
+        addAccountForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            console.log('Form submission started');
+            
+            if (!validateForm()) {
+                console.log('Form validation failed');
+                return;
+            }
+            
+            // The submit button is outside the form (in modal-footer) so we can't query inside the form
+            const submitBtn = document.getElementById('submitAddAccount');
+            if (!submitBtn) {
+                console.error('Submit button with id submitAddAccount not found');
+                return;
+            }
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            
+            // Get form data manually to ensure all fields are captured
+            const paymentType = document.querySelector('input[name="payment_type"]:checked')?.value;
+            const accountName = document.getElementById('account_name')?.value;
+            const accountNumber = document.getElementById('account_number')?.value;
+            const isPrimary = document.getElementById('is_primary')?.checked;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            
+            console.log('Form data:', {
+                payment_type: paymentType,
+                account_name: accountName,
+                account_number: accountNumber,
+                is_primary: isPrimary,
+                csrf_token: csrfToken ? 'present' : 'missing'
+            });
+            
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('payment_type', paymentType || '');
+            formData.append('account_name', accountName || '');
+            formData.append('account_number', accountNumber || '');
+            if (isPrimary) {
+                formData.append('is_primary', 'on');
+            }
+            if (csrfToken) {
+                formData.append('csrfmiddlewaretoken', csrfToken);
+            }
+            
+            console.log('Submitting form data:', Object.fromEntries(formData));
+            
+            fetch('{% url "add_bank_account" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    // Success animation
+                    submitBtn.innerHTML = '<i class="fas fa-check"></i> Added Successfully!';
+                    submitBtn.style.background = 'linear-gradient(135deg, #51cf66, #40c057)';
+                    
+                    setTimeout(() => {
+                        closeModal(addAccountModal);
+                        // Ensure navigation is shown after successful submission
+                        const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
+                        if (mobileBottomNav) {
+                            mobileBottomNav.style.display = 'block';
+                            mobileBottomNav.style.visibility = 'visible';
+                            mobileBottomNav.style.opacity = '1';
+                            mobileBottomNav.style.pointerEvents = 'auto';
+                            mobileBottomNav.classList.remove('modal-hidden');
+                        }
+                        location.reload(); // Refresh to show new account
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Failed to add account');
+                }
+            })
+            .catch(error => {
+                console.error('Error details:', error);
+                showValidationError(error.message || 'Failed to add account. Please try again.');
+                
+                // Reset button state
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    }
+
+    // Format account numbers for security
+    document.querySelectorAll('.account-number').forEach(element => {
+        const number = element.textContent.trim();
+        if (number.length > 4) {
+            element.textContent = '**** **** ' + number.slice(-4);
+        }
+    });
+
+    console.log('Bank accounts page enhanced interactions loaded successfully');
+    console.log('Found modals:', modals.length);
+    console.log('Add account button:', addAccountBtn);
+    console.log('Add account modal:', addAccountModal);
+
+    // Wire up action buttons without inline JS
+    document.querySelectorAll('[data-delete-id]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            const id = this.getAttribute('data-delete-id');
+            if (id) deleteAccount(id);
+        });
+    });
+    document.querySelectorAll('[data-primary-id]').forEach(function(btn){
+        btn.addEventListener('click', function(event){
+            const id = this.getAttribute('data-primary-id');
+            if (id) setPrimary.call(this, id, event);
+        });
+    });
+});
+
+// Delete account functionality
+function deleteAccount(accountId) {
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    if (deleteConfirmModal) {
+        // Hide mobile bottom navigation for delete modal too
+        const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
+        if (mobileBottomNav) {
+            mobileBottomNav.style.display = 'none';
+            mobileBottomNav.style.visibility = 'hidden';
+            mobileBottomNav.style.opacity = '0';
+            mobileBottomNav.style.pointerEvents = 'none';
+            mobileBottomNav.classList.add('modal-hidden');
+        }
+        
+        deleteConfirmModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Set up the confirm button
+        const confirmBtn = document.getElementById('confirmDelete');
+        if (confirmBtn) {
+            confirmBtn.onclick = function() {
+                fetch(`/delete-bank-account/${accountId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        deleteConfirmModal.classList.remove('active');
+                        document.body.style.overflow = '';
+                        
+                        // Show mobile bottom navigation again
+                        if (mobileBottomNav) {
+                            mobileBottomNav.style.display = 'block';
+                            mobileBottomNav.style.visibility = 'visible';
+                            mobileBottomNav.style.opacity = '1';
+                            mobileBottomNav.style.pointerEvents = 'auto';
+                            mobileBottomNav.classList.remove('modal-hidden');
+                        }
+                        
+                        location.reload();
+                    } else {
+                        alert('Failed to delete account. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete account. Please try again.');
+                });
+            };
+        }
+        
+        // Handle cancel button for delete modal
+        const cancelBtn = deleteConfirmModal.querySelector('.btn-cancel');
+        if (cancelBtn) {
+            cancelBtn.onclick = function() {
+                deleteConfirmModal.classList.remove('active');
+                document.body.style.overflow = '';
+                
+                // Show mobile bottom navigation again
+                if (mobileBottomNav) {
+                    mobileBottomNav.style.display = 'block';
+                    mobileBottomNav.style.visibility = 'visible';
+                    mobileBottomNav.style.opacity = '1';
+                    mobileBottomNav.style.pointerEvents = 'auto';
+                    mobileBottomNav.classList.remove('modal-hidden');
+                }
+            };
+        }
+    }
+}
+
+// Set primary account functionality
+function setPrimary(accountId, evt) {
+    const button = (evt && evt.target ? evt.target.closest('button') : this);
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting...';
+    
+    fetch(`/set-primary-account/${accountId}/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.innerHTML = '<i class="fas fa-check"></i> Primary Set!';
+            button.style.background = 'linear-gradient(135deg, #51cf66, #40c057)';
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.error || 'Failed to set primary account');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to set primary account. Please try again.');
+        
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+}
+</script>
+{% endblock %}

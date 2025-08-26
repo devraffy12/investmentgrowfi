@@ -1,0 +1,589 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}Monthly Report InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-calendar-alt"></i> Monthly Investment Report
+            </h1>
+            <p class="text-muted">{{ current_month|date:"F Y" }} Performance Summary</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-calendar"></i> Select Month
+                </button>
+                <ul class="dropdown-menu">
+                    {% for month in available_months %}
+                    <li><a class="dropdown-item" href="?month={{ month.value }}">{{ month.label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <button class="btn btn-success ms-2" onclick="downloadReport()">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Monthly Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-gradient text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-dollar-sign fa-2x mb-2"></i>
+                    <h6>Total Revenue</h6>
+                    <h4>₱{{ monthly_stats.total_revenue|default:"0.00" }}</h4>
+                    <small class="opacity-75">
+                        {% if monthly_stats.revenue_change >= 0 %}
+                            <i class="fas fa-arrow-up"></i> +{{ monthly_stats.revenue_change|default:"0" }}%
+                        {% else %}
+                            <i class="fas fa-arrow-down"></i> {{ monthly_stats.revenue_change|default:"0" }}%
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h6>Net Profit</h6>
+                    <h4>₱{{ monthly_stats.net_profit|default:"0.00" }}</h4>
+                    <small class="opacity-75">
+                        <i class="fas fa-percentage"></i> {{ monthly_stats.profit_margin|default:"0" }}% margin
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-coins fa-2x mb-2"></i>
+                    <h6>New Investments</h6>
+                    <h4>{{ monthly_stats.new_investments|default:"0" }}</h4>
+                    <small class="opacity-75">
+                        <i class="fas fa-plus"></i> ₱{{ monthly_stats.new_investment_amount|default:"0" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h6>Active Investors</h6>
+                    <h4>{{ monthly_stats.active_investors|default:"0" }}</h4>
+                    <small class="opacity-75">
+                        <i class="fas fa-user-plus"></i> +{{ monthly_stats.new_investors|default:"0" }} new
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-handshake fa-2x mb-2"></i>
+                    <h6>Referral Bonus</h6>
+                    <h4>₱{{ monthly_stats.referral_earnings|default:"0.00" }}</h4>
+                    <small class="opacity-75">
+                        <i class="fas fa-link"></i> {{ monthly_stats.total_referrals|default:"0" }} refs
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                    <h6>Portfolio ROI</h6>
+                    <h4>{{ monthly_stats.portfolio_roi|default:"0" }}%</h4>
+                    <small class="opacity-75">
+                        <i class="fas fa-trophy"></i> {{ monthly_stats.roi_rank|default:"N/A" }} rank
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Plans Performance -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Investment Plans Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="plansPerformanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-medal"></i> Top Performing Plans</h5>
+                </div>
+                <div class="card-body">
+                    {% for plan in top_plans %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <div class="fw-bold">{{ plan.name }}</div>
+                            <small class="text-muted">{{ plan.investment_count }} investments</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-success fw-bold">₱{{ plan.total_returns }}</div>
+                            <small class="text-muted">{{ plan.roi }}% ROI</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Earnings Breakdown -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-calendar-day"></i> Daily Earnings Breakdown</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="viewType" id="viewChart" checked>
+                        <label class="btn btn-outline-primary" for="viewChart">Chart View</label>
+                        
+                        <input type="radio" class="btn-check" name="viewType" id="viewTable">
+                        <label class="btn btn-outline-primary" for="viewTable">Table View</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Chart View -->
+                    <div id="chartView">
+                        <canvas id="dailyEarningsChart" height="80"></canvas>
+                    </div>
+                    
+                    <!-- Table View -->
+                    <div id="tableView" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Daily Payouts</th>
+                                        <th>New Investments</th>
+                                        <th>Withdrawals</th>
+                                        <th>Referral Bonus</th>
+                                        <th>Net Earnings</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for day in daily_breakdown %}
+                                    <tr>
+                                        <td>{{ day.date|date:"M d" }}</td>
+                                        <td class="text-success">₱{{ day.payouts }}</td>
+                                        <td class="text-primary">₱{{ day.new_investments }}</td>
+                                        <td class="text-warning">₱{{ day.withdrawals }}</td>
+                                        <td class="text-info">₱{{ day.referral_bonus }}</td>
+                                        <td class="fw-bold">₱{{ day.net_earnings }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Portfolio Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-pie-chart"></i> Investment Portfolio</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="portfolioBreakdownChart" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Active Investments</small>
+                                <div class="h6">₱{{ portfolio_stats.active_amount|default:"0.00" }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Completed Investments</small>
+                                <div class="h6">₱{{ portfolio_stats.completed_amount|default:"0.00" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock"></i> Investment Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for investment in recent_investments %}
+                        <div class="timeline-item mb-3">
+                            <div class="d-flex">
+                                <div class="timeline-marker bg-primary me-3"></div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ investment.plan.name }}</h6>
+                                            <small class="text-muted">{{ investment.created_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold">₱{{ investment.amount }}</div>
+                                            <small class="text-{{ investment.status_color }}">{{ investment.status }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-exchange-alt"></i> Transaction Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-arrow-down fa-2x text-success mb-2"></i>
+                                <h6>Total Deposits</h6>
+                                <h4 class="text-success">₱{{ transaction_stats.total_deposits|default:"0.00" }}</h4>
+                                <small class="text-muted">{{ transaction_stats.deposit_count|default:"0" }} transactions</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-arrow-up fa-2x text-warning mb-2"></i>
+                                <h6>Total Withdrawals</h6>
+                                <h4 class="text-warning">₱{{ transaction_stats.total_withdrawals|default:"0.00" }}</h4>
+                                <small class="text-muted">{{ transaction_stats.withdrawal_count|default:"0" }} transactions</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-coins fa-2x text-primary mb-2"></i>
+                                <h6>Daily Payouts</h6>
+                                <h4 class="text-primary">₱{{ transaction_stats.total_payouts|default:"0.00" }}</h4>
+                                <small class="text-muted">{{ transaction_stats.payout_count|default:"0" }} payouts</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-handshake fa-2x text-info mb-2"></i>
+                                <h6>Referral Commissions</h6>
+                                <h4 class="text-info">₱{{ transaction_stats.total_commissions|default:"0.00" }}</h4>
+                                <small class="text-muted">{{ transaction_stats.commission_count|default:"0" }} commissions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals and Targets -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-bullseye"></i> Monthly Goals Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Investment Target</span>
+                            <span>₱{{ monthly_stats.investment_progress|default:"0" }} / ₱{{ monthly_stats.investment_target|default:"10000" }}</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-primary" style="width: {{ monthly_stats.investment_progress_percentage|default:"0" }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ monthly_stats.investment_progress_percentage|default:"0" }}% completed</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Earnings Target</span>
+                            <span>₱{{ monthly_stats.earnings_progress|default:"0" }} / ₱{{ monthly_stats.earnings_target|default:"5000" }}</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: {{ monthly_stats.earnings_progress_percentage|default:"0" }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ monthly_stats.earnings_progress_percentage|default:"0" }}% completed</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Referral Target</span>
+                            <span>{{ monthly_stats.referral_progress|default:"0" }} / {{ monthly_stats.referral_target|default:"10" }}</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: {{ monthly_stats.referral_progress_percentage|default:"0" }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ monthly_stats.referral_progress_percentage|default:"0" }}% completed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-forecast"></i> Next Month Projections</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center p-3 border rounded mb-3">
+                                <i class="fas fa-chart-trend-up fa-2x text-success mb-2"></i>
+                                <h6>Projected Earnings</h6>
+                                <h5 class="text-success">₱{{ projections.next_month_earnings|default:"0.00" }}</h5>
+                                <small class="text-muted">Based on current trends</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <div class="text-center p-3 border rounded mb-3">
+                                <i class="fas fa-coins fa-2x text-primary mb-2"></i>
+                                <h6>Expected Investments</h6>
+                                <h5 class="text-primary">₱{{ projections.next_month_investments|default:"0.00" }}</h5>
+                                <small class="text-muted">Estimated new investments</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Recommendation:</strong> {{ projections.recommendation|default:"Continue your current investment strategy for optimal returns." }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-tasks"></i> Action Items for Next Month</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="fas fa-check-circle"></i> Strengths</h6>
+                            <ul class="list-unstyled">
+                                {% for strength in monthly_analysis.strengths %}
+                                <li class="mb-2"><i class="fas fa-plus text-success"></i> {{ strength }}</li>
+                                {% empty %}
+                                <li class="mb-2"><i class="fas fa-plus text-success"></i> Consistent daily earnings</li>
+                                <li class="mb-2"><i class="fas fa-plus text-success"></i> Good portfolio diversification</li>
+                                <li class="mb-2"><i class="fas fa-plus text-success"></i> Active referral participation</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-warning"><i class="fas fa-exclamation-triangle"></i> Improvement Areas</h6>
+                            <ul class="list-unstyled">
+                                {% for improvement in monthly_analysis.improvements %}
+                                <li class="mb-2"><i class="fas fa-arrow-right text-warning"></i> {{ improvement }}</li>
+                                {% empty %}
+                                <li class="mb-2"><i class="fas fa-arrow-right text-warning"></i> Consider higher investment tiers</li>
+                                <li class="mb-2"><i class="fas fa-arrow-right text-warning"></i> Increase referral activities</li>
+                                <li class="mb-2"><i class="fas fa-arrow-right text-warning"></i> Regular profit reinvestment</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chart configurations
+const plansCtx = document.getElementById('plansPerformanceChart').getContext('2d');
+const dailyCtx = document.getElementById('dailyEarningsChart').getContext('2d');
+const portfolioCtx = document.getElementById('portfolioBreakdownChart').getContext('2d');
+
+// Plans Performance Chart
+const plansChart = new Chart(plansCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ plan_names|safe }},
+        datasets: [{
+            label: 'Total Returns',
+            data: {{ plan_returns|safe }},
+            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }, {
+            label: 'Number of Investments',
+            data: {{ plan_counts|safe }},
+            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₱' + value.toLocaleString();
+                    }
+                }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                beginAtZero: true,
+                grid: {
+                    drawOnChartArea: false,
+                }
+            }
+        }
+    }
+});
+
+// Daily Earnings Chart
+const dailyChart = new Chart(dailyCtx, {
+    type: 'line',
+    data: {
+        labels: {{ daily_labels|safe }},
+        datasets: [{
+            label: 'Daily Earnings',
+            data: {{ daily_earnings|safe }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₱' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Portfolio Breakdown Chart
+const portfolioChart = new Chart(portfolioCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Active Investments', 'Completed Investments', 'Available Balance'],
+        datasets: [{
+            data: {{ portfolio_breakdown|safe }},
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Event Handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // View toggle
+    document.querySelectorAll('input[name="viewType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.id === 'viewChart') {
+                document.getElementById('chartView').style.display = 'block';
+                document.getElementById('tableView').style.display = 'none';
+            } else {
+                document.getElementById('chartView').style.display = 'none';
+                document.getElementById('tableView').style.display = 'block';
+            }
+        });
+    });
+});
+
+function downloadReport() {
+    const month = new URLSearchParams(window.location.search).get('month') || 'current';
+    window.open(`/export/monthly-report/?month=${month}`, '_blank');
+}
+</script>
+
+<style>
+.timeline-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 6px;
+}
+
+.progress {
+    height: 8px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+@media (max-width: 768px) {
+    .col-xl-2 {
+        margin-bottom: 1rem;
+    }
+    
+    .display-5 {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}

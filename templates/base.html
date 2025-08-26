@@ -1,0 +1,953 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InvestPH - Professional Investment Platform{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Advanced CSS Reset & Base Styles */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Enhanced Color Palette */
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #06b6d4;
+            
+            /* Neutral Colors */
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
+            --slate-600: #475569;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            
+            /* Background Colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            
+            /* Text Colors */
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-tertiary: #64748b;
+            --text-muted: #94a3b8;
+            
+            /* Enhanced Shadows */
+            --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            
+            /* Enhanced Borders */
+            --border-color: #e2e8f0;
+            --border-color-light: #f1f5f9;
+            --border-radius-sm: 0.375rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+            --border-radius-2xl: 1.5rem;
+            
+            /* Transitions */
+            --transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Body & Background */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-feature-settings: 'cv01', 'cv02', 'cv03', 'cv04';
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Enhanced Mobile Container */
+        .mobile-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-primary);
+            border-radius: var(--border-radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Header Section */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+        }
+
+        .brand-logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: var(--border-radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: var(--shadow-xl);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            transition: var(--transition-slow);
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-2xl);
+        }
+
+        .brand-logo img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            border-radius: var(--border-radius);
+        }
+
+        .brand-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            font-weight: 400;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Content Section */
+        .app-content {
+            padding: 2.5rem 2rem;
+        }
+
+        /* Enhanced Form Styling */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.025em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            font-size: 1rem;
+            font-weight: 500;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Phone Input Enhancement */
+        .phone-input-container {
+            display: flex;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            transition: var(--transition);
+            background: var(--bg-secondary);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .phone-input-container:focus-within {
+            border-color: var(--primary);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+
+        .phone-prefix {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.875rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .phone-number-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .phone-number-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Enhanced Button Styles */
+        .btn-primary-custom {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-lg);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            letter-spacing: 0.025em;
+        }
+
+        .btn-primary-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary-custom:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary-custom:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline-custom {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: var(--border-radius-lg);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+            letter-spacing: 0.025em;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-outline-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-outline-custom:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline-custom:hover::before {
+            width: 100%;
+        }
+
+        /* Enhanced Bonus Alert */
+        .bonus-alert {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius-xl);
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bonus-alert::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 4s linear infinite;
+        }
+
+        .bonus-alert i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .bonus-alert .font-bold {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .bonus-alert .text-sm {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Divider Enhancement */
+        .divider {
+            position: relative;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        }
+
+        .divider span {
+            background: var(--bg-primary);
+            padding: 0 1.5rem;
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Features Grid Enhancement */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color-light);
+            border-radius: var(--border-radius-lg);
+            padding: 1.25rem 1rem;
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+
+        .feature-icon.green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .feature-icon.blue {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+        }
+
+        .feature-icon.purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-description {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            line-height: 1.4;
+        }
+
+        /* Form Icon Enhancement */
+        .form-group-with-icon {
+            position: relative;
+        }
+
+        .form-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            transition: var(--transition);
+            z-index: 2;
+        }
+
+        .form-group-with-icon .form-control {
+            padding-left: 2.75rem;
+        }
+
+        .form-group-with-icon .form-control:focus + .form-icon {
+            color: var(--primary);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 2;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.96); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Enhanced Alert Styles */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 1.5rem;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            border-color: #f87171;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #16a34a;
+            border-color: #4ade80;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #2563eb;
+            border-color: #60a5fa;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            border-color: #f59e0b;
+        }
+
+        .alert i {
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        /* Enhanced Form Check Styles */
+        .form-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.375rem;
+            background: var(--bg-secondary);
+            transition: var(--transition);
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .form-check-input:checked {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-check-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .form-check-label a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .form-check-label a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+            
+            .mobile-container {
+                max-width: 100%;
+                border-radius: var(--border-radius-xl);
+            }
+            
+            .app-header {
+                padding: 2rem 1.5rem 1.5rem;
+            }
+            
+            .app-content {
+                padding: 2rem 1.5rem;
+            }
+            
+            .brand-title {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Loading States */
+        .btn-primary-custom:disabled,
+        .btn-outline-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Focus Accessibility */
+        .form-control:focus,
+        .btn-primary-custom:focus,
+        .btn-outline-custom:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header Section -->
+        <div class="app-header">
+            <div class="brand-logo">
+                <img src="{% static 'GrowFi.png' %}" alt="GrowFi Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <i class="fas fa-chart-line" style="display: none; font-size: 2.25rem; color: var(--primary);"></i>
+            </div>
+            <h1 class="brand-title">GrowFi</h1>
+            <p class="brand-subtitle">Your Gateway to Smart Investments</p>
+        </div>
+        
+        <!-- Content Section -->
+        <div class="app-content">
+            
+            {% block content %}
+            <!-- Default Login Form (fallback) -->
+            <form id="authForm" method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <div class="phone-input-container">
+                        <div class="phone-prefix">
+                            <i class="fas fa-flag"></i>
+                            +63
+                        </div>
+                        <input type="tel" class="phone-number-input" id="phone" name="phone" placeholder="9XX XXX XXXX" required maxlength="13">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-primary-custom">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Sign In to InvestPH
+                    </button>
+                </div>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <div class="form-group">
+                    <a href="{% url 'register' %}" class="btn-outline-custom text-decoration-none">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Create New Account
+                    </a>
+                </div>
+            </form>
+            {% endblock %}
+            
+            <!-- Features Grid -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon green">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-title">Secure</div>
+                    <div class="feature-description">Bank-level security for your investments</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon blue">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="feature-title">Mobile First</div>
+                    <div class="feature-description">Trade anytime, anywhere on your phone</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="feature-title">Analytics</div>
+                    <div class="feature-description">Advanced tools for smart investing</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Enhanced phone number formatting
+            $('#phone').on('input', function() {
+                let value = $(this).val().replace(/\D/g, '');
+                
+                // Limit to 10 digits (9XXXXXXXXX)
+                if (value.length > 10) {
+                    value = value.slice(0, 10);
+                }
+                
+                // Ensure it starts with 9
+                if (value.length > 0 && !value.startsWith('9')) {
+                    if (value.startsWith('09')) {
+                        value = value.substring(1);
+                    }
+                }
+                
+                // Format with spacing: 9XX XXX XXXX
+                let formattedValue = '';
+                if (value.length > 0) {
+                    formattedValue = value;
+                    
+                    if (value.length > 3) {
+                        formattedValue = value.substring(0, 3) + ' ' + value.substring(3);
+                    }
+                    if (value.length > 6) {
+                        formattedValue = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6);
+                    }
+                }
+                
+                $(this).val(formattedValue);
+                validatePhone();
+            });
+
+            function validatePhone() {
+                const phone = $('#phone').val().trim();
+                const phoneDigits = phone.replace(/\D/g, '');
+                const $container = $('.phone-input-container');
+                
+                $container.removeClass('error success');
+                
+                if (phone.length > 0) {
+                    if (phoneDigits.startsWith('9') && phoneDigits.length === 10) {
+                        $container.addClass('success');
+                        $container.css('border-color', 'var(--success)');
+                    } else if (phoneDigits.length >= 3) {
+                        $container.addClass('error');
+                        $container.css('border-color', 'var(--error)');
+                    } else {
+                        $container.css('border-color', 'var(--border-color)');
+                    }
+                } else {
+                    $container.css('border-color', 'var(--border-color)');
+                }
+            }
+
+            // Enhanced form processing
+            let formIconsProcessed = false;
+            
+            function processFormIcons() {
+                if (formIconsProcessed) return;
+                
+                $('input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="number"]').each(function() {
+                    const $input = $(this);
+                    
+                    if ($input.hasClass('icon-processed') || $input.closest('.form-group-with-icon').length > 0 || $input.hasClass('phone-number-input')) {
+                        return;
+                    }
+                    
+                    const fieldName = $input.attr('name') || $input.attr('id') || '';
+                    let iconClass = 'fas fa-edit';
+                    
+                    // Enhanced icon mapping
+                    if (fieldName.includes('email')) {
+                        iconClass = 'fas fa-envelope';
+                    } else if (fieldName.includes('password')) {
+                        iconClass = 'fas fa-lock';
+                    } else if (fieldName.includes('phone')) {
+                        iconClass = 'fas fa-phone';
+                    } else if (fieldName.includes('user') || fieldName.includes('name')) {
+                        iconClass = 'fas fa-user';
+                    } else if (fieldName.includes('amount') || fieldName.includes('money')) {
+                        iconClass = 'fas fa-peso-sign';
+                    }
+                    
+                    $input.addClass('icon-processed');
+                    $input.wrap('<div class="form-group-with-icon"></div>');
+                    $input.after(`<i class="${iconClass} form-icon"></i>`);
+                    
+                    // Add password toggle
+                    if ($input.attr('type') === 'password') {
+                        $input.parent().append('<i class="fas fa-eye password-toggle"></i>');
+                    }
+                });
+                
+                formIconsProcessed = true;
+            }
+            
+            processFormIcons();
+            
+            // Enhanced password toggle
+            $(document).on('click', '.password-toggle', function() {
+                const $input = $(this).siblings('input');
+                const $icon = $(this);
+                
+                if ($input.attr('type') === 'password') {
+                    $input.attr('type', 'text');
+                    $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    $input.attr('type', 'password');
+                    $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+            
+            // Form submission handling - Updated to work with dynamic form IDs
+            $(document).on('submit', '#authForm, #loginForm, #registerForm', function(e) {
+                const phone = $('#phone').val().trim();
+                const phoneDigits = phone.replace(/\D/g, '');
+                
+                // Validate phone number before submission
+                if (!phoneDigits.startsWith('9') || phoneDigits.length !== 10) {
+                    e.preventDefault();
+                    alert('Please enter a valid Philippine phone number (9XX XXX XXXX)');
+                    return;
+                }
+                
+                // Check for register form specific validation
+                if ($(this).attr('id') === 'registerForm' || $(this).find('#confirm_password').length > 0) {
+                    const password = $('#password').val();
+                    const confirmPassword = $('#confirm_password').val();
+                    
+                    if (password !== confirmPassword) {
+                        e.preventDefault();
+                        alert('Passwords do not match. Please try again.');
+                        return;
+                    }
+                    
+                    if (password.length < 6) {
+                        e.preventDefault();
+                        alert('Password must be at least 6 characters long.');
+                        return;
+                    }
+                    
+                    if ($('#terms').length > 0 && !$('#terms').is(':checked')) {
+                        e.preventDefault();
+                        alert('Please accept the Terms & Conditions to continue.');
+                        return;
+                    }
+                }
+                
+                const $submitBtn = $(this).find('button[type="submit"]');
+                
+                // Loading state
+                $submitBtn.prop('disabled', true);
+                
+                if ($(this).attr('id') === 'registerForm' || $(this).find('#confirm_password').length > 0) {
+                    $submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...');
+                } else {
+                    $submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Signing In...');
+                }
+                
+                // Convert formatted phone to clean format for submission
+                $('#phone').val(phoneDigits);
+            });
+            
+            // Enhanced hover effects
+            $('.feature-card').hover(function() {
+                $(this).find('.feature-icon').addClass('animate__pulse');
+            }, function() {
+                $(this).find('.feature-icon').removeClass('animate__pulse');
+            });
+
+            // Handle navigation links - Fix the button click issue
+            $(document).on('click', '.btn-outline-custom', function(e) {
+                // If it's a link with href, let it navigate normally
+                if ($(this).is('a') && $(this).attr('href')) {
+                    return true;
+                }
+                // If it's a button with onclick, execute the onclick
+                if ($(this).attr('onclick')) {
+                    eval($(this).attr('onclick'));
+                }
+            });
+
+            // Password confirmation validation for register form
+            $(document).on('input', '#confirm_password', function() {
+                const password = $('#password').val();
+                const confirmPassword = $(this).val();
+                
+                if (confirmPassword.length > 0) {
+                    if (password === confirmPassword) {
+                        $(this).css('border-color', 'var(--success)');
+                    } else {
+                        $(this).css('border-color', 'var(--error)');
+                    }
+                } else {
+                    $(this).css('border-color', 'var(--border-color)');
+                }
+            });
+        });
+    </script>   
+</body>
+</html>

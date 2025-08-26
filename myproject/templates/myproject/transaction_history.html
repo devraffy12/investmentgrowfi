@@ -1,0 +1,799 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+{% load investment_extras %}
+
+{% block title %}Account Records GrowFi{% endblock %}
+
+{% block content %}
+<!-- Account Records Header -->
+<div class="records-header">
+    <div class="header-content">
+        <div class="header-icon">
+            <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <div class="header-text">
+            <h1 class="page-title">Account Records</h1>
+            <p class="page-subtitle">Complete transaction history and account activity</p>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-section">
+    <div class="summary-grid">
+        <div class="summary-card deposits">
+            <div class="card-icon">
+                <i class="fas fa-arrow-circle-down"></i>
+            </div>
+            <div class="card-content">
+                <div class="card-amount">₱{{ summary.total_deposits|floatformat:2|default:"0.00" }}</div>
+                <div class="card-label">Total Deposits</div>
+                <div class="card-count">{{ summary.deposit_count|default:"0" }} transactions</div>
+            </div>
+        </div>
+        
+        <div class="summary-card withdrawals">
+            <div class="card-icon">
+                <i class="fas fa-arrow-circle-up"></i>
+            </div>
+            <div class="card-content">
+                <div class="card-amount">₱{{ summary.total_withdrawals|floatformat:2|default:"0.00" }}</div>
+                <div class="card-label">Total Withdrawals</div>
+                <div class="card-count">{{ summary.withdrawal_count|default:"0" }} transactions</div>
+            </div>
+        </div>
+        
+        <div class="summary-card investments">
+            <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-content">
+                <div class="card-amount">₱{{ summary.total_investments|floatformat:2|default:"0.00" }}</div>
+                <div class="card-label">Total Investments</div>
+                <div class="card-count">{{ summary.investment_count|default:"0" }} transactions</div>
+            </div>
+        </div>
+        
+        <div class="summary-card earnings">
+            <div class="card-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="card-content">
+                <div class="card-amount">₱{{ summary.total_earnings|floatformat:2|default:"0.00" }}</div>
+                <div class="card-label">Total Earnings</div>
+                <div class="card-count">{{ summary.earning_count|default:"0" }} transactions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-section">
+    <div class="filter-container">
+        <div class="filter-tabs">
+            <button class="filter-btn active" data-filter="all" onclick="filterRecords('all')">
+                <i class="fas fa-list"></i>
+                <span>All Types</span>
+                <div class="filter-badge">{{ summary.total_transactions|default:"0" }}</div>
+            </button>
+            
+            <button class="filter-btn" data-filter="deposit" onclick="filterRecords('deposit')">
+                <i class="fas fa-plus-circle"></i>
+                <span>Deposits</span>
+                <div class="filter-badge">{{ summary.deposit_count|default:"0" }}</div>
+            </button>
+            
+            <button class="filter-btn" data-filter="withdrawal" onclick="filterRecords('withdrawal')">
+                <i class="fas fa-minus-circle"></i>
+                <span>Withdrawals</span>
+                <div class="filter-badge">{{ summary.withdrawal_count|default:"0" }}</div>
+            </button>
+            
+            <button class="filter-btn" data-filter="investment" onclick="filterRecords('investment')">
+                <i class="fas fa-chart-line"></i>
+                <span>Investments</span>
+                <div class="filter-badge">{{ summary.investment_count|default:"0" }}</div>
+            </button>
+            
+            <button class="filter-btn" data-filter="daily_payout" onclick="filterRecords('daily_payout')">
+                <i class="fas fa-coins"></i>
+                <span>Earnings</span>
+                <div class="filter-badge">{{ summary.earning_count|default:"0" }}</div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Records List -->
+<div class="records-section">
+    {% if transactions %}
+        <div class="records-container">
+            {% for transaction in transactions %}
+            <div class="record-item" data-type="{{ transaction.transaction_type }}">
+                <div class="record-icon-wrapper">
+                    {% if transaction.transaction_type == 'deposit' %}
+                        <div class="record-icon deposit-bg">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                    {% elif transaction.transaction_type == 'withdrawal' %}
+                        <div class="record-icon withdrawal-bg">
+                            <i class="fas fa-minus-circle"></i>
+                        </div>
+                    {% elif transaction.transaction_type == 'investment' %}
+                        <div class="record-icon investment-bg">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    {% elif transaction.transaction_type == 'daily_payout' %}
+                        <div class="record-icon earnings-bg">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    {% elif transaction.transaction_type == 'referral_bonus' %}
+                        <div class="record-icon referral-bg">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    {% else %}
+                        <div class="record-icon default-bg">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="record-content">
+                    <div class="record-main">
+                        <div class="record-title">
+                            {% if transaction.transaction_type == 'deposit' %}
+                                Account Deposit
+                            {% elif transaction.transaction_type == 'withdrawal' %}
+                                Account Withdrawal
+                            {% elif transaction.transaction_type == 'investment' %}
+                                Investment Purchase
+                            {% elif transaction.transaction_type == 'daily_payout' %}
+                                Daily Earnings
+                            {% elif transaction.transaction_type == 'referral_bonus' %}
+                                Referral Bonus
+                            {% elif transaction.transaction_type == 'registration_bonus' %}
+                                Welcome Bonus
+                            {% else %}
+                                {{ transaction.get_transaction_type_display }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="record-details">
+                            <div class="record-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                {{ transaction.created_at|date:"M d, Y" }}
+                            </div>
+                            <div class="record-time">
+                                <i class="fas fa-clock"></i>
+                                {{ transaction.created_at|date:"g:i A" }}
+                            </div>
+                        </div>
+                        
+                        {% if transaction.reference_number %}
+                        <div class="record-reference">
+                            <i class="fas fa-hashtag"></i>
+                            <span>{{ transaction.reference_number }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="record-amount-section">
+                        <div class="record-amount {% if transaction.transaction_type == 'withdrawal' %}negative{% else %}positive{% endif %}">
+                            {% if transaction.transaction_type == 'withdrawal' %}-{% else %}+{% endif %}₱{{ transaction.amount|floatformat:2 }}
+                        </div>
+                        
+                        <div class="record-status">
+                            <span class="status-pill status-{{ transaction.status }}">
+                                {% if transaction.status == 'pending' %}
+                                    <i class="fas fa-clock"></i> Pending
+                                {% elif transaction.status == 'approved' %}
+                                    <i class="fas fa-check"></i> Approved
+                                {% elif transaction.status == 'completed' %}
+                                    <i class="fas fa-check-circle"></i> Completed
+                                {% elif transaction.status == 'rejected' %}
+                                    <i class="fas fa-times-circle"></i> Rejected
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="record-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination if needed -->
+        {% if transactions.has_other_pages %}
+        <div class="pagination-section">
+            <div class="pagination-info">
+                Showing {{ transactions.start_index }} to {{ transactions.end_index }} of {{ transactions.paginator.count }} records
+            </div>
+        </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="no-records">
+            <div class="no-records-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <h3>No Records Found</h3>
+            <p>You haven't made any transactions yet. Start investing or make a deposit to see your account records here.</p>
+            <div class="no-records-actions">
+                <a href="{% url 'invest' %}" class="action-btn primary">
+                    <i class="fas fa-chart-line"></i>
+                    Start Investing
+                </a>
+                <a href="{% url 'deposit' %}" class="action-btn secondary">
+                    <i class="fas fa-plus-circle"></i>
+                    Make Deposit
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+/* Account Records Styles */
+.records-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px 20px;
+    margin: 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.header-text {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.page-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.summary-section {
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.summary-card.deposits { border-left-color: #4CAF50; }
+.summary-card.withdrawals { border-left-color: #f44336; }
+.summary-card.investments { border-left-color: #2196F3; }
+.summary-card.earnings { border-left-color: #FF9800; }
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+}
+
+.deposits .card-icon { background: linear-gradient(135deg, #4CAF50, #45a049); }
+.withdrawals .card-icon { background: linear-gradient(135deg, #f44336, #e53935); }
+.investments .card-icon { background: linear-gradient(135deg, #2196F3, #1976d2); }
+.earnings .card-icon { background: linear-gradient(135deg, #FF9800, #f57c00); }
+
+.card-content {
+    flex: 1;
+}
+
+.card-amount {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.card-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.card-count {
+    font-size: 12px;
+    color: #999;
+}
+
+.filter-section {
+    padding: 0 20px;
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.filter-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding: 15px 0;
+}
+
+.filter-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 25px;
+    padding: 12px 20px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.filter-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.filter-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: inherit;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+.filter-btn.active .filter-badge {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.records-section {
+    padding: 20px;
+    background: #f8f9fa;
+    min-height: 400px;
+}
+
+.records-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.record-item {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.record-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.record-icon-wrapper {
+    flex-shrink: 0;
+}
+
+.record-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+}
+
+.deposit-bg { background: linear-gradient(135deg, #4CAF50, #45a049); }
+.withdrawal-bg { background: linear-gradient(135deg, #f44336, #e53935); }
+.investment-bg { background: linear-gradient(135deg, #2196F3, #1976d2); }
+.earnings-bg { background: linear-gradient(135deg, #FF9800, #f57c00); }
+.referral-bg { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
+.default-bg { background: linear-gradient(135deg, #607D8B, #455A64); }
+
+.record-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.record-main {
+    flex: 1;
+}
+
+.record-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.record-details {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 5px;
+}
+
+.record-date, .record-time {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #666;
+}
+
+.record-reference {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #999;
+}
+
+.record-amount-section {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.record-amount {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.record-amount.positive { color: #4CAF50; }
+.record-amount.negative { color: #f44336; }
+
+.record-status {
+    font-size: 12px;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.record-arrow {
+    color: #ccc;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.no-records {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 15px;
+    max-width: 600px;
+    margin: 40px auto;
+}
+
+.no-records-icon {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 30px;
+}
+
+.no-records h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.no-records p {
+    color: #666;
+    margin-bottom: 30px;
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.no-records-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.action-btn.secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    text-decoration: none;
+}
+
+.action-btn.primary:hover { color: white; }
+.action-btn.secondary:hover { color: #667eea; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .summary-card {
+        padding: 15px;
+    }
+    
+    .filter-tabs {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 10px 15px;
+        font-size: 13px;
+        min-width: 100px;
+    }
+    
+    .record-item {
+        padding: 15px;
+    }
+    
+    .record-details {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .record-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .record-amount-section {
+        align-self: flex-end;
+        text-align: right;
+    }
+    
+    .no-records-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-btn {
+        min-width: 200px;
+        justify-content: center;
+    }
+}
+
+/* Animation for filtering */
+.record-item {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.record-item.hidden {
+    display: none;
+}
+
+.record-item.filtering {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Loading animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.record-item {
+    animation: fadeInUp 0.5s ease forwards;
+}
+</style>
+
+<script>
+function filterRecords(type) {
+    // Update active filter button
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.filter === type) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Filter record items
+    const records = document.querySelectorAll('.record-item');
+    let visibleCount = 0;
+    
+    records.forEach((record, index) => {
+        const recordType = record.dataset.type;
+        
+        if (type === 'all' || recordType === type) {
+            record.style.display = 'flex';
+            record.classList.remove('hidden', 'filtering');
+            
+            // Staggered animation for visible items
+            setTimeout(() => {
+                record.style.opacity = '1';
+                record.style.transform = 'translateY(0)';
+            }, visibleCount * 50);
+            
+            visibleCount++;
+        } else {
+            record.classList.add('filtering');
+            
+            setTimeout(() => {
+                record.style.display = 'none';
+                record.classList.add('hidden');
+            }, 200);
+        }
+    });
+    
+    // Show/hide no records message
+    const noRecords = document.querySelector('.no-records');
+    if (visibleCount === 0 && noRecords) {
+        noRecords.style.display = 'block';
+    } else if (noRecords) {
+        noRecords.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial filter setup
+    filterRecords('all');
+    
+    // Add click handlers for record items (future enhancement)
+    const recordItems = document.querySelectorAll('.record-item');
+    recordItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // Could show detailed transaction info in a modal
+            console.log('Record clicked:', this.dataset.type);
+        });
+    });
+});
+
+// Smooth scroll for better UX
+function smoothScrollToSection(element) {
+    element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+</script>
+{% endblock %}

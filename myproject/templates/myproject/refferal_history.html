@@ -1,0 +1,743 @@
+{% extends 'myproject/base.html' %}
+
+{% block title %}Referral History InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="fas fa-history"></i> Referral History
+            </h1>
+            <p class="text-muted">Complete record of your referral activities and commissions</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'referral_dashboard' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <button class="btn btn-success" onclick="exportHistory()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h6>Total Referrals</h6>
+                    <h4 id="totalReferrals">0</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h6>Active Referrals</h6>
+                    <h4 id="activeReferrals">0</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-coins fa-2x mb-2"></i>
+                    <h6>Total Commissions</h6>
+                    <h4 id="totalCommissions">₱0.00</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h6>Monthly Average</h6>
+                    <h4 id="monthlyAverage">₱0.00</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter"></i> Filter Referrals</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" id="filterForm">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status" id="statusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="registered">Registered</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="invested">Invested</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">Date Range</label>
+                                <select class="form-select" name="date_range" id="dateRangeFilter">
+                                    <option value="">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">From Date</label>
+                                <input type="date" class="form-control" name="date_from" id="dateFrom">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">To Date</label>
+                                <input type="date" class="form-control" name="date_to" id="dateTo">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">Commission Range</label>
+                                <select class="form-select" name="commission_range" id="commissionRangeFilter">
+                                    <option value="">All Amounts</option>
+                                    <option value="0-100">₱0 - ₱100</option>
+                                    <option value="100-500">₱100 - ₱500</option>
+                                    <option value="500-1000">₱500 - ₱1,000</option>
+                                    <option value="1000+">₱1,000+</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary me-2" onclick="applyFilters()">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Referral Details</h5>
+                    <div>
+                        <small class="text-muted" id="resultCount">Loading...</small>
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Referral Info</th>
+                                    <th>Registration Date</th>
+                                    <th>Verification Status</th>
+                                    <th>Investment Activity</th>
+                                    <th>Total Commissions</th>
+                                    <th>Last Activity</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="referralTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <i class="fas fa-spinner fa-spin fa-2x text-muted mb-3"></i>
+                                        <h5 class="text-muted">Loading referrals...</h5>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card-footer" id="paginationContainer" style="display: none;">
+                    <!-- Pagination will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Details Modal -->
+<div class="modal fade" id="referralDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user"></i> Referral Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="referralDetailsContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Message Modal -->
+<div class="modal fade" id="sendMessageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-envelope"></i> Send Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="messageForm">
+                    <input type="hidden" name="referral_id" id="messageReferralId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message Type</label>
+                        <select class="form-select" name="message_type" id="messageType" onchange="updateMessageTemplate()">
+                            <option value="welcome">Welcome Message</option>
+                            <option value="investment_tips">Investment Tips</option>
+                            <option value="platform_update">Platform Update</option>
+                            <option value="custom">Custom Message</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" name="subject" id="messageSubject" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" rows="5" name="message" id="messageContent" required></textarea>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="send_email" id="sendEmail" checked>
+                        <label class="form-check-label" for="sendEmail">
+                            Send via email
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendReferralMessage()">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let currentFilters = {};
+
+// Message templates
+const messageTemplates = {
+    welcome: {
+        subject: "Welcome to InvestPH!",
+        content: "Hi there!\n\nThank you for joining InvestPH through my referral! I'm excited to have you on this investment journey.\n\nIf you have any questions about getting started or choosing your first investment plan, feel free to reach out. I'm here to help!\n\nBest regards"
+    },
+    investment_tips: {
+        subject: "Investment Tips from Your Referrer",
+        content: "Hello!\n\nI wanted to share some tips that have helped me succeed on InvestPH:\n\n1. Start with smaller amounts to get familiar with the platform\n2. Reinvest your profits for compound growth\n3. Monitor your daily payouts and track your ROI\n4. Consider diversifying across multiple investment plans\n\nFeel free to ask if you need any guidance!\n\nHappy investing!"
+    },
+    platform_update: {
+        subject: "InvestPH Platform Update",
+        content: "Hi!\n\nI wanted to let you know about some recent updates on InvestPH that you might find interesting:\n\n[Add your update information here]\n\nIf you have any questions about these changes, don't hesitate to reach out!\n\nBest regards"
+    },
+    custom: {
+        subject: "",
+        content: ""
+    }
+};
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadSummaryData();
+    loadReferralHistory();
+});
+
+function loadSummaryData() {
+    fetch('/api/referral-summary/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalReferrals').textContent = data.total_referrals || 0;
+            document.getElementById('activeReferrals').textContent = data.active_referrals || 0;
+            document.getElementById('totalCommissions').textContent = '₱' + (data.total_commissions || '0.00');
+            document.getElementById('monthlyAverage').textContent = '₱' + (data.monthly_average || '0.00');
+        })
+        .catch(error => {
+            console.error('Error loading summary:', error);
+        });
+}
+
+function loadReferralHistory(page = 1) {
+    const params = new URLSearchParams({
+        page: page,
+        ...currentFilters
+    });
+    
+    fetch(`/api/referral-history/?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            updateReferralTable(data.referrals);
+            updatePagination(data.pagination);
+            updateResultCount(data.pagination);
+        })
+        .catch(error => {
+            console.error('Error loading referral history:', error);
+            showErrorState();
+        });
+}
+
+function updateReferralTable(referrals) {
+    const tbody = document.getElementById('referralTableBody');
+    
+    if (!referrals || referrals.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No referrals found</h5>
+                    <p class="text-muted">Start sharing your referral link to build your network!</p>
+                    <a href="{% url 'referral_link' %}" class="btn btn-primary">
+                        <i class="fas fa-link"></i> Get Referral Link
+                    </a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = referrals.map(referral => `
+        <tr>
+            <td>
+                <div class="d-flex align-items-center">
+                    <div class="avatar-md bg-primary text-white rounded-circle me-3">
+                        ${referral.initials}
+                    </div>
+                    <div>
+                        <div class="fw-bold">${referral.name}</div>
+                        <small class="text-muted">${referral.email}</small>
+                        <div class="small text-muted">${referral.phone || 'No phone'}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div>${referral.registration_date}</div>
+                <small class="text-muted">${referral.registration_time}</small>
+            </td>
+            <td>
+                ${referral.is_verified ? 
+                    '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Verified</span>' :
+                    '<span class="badge bg-warning"><i class="fas fa-clock"></i> Pending</span>'
+                }
+                ${referral.kyc_completed ? 
+                    '<div class="small mt-1"><span class="badge bg-info">KYC Complete</span></div>' : ''
+                }
+            </td>
+            <td>
+                <div class="small">
+                    <strong>Investments:</strong> ${referral.total_investments || 0}
+                </div>
+                <div class="small">
+                    <strong>Amount:</strong> ₱${referral.total_investment_amount || '0.00'}
+                </div>
+                <div class="small">
+                    <strong>Status:</strong> 
+                    ${referral.has_active_investments ? 
+                        '<span class="text-success">Active</span>' :
+                        '<span class="text-muted">None</span>'
+                    }
+                </div>
+            </td>
+            <td>
+                <div class="fw-bold text-success">₱${referral.total_commissions || '0.00'}</div>
+                <div class="small text-muted">${referral.commission_count || 0} payments</div>
+                ${referral.last_commission_date ? 
+                    `<div class="small text-muted">Last: ${referral.last_commission_date}</div>` : ''
+                }
+            </td>
+            <td>
+                ${referral.last_login ? 
+                    `<div>${referral.last_login_ago}</div><small class="text-muted">${referral.last_login_date}</small>` :
+                    '<span class="text-muted">Never logged in</span>'
+                }
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-info" onclick="viewReferralDetails('${referral.id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="sendMessage('${referral.id}')">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                    ${!referral.is_active ? 
+                        `<button class="btn btn-outline-warning" onclick="reactivateReferral('${referral.id}')">
+                            <i class="fas fa-undo"></i>
+                        </button>` : ''
+                    }
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updatePagination(pagination) {
+    const container = document.getElementById('paginationContainer');
+    
+    if (!pagination || pagination.total_pages <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = `
+        <nav aria-label="Referral pagination">
+            <ul class="pagination justify-content-center mb-0">
+                ${pagination.has_previous ? 
+                    `<li class="page-item">
+                        <button class="page-link" onclick="loadReferralHistory(${pagination.previous_page})">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                    </li>` : ''
+                }
+                
+                ${Array.from({length: pagination.total_pages}, (_, i) => i + 1)
+                    .filter(num => Math.abs(num - pagination.current_page) <= 2)
+                    .map(num => `
+                        <li class="page-item ${num === pagination.current_page ? 'active' : ''}">
+                            <button class="page-link" onclick="loadReferralHistory(${num})">${num}</button>
+                        </li>
+                    `).join('')
+                }
+                
+                ${pagination.has_next ? 
+                    `<li class="page-item">
+                        <button class="page-link" onclick="loadReferralHistory(${pagination.next_page})">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </li>` : ''
+                }
+            </ul>
+        </nav>
+    `;
+}
+
+function updateResultCount(pagination) {
+    const element = document.getElementById('resultCount');
+    if (pagination && pagination.total_count) {
+        const start = (pagination.current_page - 1) * pagination.per_page + 1;
+        const end = Math.min(pagination.current_page * pagination.per_page, pagination.total_count);
+        element.textContent = `Showing ${start} - ${end} of ${pagination.total_count} referrals`;
+    } else {
+        element.textContent = 'No results';
+    }
+}
+
+function showErrorState() {
+    document.getElementById('referralTableBody').innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h5 class="text-muted">Error loading data</h5>
+                <p class="text-muted">Please try refreshing the page</p>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Retry
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+function applyFilters() {
+    currentFilters = {
+        status: document.getElementById('statusFilter').value,
+        date_range: document.getElementById('dateRangeFilter').value,
+        date_from: document.getElementById('dateFrom').value,
+        date_to: document.getElementById('dateTo').value,
+        commission_range: document.getElementById('commissionRangeFilter').value
+    };
+    
+    // Remove empty filters
+    Object.keys(currentFilters).forEach(key => {
+        if (!currentFilters[key]) {
+            delete currentFilters[key];
+        }
+    });
+    
+    currentPage = 1;
+    loadReferralHistory(1);
+}
+
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    currentFilters = {};
+    currentPage = 1;
+    loadReferralHistory(1);
+}
+
+function refreshData() {
+    loadSummaryData();
+    loadReferralHistory(currentPage);
+    showToast('Data refreshed!', 'info');
+}
+
+function viewReferralDetails(referralId) {
+    fetch(`/api/referral-details/${referralId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('referralDetailsContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Personal Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Name:</strong></td><td>${data.name}</td></tr>
+                            <tr><td><strong>Email:</strong></td><td>${data.email}</td></tr>
+                            <tr><td><strong>Phone:</strong></td><td>${data.phone || 'Not provided'}</td></tr>
+                            <tr><td><strong>Registration:</strong></td><td>${data.registration_date}</td></tr>
+                            <tr><td><strong>Last Login:</strong></td><td>${data.last_login || 'Never'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Investment Summary</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Total Investments:</strong></td><td>${data.total_investments}</td></tr>
+                            <tr><td><strong>Investment Amount:</strong></td><td>₱${data.total_investment_amount}</td></tr>
+                            <tr><td><strong>Active Investments:</strong></td><td>${data.active_investments}</td></tr>
+                            <tr><td><strong>Total Earnings:</strong></td><td>₱${data.total_earnings}</td></tr>
+                            <tr><td><strong>Your Commissions:</strong></td><td>₱${data.total_commissions}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>Recent Activity</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Activity</th>
+                                <th>Amount</th>
+                                <th>Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.recent_activity.map(activity => `
+                                <tr>
+                                    <td>${activity.date}</td>
+                                    <td>${activity.description}</td>
+                                    <td>₱${activity.amount}</td>
+                                    <td>₱${activity.commission}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            new bootstrap.Modal(document.getElementById('referralDetailsModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading referral details:', error);
+            showToast('Error loading details', 'error');
+        });
+}
+
+function sendMessage(referralId) {
+    document.getElementById('messageReferralId').value = referralId;
+    
+    // Reset form
+    document.getElementById('messageForm').reset();
+    document.getElementById('messageType').value = 'welcome';
+    updateMessageTemplate();
+    
+    new bootstrap.Modal(document.getElementById('sendMessageModal')).show();
+}
+
+function updateMessageTemplate() {
+    const messageType = document.getElementById('messageType').value;
+    const template = messageTemplates[messageType];
+    
+    document.getElementById('messageSubject').value = template.subject;
+    document.getElementById('messageContent').value = template.content;
+}
+
+function sendReferralMessage() {
+    const form = document.getElementById('messageForm');
+    const formData = new FormData(form);
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    fetch('/api/send-referral-message/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('sendMessageModal')).hide();
+            showToast('Message sent successfully!', 'success');
+        } else {
+            showToast(data.message || 'Error sending message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error sending message', 'error');
+    });
+}
+
+function reactivateReferral(referralId) {
+    if (confirm('Are you sure you want to send a reactivation message to this referral?')) {
+        fetch(`/api/reactivate-referral/${referralId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Reactivation message sent!', 'success');
+            } else {
+                showToast(data.message || 'Error sending reactivation message', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error sending reactivation message', 'error');
+        });
+    }
+}
+
+function exportHistory() {
+    const params = new URLSearchParams(currentFilters);
+    params.set('export', 'excel');
+    window.open(`/api/export-referral-history/?${params.toString()}`, '_blank');
+}
+
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastElement.role = 'alert';
+    toastElement.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toastElement);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1080';
+    document.body.appendChild(container);
+    return container;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.avatar-md {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.table th {
+    border-top: none;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Loading animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,1073 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+{% load investment_extras %}
+
+{% block title %}Team GrowFi{% endblock %}
+
+{% block content %}
+<!-- Team Header -->
+<div class="team-header">
+    <div class="header-content">
+        <div class="header-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="header-text">
+            <h1 class="page-title">My Team</h1>
+            <p class="page-subtitle" style="color: white">Grow your network and earn referral bonuses</p>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Stats Overview -->
+<div class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card total-referrals">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ total_referrals }}</div>
+                <div class="stat-label">Total Referrals</div>
+                <div class="stat-sublabel">All time members</div>
+            </div>
+        </div>
+        
+        <div class="stat-card active-referrals">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ active_referrals }}</div>
+                <div class="stat-label">Active Members</div>
+                <div class="stat-sublabel">Currently investing</div>
+            </div>
+        </div>
+        
+        <div class="stat-card referral-earnings">
+            <div class="stat-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">₱{{ referral_earnings|floatformat:2 }}</div>
+                <div class="stat-label">Total Earnings</div>
+                <div class="stat-sublabel">From referrals</div>
+            </div>
+        </div>
+        
+        <div class="stat-card team-volume">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">₱{{ team_total_invested|floatformat:2 }}</div>
+                <div class="stat-label">Team Volume</div>
+                <div class="stat-sublabel">Total investments</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Tools Section -->
+<div class="tools-section">
+    <div class="tools-container">
+        <div class="tools-header">
+            <h3>
+                <i class="fas fa-share-alt"></i>
+                Referral Tools
+            </h3>
+            <p>Share your referral link and start earning commissions</p>
+        </div>
+        
+        <div class="referral-info">
+            <div class="referral-code-section">
+                <div class="code-label">Your Referral Code</div>
+                <div class="code-display">
+                    <span class="code-text">{{ referral_code }}</span>
+                    <button class="copy-btn" onclick="copyToClipboard('{{ referral_code }}', 'code')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="referral-link-section">
+                <div class="link-label">Your Referral Link</div>
+                <div class="link-display">
+                    <input type="text" class="link-input" value="{{ referral_link }}" readonly id="referralLink">
+                    <button class="copy-btn" onclick="copyToClipboard('{{ referral_link }}', 'link')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="share-buttons">
+            <h4>Quick Share</h4>
+            <div class="share-grid">
+                <button class="share-btn facebook" onclick="shareToFacebook()">
+                    <i class="fab fa-facebook-f"></i>
+                    <span>Facebook</span>
+                </button>
+                
+                <button class="share-btn twitter" onclick="shareToTwitter()">
+                    <i class="fab fa-twitter"></i>
+                    <span>Twitter</span>
+                </button>
+                
+                <button class="share-btn whatsapp" onclick="shareToWhatsApp()">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </button>
+                
+                <button class="share-btn telegram" onclick="shareToTelegram()">
+                    <i class="fab fa-telegram-plane"></i>
+                    <span>Telegram</span>
+                </button>
+                
+                <button class="share-btn email" onclick="shareViaEmail()">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email</span>
+                </button>
+                
+                <button class="share-btn sms" onclick="shareViaSMS()">
+                    <i class="fas fa-sms"></i>
+                    <span>SMS</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Commission Structure -->
+<div class="commission-section">
+    <div class="commission-container">
+        <div class="commission-header">
+            <h3>
+                <i class="fas fa-percentage"></i>
+                Commission Structure
+            </h3>
+            <p>Earn commissions on your team's investments</p>
+        </div>
+        
+        <div class="commission-grid">
+            <div class="commission-item">
+                <div class="commission-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="commission-content">
+                    <h4>Direct Referral</h4>
+                    <div class="commission-rate">10%</div>
+                    <p>Earn 10% commission on direct referral investments</p>
+                </div>
+            </div>
+            
+            <div class="commission-item">
+                <div class="commission-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="commission-content">
+                    <h4>Team Bonus</h4>
+                    <div class="commission-rate">5%</div>
+                    <p>Additional 5% bonus on team volume milestones</p>
+                </div>
+            </div>
+            
+            <div class="commission-item">
+                <div class="commission-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="commission-content">
+                    <h4>Leadership Bonus</h4>
+                    <div class="commission-rate">15%</div>
+                    <p>Special bonus for top performing leaders</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Members List -->
+<div class="team-section">
+    <div class="team-container">
+        <div class="team-header">
+            <h3>
+                <i class="fas fa-users"></i>
+                Recent Team Members
+            </h3>
+            <p style="color: white">Your latest referrals and their activity</p>
+        </div>
+        
+        {% if recent_referrals %}
+            <div class="members-list">
+                {% for member in recent_referrals %}
+                <div class="member-item">
+                    <div class="member-avatar">
+                        {% if member.userprofile.profile_picture %}
+                            <img src="{{ member.userprofile.profile_picture.url }}" alt="{{ member.get_full_name }}">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="member-info">
+                        <div class="member-name">
+                            {{ member.first_name }} {{ member.last_name|first }}.
+                        </div>
+                        <div class="member-details">
+                            <div class="member-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                Joined {{ member.date_joined|date:"M d, Y" }}
+                            </div>
+                            <div class="member-status">
+                                {% if member.is_active %}
+                                    <span class="status-badge active">
+                                        <i class="fas fa-check-circle"></i>
+                                        Active
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge inactive">
+                                        <i class="fas fa-clock"></i>
+                                        Pending
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="member-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">₱{{ member.userprofile.total_invested|default:0|floatformat:2 }}</div>
+                            <div class="stat-label">Invested</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if total_referrals > 10 %}
+            <div class="view-all-section">
+                <a href="{% url 'referrals' %}" class="view-all-btn">
+                    <i class="fas fa-list"></i>
+                    View All {{ total_referrals }} Members
+                </a>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-team">
+                <div class="no-team-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h4>No Team Members Yet</h4>
+                <p>Start sharing your referral link to build your team and earn commissions!</p>
+                <div class="no-team-actions">
+                    <button class="action-btn primary" onclick="copyToClipboard('{{ referral_link }}', 'link')">
+                        <i class="fas fa-copy"></i>
+                        Copy Referral Link
+                    </button>
+                    <button class="action-btn secondary" onclick="shareToWhatsApp()">
+                        <i class="fab fa-whatsapp"></i>
+                        Share on WhatsApp
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Success Toast -->
+<div class="toast-container">
+    <div class="toast" id="copyToast">
+        <div class="toast-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="toast-message">
+            Copied to clipboard!
+        </div>
+    </div>
+</div>
+
+<style>
+/* Team Page Styles */
+.team-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px 20px;
+    margin: 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.header-text {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.page-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.stats-section {
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-card.total-referrals { border-left-color: #667eea; }
+.stat-card.active-referrals { border-left-color: #4CAF50; }
+.stat-card.referral-earnings { border-left-color: #FF9800; }
+.stat-card.team-volume { border-left-color: #2196F3; }
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+}
+
+.total-referrals .stat-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+.active-referrals .stat-icon { background: linear-gradient(135deg, #4CAF50, #45a049); }
+.referral-earnings .stat-icon { background: linear-gradient(135deg, #FF9800, #f57c00); }
+.team-volume .stat-icon { background: linear-gradient(135deg, #2196F3, #1976d2); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.stat-sublabel {
+    font-size: 12px;
+    color: #999;
+}
+
+.tools-section {
+    padding: 20px;
+    background: white;
+}
+
+.tools-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tools-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.tools-header h3 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.tools-header p {
+    color: #666;
+    margin: 0;
+}
+
+.referral-info {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.referral-code-section,
+.referral-link-section {
+    margin-bottom: 20px;
+}
+
+.referral-link-section {
+    margin-bottom: 0;
+}
+
+.code-label,
+.link-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.code-display,
+.link-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.code-text {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    flex: 1;
+    text-align: center;
+    min-width: 120px;
+}
+
+.link-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 14px;
+    background: white;
+    color: #333;
+    font-family: monospace;
+}
+
+.copy-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border: none;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.share-buttons {
+    margin-top: 20px;
+}
+
+.share-buttons h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.share-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.share-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #666;
+}
+
+.share-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.share-btn i {
+    font-size: 20px;
+}
+
+.share-btn span {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.share-btn.facebook:hover { border-color: #1877f2; color: #1877f2; }
+.share-btn.twitter:hover { border-color: #1da1f2; color: #1da1f2; }
+.share-btn.whatsapp:hover { border-color: #25d366; color: #25d366; }
+.share-btn.telegram:hover { border-color: #0088cc; color: #0088cc; }
+.share-btn.email:hover { border-color: #ea4335; color: #ea4335; }
+.share-btn.sms:hover { border-color: #667eea; color: #667eea; }
+
+.commission-section {
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.commission-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.commission-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.commission-header h3 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.commission-header p {
+    color: #666;
+    margin: 0;
+}
+
+.commission-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.commission-item {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.commission-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.commission-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    margin: 0 auto 20px;
+}
+
+.commission-content h4 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.commission-rate {
+    font-size: 32px;
+    font-weight: 700;
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
+
+.commission-content p {
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.team-section {
+    padding: 20px;
+    background: white;
+}
+
+.team-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.team-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.team-header h3 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.team-header p {
+    color: #666;
+    margin: 0;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.member-item {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.member-item:hover {
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.member-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.member-info {
+    flex: 1;
+}
+
+.member-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.member-details {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.member-date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #666;
+}
+
+.member-status {
+    font-size: 12px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inactive {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.member-stats {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.member-stats .stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #4CAF50;
+    margin-bottom: 2px;
+}
+
+.member-stats .stat-label {
+    font-size: 12px;
+    color: #666;
+}
+
+.view-all-section {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.view-all-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.no-team {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8f9fa;
+    border-radius: 15px;
+}
+
+.no-team-icon {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.no-team h4 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.no-team p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.no-team-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.action-btn.secondary {
+    background: white;
+    color: #25d366;
+    border: 2px solid #25d366;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    text-decoration: none;
+}
+
+.action-btn.primary:hover { color: white; }
+.action-btn.secondary:hover { color: #25d366; }
+
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast-icon {
+    font-size: 18px;
+}
+
+.toast-message {
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .commission-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .share-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .member-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .no-team-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-btn {
+        min-width: 200px;
+        justify-content: center;
+    }
+    
+    .link-display {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .link-input {
+        font-size: 12px;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.member-item {
+    animation: fadeInUp 0.5s ease forwards;
+}
+</style>
+
+<script>
+// Copy to clipboard functionality
+function copyToClipboard(text, type) {
+    navigator.clipboard.writeText(text).then(function() {
+        showToast(`${type === 'code' ? 'Referral code' : 'Referral link'} copied to clipboard!`);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast(`${type === 'code' ? 'Referral code' : 'Referral link'} copied to clipboard!`);
+    });
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.getElementById('copyToast');
+    const toastMessage = toast.querySelector('.toast-message');
+    toastMessage.textContent = message;
+    
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Social sharing functions
+function shareToFacebook() {
+    const url = encodeURIComponent('{{ referral_link }}');
+    const text = encodeURIComponent('Join me on GrowFi and start investing! Use my referral link to get started.');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank', 'width=600,height=400');
+}
+
+function shareToTwitter() {
+    const url = encodeURIComponent('{{ referral_link }}');
+    const text = encodeURIComponent('Join me on GrowFi and start your investment journey! Use my referral code: {{ referral_code }}');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
+}
+
+function shareToWhatsApp() {
+    const text = encodeURIComponent(`🚀 Hey! Join me on GrowFi and start your investment journey!\n\n💰 Earn daily returns on your investments\n🎁 Use my referral code: {{ referral_code }}\n🔗 Sign up here: {{ referral_link }}\n\nStart investing today! 💎`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+function shareToTelegram() {
+    const url = encodeURIComponent('{{ referral_link }}');
+    const text = encodeURIComponent('🚀 Join me on GrowFi! Use my referral code: {{ referral_code }} to start investing and earning daily returns! 💰');
+    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+}
+
+function shareViaEmail() {
+    const subject = encodeURIComponent('Join me on GrowFi - Start Investing Today!');
+    const body = encodeURIComponent(`Hi there!\n\nI wanted to share an amazing investment platform with you - GrowFi!\n\n🚀 You can earn daily returns on your investments\n💰 Multiple investment plans available\n🎁 Get bonus rewards when you sign up with my referral\n\nUse my referral code: {{ referral_code }}\nSign up here: {{ referral_link }}\n\nStart your investment journey today!\n\nBest regards`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+}
+
+function shareViaSMS() {
+    const text = encodeURIComponent(`Join me on GrowFi! Use code {{ referral_code }} to start investing: {{ referral_link }}`);
+    window.open(`sms:?body=${text}`);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation delays to stats cards
+    const statsCards = document.querySelectorAll('.stat-card');
+    statsCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+    
+    // Add hover effects to member items
+    const memberItems = document.querySelectorAll('.member-item');
+    memberItems.forEach((item, index) => {
+        item.style.animationDelay = `${index * 0.1}s`;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1706 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Profile - GrowFi{% endblock %}
+
+{% block content %}
+<div class="profile-dashboard">
+    <!-- Profile Hero Section -->
+    <div class="profile-hero">
+        <div class="hero-background">
+            <div class="gradient-overlay"></div>
+            <div class="floating-shapes">
+                <div class="shape-1"></div>
+                <div class="shape-2"></div>
+                <div class="shape-3"></div>
+            </div>
+        </div>
+        
+        <div class="profile-header">
+            <div class="avatar-section">
+                <div class="avatar-container">
+                    <div class="avatar-ring">
+                        <div class="avatar-image">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="status-indicator"></div>
+                    </div>
+                </div>
+                <div class="user-info">
+                    <h1 class="user-name">{{ user.first_name|default:"Welcome" }} {{ user.last_name|default:"Investor" }}</h1>
+                    <p class="user-title">Premium Member</p>
+                    <div class="member-badge">
+                        <i class="fas fa-crown"></i>
+                        <span>VIP Status</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <div class="stat-icon verified">
+                        <i class="fas fa-shield-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Account Status</span>
+                        <span class="stat-value">Verified</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon active">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Investment Status</span>
+                        <span class="stat-value">Active</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon premium">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Member Since</span>
+                        <span class="stat-value">{{ profile.date_joined|date:"M Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+            <p>Manage your investments efficiently</p>
+        </div>
+        
+        <div class="actions-grid">
+            <a href="{% url 'deposit' %}" class="action-card deposit">
+                <div class="card-glow"></div>
+                <div class="action-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Add Funds</h3>
+                    <p>Deposit money to your wallet</p>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <a href="{% url 'withdraw' %}" class="action-card withdraw">
+                <div class="card-glow"></div>
+                <div class="action-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Withdraw</h3>
+                    <p>Transfer earnings to bank</p>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <a href="{% url 'investment_plans' %}" class="action-card invest">
+                <div class="card-glow"></div>
+                <div class="action-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Invest Now</h3>
+                    <p>Browse investment plans</p>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <a href="{% url 'team' %}" class="action-card team">
+                <div class="card-glow"></div>
+                <div class="action-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="action-content">
+                    <h3>My Team</h3>
+                    <p>Manage referral network</p>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Account Information -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h2><i class="fas fa-user-cog"></i> Account Information</h2>
+            <p>Your personal details and settings</p>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="info-details">
+                        <label>Phone Number</label>
+                        <span class="info-value">{{ profile.phone_number|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-status verified">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Verified</span>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="info-details">
+                        <label>Email Address</label>
+                        <span class="info-value">{{ user.email|default:"Not provided" }}</span>
+                    </div>
+                    <div class="info-status verified">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Verified</span>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="info-details">
+                        <label>User ID</label>
+                        <span class="info-value">#{{ user.id|stringformat:"06d" }}</span>
+                    </div>
+                    <div class="info-status info">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Unique</span>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="info-details">
+                        <label>Joined Date</label>
+                        <span class="info-value">{{ profile.date_joined|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="info-status info">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ profile.date_joined|timesince }} ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  
+    <!-- Settings & Tools -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h2><i class="fas fa-cog"></i> Settings & Tools</h2>
+            <p>Manage your account preferences</p>
+        </div>
+        
+        <div class="settings-grid">
+            <a href="{% url 'bank_accounts' %}" class="settings-card">
+                <div class="settings-icon bank">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div class="settings-content">
+                    <h4>Payment Methods</h4>
+                    <p>Manage bank accounts and cards</p>
+                </div>
+                <div class="settings-meta">
+                    <span class="badge active">2 Active</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <a href="{% url 'transaction_history' %}" class="settings-card">
+                <div class="settings-icon history">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="settings-content">
+                    <h4>Transaction History</h4>
+                    <p>View all financial activities</p>
+                </div>
+                <div class="settings-meta">
+                    <span class="badge info">Recent</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <a href="#" class="settings-card" onclick="showSecurityModal()">
+                <div class="settings-icon security">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="settings-content">
+                    <h4>Security Settings</h4>
+                    <p>Password and 2FA management</p>
+                </div>
+                <div class="settings-meta">
+                    <span class="badge secure">Secure</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <a href="{% url 'support' %}" class="settings-card">
+                <div class="settings-icon support">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="settings-content">
+                    <h4>Customer Support</h4>
+                    <p>Get help from our team 24/7</p>
+                </div>
+                <div class="settings-meta">
+                    <span class="badge online">Online</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Support Banner -->
+    <div class="dashboard-section">
+        <div class="support-banner">
+            <div class="support-content">
+                <div class="support-icon">
+                    <i class="fab fa-telegram-plane"></i>
+                </div>
+                <div class="support-text">
+                    <h3>Need Assistance?</h3>
+                    <p>Our support team is available 24/7 via Telegram for instant help</p>
+                </div>
+                <a href="https://t.me/trustlongterm" target="_blank" class="support-btn">
+                    <i class="fab fa-telegram-plane"></i>
+                    <span>Contact Support</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Section -->
+    <div class="dashboard-section">
+        <div class="logout-section">
+            <a href="{% url 'logout' %}" class="logout-btn" onclick="return confirm('Are you sure you want to logout?')">
+                <div class="logout-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <div class="logout-content">
+                    <span class="logout-title">Sign Out</span>
+                    <span class="logout-subtitle">Logout from your account</span>
+                </div>
+                <div class="logout-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Security Modal -->
+<div class="modal-overlay" id="securityModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Security Settings</h3>
+            <button class="modal-close" onclick="closeSecurityModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="security-options">
+                <div class="security-option">
+                    <div class="security-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="security-info">
+                        <h4>Change Password</h4>
+                        <p>Update your account password</p>
+                    </div>
+                    <button class="security-btn">Change</button>
+                </div>
+                
+                <div class="security-option">
+                    <div class="security-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="security-info">
+                        <h4>Two-Factor Authentication</h4>
+                        <p>Add extra security layer</p>
+                    </div>
+                    <button class="security-btn">Enable</button>
+                </div>
+                
+                <div class="security-option">
+                    <div class="security-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="security-info">
+                        <h4>Login History</h4>
+                        <p>View recent account access</p>
+                    </div>
+                    <button class="security-btn">View</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modern Profile Dashboard Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    --info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --purple-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    --telegram-gradient: linear-gradient(135deg, #0088cc 0%, #006db3 100%);
+    --whatsapp-gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    --facebook-gradient: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+    
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 16px 64px rgba(0, 0, 0, 0.2);
+    
+    --border-radius: 16px;
+    --border-radius-lg: 20px;
+    --border-radius-xl: 24px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-dashboard {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+/* Profile Hero Section */
+.profile-hero {
+    position: relative;
+    background: var(--primary-gradient);
+    border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.gradient-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+
+.floating-shapes {
+    position: absolute;
+    inset: 0;
+}
+
+.floating-shapes div {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.shape-1 {
+    width: 80px;
+    height: 80px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 60px;
+    height: 60px;
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+}
+
+.shape-3 {
+    width: 40px;
+    height: 40px;
+    bottom: 30%;
+    left: 70%;
+    animation-delay: 4s;
+}
+
+.profile-header {
+    position: relative;
+    z-index: 2;
+    padding: 2rem 1.5rem;
+    color: white !important;
+}
+
+.profile-header * {
+    color: white !important;
+}
+
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.avatar-ring {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #fbbf24, #f59e0b, #d97706, #fbbf24);
+    padding: 3px;
+    animation: rotate 3s linear infinite;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #667eea;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 3px solid white;
+    animation: pulse 2s infinite;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-title {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.member-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.member-badge i {
+    color: #fbbf24;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: var(--border-radius);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: var(--transition);
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-icon.verified { background: var(--success-gradient); }
+.stat-icon.active { background: var(--info-gradient); }
+.stat-icon.premium { background: var(--warning-gradient); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+    margin-bottom: 2rem;
+    padding: 0 1.5rem;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-header h2 i {
+    color: #667eea;
+    font-size: 1.25rem;
+}
+
+.section-header p {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Actions Grid */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.action-card {
+    position: relative;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-glow {
+    position: absolute;
+    inset: -2px;
+    border-radius: var(--border-radius);
+    opacity: 0;
+    transition: var(--transition);
+    z-index: -1;
+}
+
+.action-card:hover .card-glow {
+    opacity: 1;
+}
+
+.action-card.deposit .card-glow { background: var(--success-gradient); }
+.action-card.withdraw .card-glow { background: var(--warning-gradient); }
+.action-card.invest .card-glow { background: var(--info-gradient); }
+.action-card.team .card-glow { background: var(--purple-gradient); }
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.action-card.deposit .action-icon { background: var(--success-gradient); }
+.action-card.withdraw .action-icon { background: var(--warning-gradient); }
+.action-card.invest .action-icon { background: var(--info-gradient); }
+.action-card.team .action-icon { background: var(--purple-gradient); }
+
+.action-content {
+    flex: 1;
+}
+
+.action-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.action-content p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.action-arrow {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.action-card:hover .action-arrow {
+    color: #667eea;
+    transform: translateX(4px);
+}
+
+/* Info Panel */
+.info-panel {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #e2e8f0;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.info-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(102, 126, 234, 0.03);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    transition: var(--transition);
+}
+
+.info-card:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-2px);
+}
+
+.info-icon {
+    width: 45px;
+    height: 45px;
+    background: var(--primary-gradient);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.info-details {
+    flex: 1;
+}
+
+.info-details label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.info-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.info-status.verified {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.info-status.info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+/* Referral Panel */
+.referral-panel {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #e2e8f0;
+}
+
+.referral-code-section {
+    padding: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.code-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.code-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.code-header p {
+    color: #64748b;
+    margin: 0;
+}
+
+.code-display {
+    margin-bottom: 2rem;
+}
+
+.code-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(102, 126, 234, 0.05);
+    border: 2px dashed rgba(102, 126, 234, 0.2);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+.referral-code {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #667eea;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.copy-btn {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.referral-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 12px;
+}
+
+.stat-box .stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #667eea;
+    margin-bottom: 0.25rem;
+}
+
+.stat-box .stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.share-section {
+    padding: 2rem;
+}
+
+.share-section h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.share-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.share-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    color: white;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.share-btn.telegram { background: var(--telegram-gradient); }
+.share-btn.whatsapp { background: var(--whatsapp-gradient); }
+.share-btn.facebook { background: var(--facebook-gradient); }
+.share-btn.link { background: var(--primary-gradient); }
+
+/* Settings Grid */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.settings-card {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.settings-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    color: inherit;
+}
+
+.settings-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.settings-icon.bank { background: var(--info-gradient); }
+.settings-icon.history { background: var(--success-gradient); }
+.settings-icon.security { background: var(--warning-gradient); }
+.settings-icon.support { background: var(--telegram-gradient); }
+
+.settings-content {
+    flex: 1;
+}
+
+.settings-content h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.settings-content p {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.settings-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.badge.active { background: rgba(16, 185, 129, 0.1); color: #059669; }
+.badge.info { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+.badge.secure { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.badge.online { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+
+.settings-meta i {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.settings-card:hover .settings-meta i {
+    color: #667eea;
+    transform: translateX(4px);
+}
+
+/* Support Banner */
+.support-banner {
+    background: var(--telegram-gradient);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.support-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+
+.support-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    color: white;
+}
+
+.support-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.support-text {
+    flex: 1;
+}
+
+.support-text h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.support-text p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.support-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    text-decoration: none;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.support-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+/* Logout Section */
+.logout-section {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid #e2e8f0;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: #dc2626;
+    transition: var(--transition);
+    width: 100%;
+    border-radius: var(--border-radius-lg);
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.05);
+    color: #dc2626;
+    text-decoration: none;
+    transform: translateX(4px);
+}
+
+.logout-icon {
+    width: 45px;
+    height: 45px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.logout-content {
+    flex: 1;
+}
+
+.logout-title {
+    display: block;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.logout-subtitle {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.logout-arrow {
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.logout-btn:hover .logout-arrow {
+    transform: translateX(4px);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    background: rgba(102, 126, 234, 0.05);
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.security-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.security-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(102, 126, 234, 0.03);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    transition: var(--transition);
+}
+
+.security-option:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.security-icon {
+    width: 45px;
+    height: 45px;
+    background: var(--primary-gradient);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.security-info {
+    flex: 1;
+}
+
+.security-info h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.security-info p {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.security-btn {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.security-btn:hover {
+    background: rgba(102, 126, 234, 0.15);
+    transform: translateY(-1px);
+}
+
+/* Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(1deg); }
+    50% { transform: translateY(-5px) rotate(0deg); }
+    75% { transform: translateY(-15px) rotate(-1deg); }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .avatar-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .quick-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .share-buttons {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .referral-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .support-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .dashboard-section {
+        padding: 0 1rem;
+    }
+    
+    .referral-code-section,
+    .share-section {
+        padding: 1.5rem;
+    }
+    
+    .info-panel {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .avatar-ring {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .avatar-image {
+        font-size: 2rem;
+    }
+    
+    .user-name {
+        font-size: 1.5rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .code-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .referral-code {
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+// Modern Profile Dashboard JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize animations
+    initializeAnimations();
+    
+    // Add click effects to cards
+    addClickEffects();
+    
+    // Initialize modal functionality
+    initializeModal();
+    
+    // Add scroll animations
+    addScrollAnimations();
+});
+
+// Copy referral code functionality
+function copyCode() {
+    const code = document.getElementById('referralCode').textContent;
+    const btn = document.querySelector('.copy-btn');
+    
+    navigator.clipboard.writeText(code).then(function() {
+        const originalHTML = btn.innerHTML;
+        
+        // Show success state
+        btn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        
+        // Show toast notification
+        showToast('Referral code copied to clipboard!', 'success');
+        
+        // Reset after 2 seconds
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.style.background = '';
+        }, 2000);
+    }).catch(function() {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        showToast('Referral code copied!', 'success');
+    });
+}
+
+// Share functions
+function shareToTelegram() {
+    const code = "{{ profile.referral_code }}";
+    const message = `🚀 Join me on GrowFi Investment Platform! Use my referral code: ${code}`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    showToast('Opening Telegram...', 'info');
+}
+
+function shareToWhatsApp() {
+    const code = "{{ profile.referral_code }}";
+    const message = `🚀 Join me on GrowFi Investment Platform! Use my referral code: ${code}\n\nSign up: ${window.location.origin}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    showToast('Opening WhatsApp...', 'info');
+}
+
+function shareToFacebook() {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}`;
+    window.open(url, '_blank');
+    showToast('Opening Facebook...', 'info');
+}
+
+function copyReferralLink() {
+    const code = "{{ profile.referral_code }}";
+    const link = `${window.location.origin}/?ref=${code}`;
+    
+    navigator.clipboard.writeText(link).then(function() {
+        showToast('Referral link copied!', 'success');
+    }).catch(function() {
+        showToast('Failed to copy link', 'error');
+    });
+}
+
+// Security modal functions
+function showSecurityModal() {
+    const modal = document.getElementById('securityModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Animate in
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+    }, 10);
+}
+
+function closeSecurityModal() {
+    const modal = document.getElementById('securityModal');
+    modal.style.opacity = '0';
+    
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }, 300);
+}
+
+// Toast notification system
+function showToast(message, type = 'info') {
+    // Remove existing toast
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Create toast
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i class="fas fa-${getToastIcon(type)}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Style toast
+    Object.assign(toast.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        background: getToastBackground(type),
+        color: 'white',
+        padding: '1rem 1.5rem',
+        borderRadius: '12px',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+        zIndex: '10001',
+        transform: 'translateX(100%)',
+        transition: 'transform 0.3s ease',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        fontWeight: '600',
+        fontSize: '0.9rem',
+        minWidth: '280px'
+    });
+    
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Auto remove
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+function getToastIcon(type) {
+    switch(type) {
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-triangle';
+        case 'warning': return 'exclamation-circle';
+        default: return 'info-circle';
+    }
+}
+
+function getToastBackground(type) {
+    switch(type) {
+        case 'success': return 'linear-gradient(135deg, #10b981, #059669)';
+        case 'error': return 'linear-gradient(135deg, #ef4444, #dc2626)';
+        case 'warning': return 'linear-gradient(135deg, #f59e0b, #d97706)';
+        default: return 'linear-gradient(135deg, #3b82f6, #2563eb)';
+    }
+}
+
+// Initialize animations
+function initializeAnimations() {
+    // Stagger animation for action cards
+    const actionCards = document.querySelectorAll('.action-card');
+    actionCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Stagger animation for settings cards
+    const settingsCards = document.querySelectorAll('.settings-card');
+    settingsCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, (index * 100) + 200);
+    });
+}
+
+// Add click effects
+function addClickEffects() {
+    const cards = document.querySelectorAll('.action-card, .settings-card, .info-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('div');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            
+            ripple.style.cssText = `
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(102, 126, 234, 0.3);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                pointer-events: none;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${e.clientX - rect.left - size / 2}px;
+                top: ${e.clientY - rect.top - size / 2}px;
+            `;
+            
+            this.style.position = 'relative';
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+}
+
+// Initialize modal
+function initializeModal() {
+    // Close modal when clicking outside
+    document.getElementById('securityModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSecurityModal();
+        }
+    });
+    
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('securityModal');
+            if (modal.style.display === 'flex') {
+                closeSecurityModal();
+            }
+        }
+    });
+}
+
+// Add scroll animations
+function addScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    // Observe sections
+    const sections = document.querySelectorAll('.dashboard-section');
+    sections.forEach(section => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(30px)';
+        section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(section);
+    });
+}
+
+// Add ripple animation CSS
+const rippleStyle = document.createElement('style');
+rippleStyle.textContent = `
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(rippleStyle);
+</script>
+{% endblock %}

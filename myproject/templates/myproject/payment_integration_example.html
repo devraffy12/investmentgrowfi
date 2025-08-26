@@ -1,0 +1,289 @@
+<!-- Example JavaScript for Frontend Integration -->
+<script>
+// Automatic GCash Deposit
+async function createGCashDeposit(amount) {
+    try {
+        const response = await fetch('/payment/deposit/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                amount: amount,
+                payment_method: 'gcash'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            showMessage('Payment request created successfully!', 'success');
+            
+            // If there's a payment URL, redirect user
+            if (result.payment_url) {
+                window.open(result.payment_url, '_blank');
+            }
+            
+            // If there's a QR code, show it
+            if (result.qr_code) {
+                showQRCode(result.qr_code);
+            }
+            
+            // Start checking payment status
+            checkPaymentStatus(result.transaction_id);
+            
+        } else {
+            showMessage(result.error || 'Failed to create payment request', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Deposit error:', error);
+        showMessage('An error occurred while creating the deposit', 'error');
+    }
+}
+
+// Automatic PayMaya Deposit
+async function createPayMayaDeposit(amount) {
+    try {
+        const response = await fetch('/payment/deposit/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                amount: amount,
+                payment_method: 'paymaya'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage('Payment request created successfully!', 'success');
+            
+            // Redirect to PayMaya payment page
+            if (result.payment_url) {
+                window.location.href = result.payment_url;
+            }
+            
+        } else {
+            showMessage(result.error || 'Failed to create payment request', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Deposit error:', error);
+        showMessage('An error occurred while creating the deposit', 'error');
+    }
+}
+
+// Automatic Withdrawal
+async function processWithdrawal(amount, bankAccountId) {
+    try {
+        const response = await fetch('/payment/withdrawal/process/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                amount: amount,
+                bank_account_id: bankAccountId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(`Withdrawal processed successfully! 
+                Amount: ₱${result.amount}
+                Fee: ₱${result.fee}
+                Total Deducted: ₱${result.total_deducted}
+                Reference: ${result.reference_id}`, 'success');
+            
+            // Update balance display
+            updateBalanceDisplay();
+            
+        } else {
+            showMessage(result.error || 'Failed to process withdrawal', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Withdrawal error:', error);
+        showMessage('An error occurred while processing the withdrawal', 'error');
+    }
+}
+
+// Check Payment Status
+async function checkPaymentStatus(transactionId) {
+    try {
+        const response = await fetch(`/payment/status/${transactionId}/`);
+        const result = await response.json();
+        
+        if (result.success) {
+            if (result.transaction_status === 'completed') {
+                showMessage('Payment completed successfully!', 'success');
+                updateBalanceDisplay();
+                return true;
+            } else if (result.transaction_status === 'failed') {
+                showMessage('Payment failed', 'error');
+                return false;
+            } else {
+                // Still pending, check again in 5 seconds
+                setTimeout(() => checkPaymentStatus(transactionId), 5000);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Status check error:', error);
+    }
+}
+
+// Utility Functions
+function showMessage(message, type) {
+    // Create and show notification
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'}`;
+    notification.textContent = message;
+    
+    // Add to page
+    const container = document.querySelector('.notifications-container') || document.body;
+    container.appendChild(notification);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+function showQRCode(qrCodeData) {
+    // Display QR code for GCash payment
+    const modal = document.createElement('div');
+    modal.className = 'qr-modal';
+    modal.innerHTML = `
+        <div class="qr-content">
+            <h3>Scan QR Code with GCash</h3>
+            <img src="${qrCodeData}" alt="GCash QR Code" />
+            <p>Scan this QR code with your GCash app to complete the payment</p>
+            <button onclick="this.closest('.qr-modal').remove()">Close</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function updateBalanceDisplay() {
+    // Refresh the page or update balance via AJAX
+    location.reload();
+}
+
+// Event Listeners for Buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // GCash Deposit Button
+    const gcashDepositBtn = document.getElementById('gcash-deposit-btn');
+    if (gcashDepositBtn) {
+        gcashDepositBtn.addEventListener('click', function() {
+            const amount = document.getElementById('deposit-amount').value;
+            if (amount >= 100) {
+                createGCashDeposit(amount);
+            } else {
+                showMessage('Minimum deposit amount is ₱100', 'error');
+            }
+        });
+    }
+    
+    // PayMaya Deposit Button
+    const paymayaDepositBtn = document.getElementById('paymaya-deposit-btn');
+    if (paymayaDepositBtn) {
+        paymayaDepositBtn.addEventListener('click', function() {
+            const amount = document.getElementById('deposit-amount').value;
+            if (amount >= 100) {
+                createPayMayaDeposit(amount);
+            } else {
+                showMessage('Minimum deposit amount is ₱100', 'error');
+            }
+        });
+    }
+    
+    // Withdrawal Button
+    const withdrawBtn = document.getElementById('withdraw-btn');
+    if (withdrawBtn) {
+        withdrawBtn.addEventListener('click', function() {
+            const amount = document.getElementById('withdraw-amount').value;
+            const bankAccountId = document.querySelector('input[name="bank_account"]:checked')?.value;
+            
+            if (!bankAccountId) {
+                showMessage('Please select a bank account', 'error');
+                return;
+            }
+            
+            if (amount >= 100) {
+                processWithdrawal(amount, bankAccountId);
+            } else {
+                showMessage('Minimum withdrawal amount is ₱100', 'error');
+            }
+        });
+    }
+});
+</script>
+
+<!-- CSS for QR Code Modal -->
+<style>
+.qr-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.qr-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.qr-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+}
+
+.qr-content button {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+</style>

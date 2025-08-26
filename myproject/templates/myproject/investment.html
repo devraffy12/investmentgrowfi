@@ -1,0 +1,1377 @@
+{% extends 'myproject/dashboard_base.html' %}
+{% load investment_extras %}
+{% load static %}
+
+{% block title %}GROWFI Investment Plans InvestPH{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section with Background Image -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="hero-section position-relative overflow-hidden" style="border-radius: 20px; min-height: 400px; display: flex; align-items: center;" data-bg="{% static 'Growfi1.jpg' %}">
+                <div class="container text-center text-white">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="fas fa-seedling"></i> GROWFI Investment Plans
+                    </h1>
+                    <p class="lead mb-4">Invest smartly with our GROWFI plans - Daily profits guaranteed!</p>
+                    <div class="row justify-content-center mt-4">
+                        <div class="col-md-3 col-6 text-center mb-3">
+                            <div class="stats-card bg-white bg-opacity-10 rounded p-3">
+                                <div class="h2 text-white mb-0">{{ stats.total_investors|default:"1,250" }}+</div>
+                                <small class="text-white-75">Active Investors</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 text-center mb-3">
+                            <div class="stats-card bg-white bg-opacity-10 rounded p-3">
+                                <div class="h2 text-white mb-0">₱{{ stats.total_invested|default:"25,000,000" }}+</div>
+                                <small class="text-white-75">Total Invested</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 text-center mb-3">
+                            <div class="stats-card bg-white bg-opacity-10 rounded p-3">
+                                <div class="h2 text-white mb-0">{{ stats.daily_payouts|default:"5,000" }}+</div>
+                                <small class="text-white-75">Daily Payouts</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 text-center mb-3">
+                            <div class="stats-card bg-white bg-opacity-10 rounded p-3">
+                                <div class="h2 text-white mb-0">98.5%</div>
+                                <small class="text-white-75">Success Rate</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GROWFI Calculator with Side Image -->
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-6 mb-4">
+            <div class="position-relative">
+                <img src="{% static 'Growfi2.jpg' %}" alt="GROWFI Calculator" class="img-fluid rounded-4 shadow-lg" style="width: 100%; height: 400px; object-fit: cover;">
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-to-r from-success/20 to-transparent rounded-4"></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-success shadow-lg h-100">
+                <div class="card-header bg-gradient text-white text-center" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    <h5 class="mb-0"><i class="fas fa-calculator"></i> GROWFI Calculator</h5>
+                    <small>Calculate your potential earnings with our GROWFI plans</small>
+                </div>
+                <div class="card-body">
+                    <form id="growfiCalculator">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Select GROWFI Plan</label>
+                                <select class="form-select" id="growfiPlan" onchange="calculateGrowfiReturns()">
+                                    <option value="">Choose a plan...</option>
+                                    <option value="1" data-amount="500" data-profit="56" data-duration="30" data-revenue="1680" data-netprofit="1680">GROWFI 1 - ₱500</option>
+                                    <option value="2" data-amount="1000" data-profit="111" data-duration="30" data-revenue="3330" data-netprofit="3330">GROWFI 2 - ₱1,000</option>
+                                    <option value="3" data-amount="2200" data-profit="269" data-duration="90" data-revenue="24210" data-netprofit="16140">GROWFI 3 - ₱2,200</option>
+                                    <option value="4" data-amount="3500" data-profit="389" data-duration="120" data-revenue="46680" data-netprofit="46680">GROWFI 4 - ₱3,500</option>
+                                    <option value="5" data-amount="5000" data-profit="556" data-duration="180" data-revenue="100080" data-netprofit="100080">GROWFI 5 - ₱5,000</option>
+                                    <option value="6" data-amount="8000" data-profit="889" data-duration="180" data-revenue="100080" data-netprofit="100080">GROWFI 6 - ₱8,000</option>
+                                    <option value="7" data-amount="9000" data-profit="450" data-duration="140" data-revenue="63000" data-netprofit="63000">GROWFI 7 - ₱9,000</option>
+                                </select>
+                            </div>  
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Investment Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white">₱</span>
+                                    <input type="text" class="form-control fw-bold" id="investmentAmountDisplay" 
+                                           readonly style="background-color: #f8f9fa;">
+                                </div>
+                                <div class="form-text text-success">Fixed amount for selected plan</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="calculationResults" style="display: none;">
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-success text-white h-100">
+                                    <div class="card-body text-center p-3">
+                                        <div class="h4 mb-0" id="dailyProfit">₱0</div>
+                                        <small>Daily Profit</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-info text-white h-100">
+                                    <div class="card-body text-center p-3">
+                                        <div class="h4 mb-0" id="duration">0</div>
+                                        <small>Days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-warning text-white h-100">
+                                    <div class="card-body text-center p-3">
+                                        <div class="h4 mb-0" id="totalRevenue">₱0</div>
+                                        <small>Total Revenue</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-primary text-white h-100">
+                                    <div class="card-body text-center p-3">
+                                        <div class="h4 mb-0" id="netProfit">₱0</div>
+                                        <small>Net Profit</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3" id="profitBreakdown" style="display: none;">
+                            <div class="alert alert-success">
+                                <strong>Profit Breakdown:</strong> You will earn <span id="dailyProfitText"></span> every day for <span id="durationText"></span> days, 
+                                totaling <span id="totalProfitText"></span> in profit!
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GROWFI Investment Plans with Header Image -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <div class="position-relative">
+                <img src="{% static 'Growfi3.jpg' %}" alt="Investment Plans" class="img-fluid rounded-4 shadow-lg w-100" style="height: 200px; object-fit: cover;">
+                <div class="position-absolute top-50 start-50 translate-middle text-white">
+                    <h2 class="fw-bold mb-2" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">
+                        <i class="fas fa-seedling"></i> GROWFI Investment Plans
+                    </h2>
+                    <p class="mb-0" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Choose your perfect GROWFI plan and start earning daily profits</p>
+                </div>
+            </div>
+        </div>
+        
+        {% for plan in investment_plans %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-lg border-0 growfi-card" 
+                 data-plan="{{ plan.name|lower|slice:'-1:' }}" 
+                 style="transform: translateY(0); transition: all 0.3s ease;">
+                
+                <!-- Plan Image Header -->
+                <div class="position-relative">
+                    {% if forloop.counter == 1 %}
+                        <img src="{% static 'Growfi4.jpg' %}" alt="{{ plan.name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% elif forloop.counter == 2 %}
+                        <img src="{% static 'Growfi5.jpg' %}" alt="{{ plan.name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% elif forloop.counter == 3 %}
+                        <img src="{% static 'Growfi6.jpg' %}" alt="{{ plan.name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% elif forloop.counter == 4 %}
+                        <img src="{% static 'Growfi7.jpg' %}" alt="{{ plan.name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% elif forloop.counter == 5 %}
+                        <img src="{% static 'Growfi1.jpg' %}" alt="{{ plan.name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'Growfi2.jpg' %}" alt="{{ plan.name }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 m-2">
+                        {% if 'GROWFI 3' in plan.name %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-star"></i> Popular
+                        </span>
+                        {% elif 'GROWFI 5' in plan.name %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-crown"></i> Premium
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Plan Header -->
+                <div class="card-header text-center position-relative" style="border: none;"
+                     {% if 'GROWFI 1' in plan.name %}data-bg-start="#28a745" data-bg-end="#20c997"
+                     {% elif 'GROWFI 2' in plan.name %}data-bg-start="#007bff" data-bg-end="#0056b3"
+                     {% elif 'GROWFI 3' in plan.name %}data-bg-start="#ffc107" data-bg-end="#e0a800"
+                     {% elif 'GROWFI 4' in plan.name %}data-bg-start="#dc3545" data-bg-end="#c82333"
+                     {% elif 'GROWFI 5' in plan.name %}data-bg-start="#6f42c1" data-bg-end="#5a32a3"
+                     {% else %}data-bg-start="#fd7e14" data-bg-end="#e8590c"{% endif %}>
+                    
+                    <h3 class="text-white mb-2 fw-bold">{{ plan.name }}</h3>
+                    <div class="h1 text-white mb-0">₱{{ plan.minimum_amount|floatformat:0 }}</div>
+                    <small class="text-white-50">Investment Price</small>
+                </div>
+                
+                <!-- Plan Body -->
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="h3 text-success mb-1">₱{{ plan.daily_profit|format_currency }}</div>
+                                <small class="text-muted">Daily Profit</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="h3 text-info mb-1">{{ plan.duration_days }}</div>
+                                <small class="text-muted">Days</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Total Revenue:</span>
+                            <span class="fw-bold text-primary">₱{{ plan.total_revenue|format_currency }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Net Profit:</span>
+                            <span class="fw-bold text-success">₱{{ plan.net_profit|format_currency }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Daily Return Rate:</span>
+                            <span class="fw-bold text-warning">{{ plan.daily_return_rate|floatformat:2 }}%</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Daily payouts guaranteed
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Fixed investment amount
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Principal + profit returned
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            24/7 customer support
+                        </li>
+                        {% if 'GROWFI 3' in plan.name or 'GROWFI 5' in plan.name %}
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Priority processing
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <!-- Profit Breakdown -->
+                    <div class="alert alert-light border">
+                        <small class="text-muted d-block mb-1">Profit Calculation:</small>
+                        <small class="text-dark">
+                            ₱{{ plan.daily_profit|format_currency }} × {{ plan.duration_days }} days = 
+                            <strong class="text-success">₱{{ plan.net_profit|format_currency }}</strong> net profit
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Plan Footer -->
+                <div class="card-footer border-0 bg-transparent p-4 pt-0">
+                    <button class="btn btn-lg w-100 fw-bold shadow-sm invest-btn"
+                            style="border: none; color: white;"
+                            {% if 'GROWFI 1' in plan.name %}data-bg-start="#28a745" data-bg-end="#20c997"
+                            {% elif 'GROWFI 2' in plan.name %}data-bg-start="#007bff" data-bg-end="#0056b3"
+                            {% elif 'GROWFI 3' in plan.name %}data-bg-start="#ffc107" data-bg-end="#e0a800"
+                            {% elif 'GROWFI 4' in plan.name %}data-bg-start="#dc3545" data-bg-end="#c82333"
+                            {% elif 'GROWFI 5' in plan.name %}data-bg-start="#6f42c1" data-bg-end="#5a32a3"
+                            {% else %}data-bg-start="#fd7e14" data-bg-end="#e8590c"{% endif %}
+                            data-plan-id="{{ plan.id }}"
+                            data-plan-name="{{ plan.name }}"
+                            data-amount="{{ plan.minimum_amount }}"
+                            data-daily-profit="{{ plan.daily_profit }}"
+                            data-duration="{{ plan.duration_days }}">
+                        <i class="fas fa-rocket me-2"></i>Invest Now
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Why Choose InvestPH with Side Images -->
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-5">
+            <div class="position-relative">
+                <img src="{% static 'Growfi4.jpg' %}" alt="Why Choose InvestPH" class="img-fluid rounded-4 shadow-lg" style="width: 100%; height: 450px; object-fit: cover;">
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-to-r from-primary/20 to-transparent rounded-4"></div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <h3><i class="fas fa-shield-alt"></i> Why Choose InvestPH?</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 col-12 text-center mb-4">
+                            <div class="mb-3">
+                                <i class="fas fa-lock fa-3x text-primary"></i>
+                            </div>
+                            <h5>Secure Platform</h5>
+                            <p class="text-muted">Bank-level security with SSL encryption and secure payment processing</p>
+                        </div>
+                        
+                        <div class="col-md-6 col-12 text-center mb-4">
+                            <div class="mb-3">
+                                <i class="fas fa-clock fa-3x text-success"></i>
+                            </div>
+                            <h5>Daily Payouts</h5>
+                            <p class="text-muted">Receive your returns every day automatically to your account</p>
+                        </div>
+                        
+                        <div class="col-md-6 col-12 text-center mb-4">
+                            <div class="mb-3">
+                                <i class="fas fa-mobile-alt fa-3x text-info"></i>
+                            </div>
+                            <h5>Easy Withdrawal</h5>
+                            <p class="text-muted">Withdraw to GCash, bank transfer, or other payment methods</p>
+                        </div>
+                        
+                        <div class="col-md-6 col-12 text-center mb-4">
+                            <div class="mb-3">
+                                <i class="fas fa-headset fa-3x text-warning"></i>
+                            </div>
+                            <h5>24/7 Support</h5>
+                            <p class="text-muted">Our dedicated support team is always ready to help you</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Process with Background -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="position-relative overflow-hidden rounded-4">
+                <img src="{% static 'Growfi5.jpg' %}" alt="Investment Process" class="w-100" style="height: 500px; object-fit: cover;">
+                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.85), rgba(32, 201, 151, 0.85));">
+                    <div class="container h-100 d-flex flex-column justify-content-center">
+                        <div class="text-center mb-4">
+                            <h3 class="text-white mb-3"><i class="fas fa-route"></i> How It Works</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-4">
+                                <div class="position-relative">
+                                    <div class="bg-white text-primary rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px; font-size: 1.5rem; font-weight: bold;">
+                                        1
+                                    </div>
+                                    <h5 class="text-white">Choose Plan</h5>
+                                    <p class="text-white-75">Select an investment plan that fits your budget and goals</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 text-center mb-4">
+                                <div class="position-relative">
+                                    <div class="bg-white text-success rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px; font-size: 1.5rem; font-weight: bold;">
+                                        2
+                                    </div>
+                                    <h5 class="text-white">Make Payment</h5>
+                                    <p class="text-white-75">Invest using GCash, bank transfer, or other payment methods</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 text-center mb-4">
+                                <div class="position-relative">
+                                    <div class="bg-white text-info rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px; font-size: 1.5rem; font-weight: bold;">
+                                        3
+                                    </div>
+                                    <h5 class="text-white">Earn Daily</h5>
+                                    <p class="text-white-75">Receive daily returns automatically to your account</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 text-center mb-4">
+                                <div class="position-relative">
+                                    <div class="bg-white text-warning rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px; font-size: 1.5rem; font-weight: bold;">
+                                        4
+                                    </div>
+                                    <h5 class="text-white">Withdraw</h5>
+                                    <p class="text-white-75">Withdraw your profits anytime with instant processing</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Investments with Side Image -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-chart-bar"></i> Recent Investments</h5>
+                    <small class="text-muted">Live activity from other investors</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Investor</th>
+                                    <th>Plan</th>
+                                    <th>Amount</th>
+                                    <th>Expected Daily</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentInvestments">
+                                {% for investment in recent_investments %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary text-white rounded-circle me-2" style="width: 32px; height: 32px; line-height: 32px; font-size: 0.8rem; text-align: center;">
+                                                {{ investment.investor|slice:":2"|upper }}
+                                            </div>
+                                            {{ investment.investor }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ investment.plan_color }}">{{ investment.plan }}</span>
+                                    </td>
+                                    <td class="fw-bold text-success">₱{{ investment.amount }}</td>
+                                    <td class="text-info">₱{{ investment.daily_return }}</td>
+                                    <td class="text-muted">{{ investment.time_ago }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="position-relative h-100">
+                <img src="{% static 'Growfi6.jpg' %}" alt="Investment Success" class="img-fluid rounded-4 shadow-lg h-100" style="width: 100%; object-fit: cover;">
+                <div class="position-absolute top-50 start-50 translate-middle text-center text-white">
+                    <div class="bg-dark bg-opacity-75 rounded-4 p-3">
+                        <h4 class="mb-2"><i class="fas fa-users"></i></h4>
+                        <h5 class="mb-1">Join Our Community</h5>
+                        <p class="mb-0 small">Thousands of successful investors</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Stories Section -->
+    <div class="row mt-5 mb-5">
+        <div class="col-12">
+            <div class="position-relative overflow-hidden rounded-4">
+                <img src="{% static 'Growfi7.jpg' %}" alt="Success Stories" class="w-100" style="height: 400px; object-fit: cover;">
+                <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, rgba(13, 110, 253, 0.8), rgba(111, 66, 193, 0.8));">
+                    <div class="container h-100 d-flex align-items-center">
+                        <div class="row w-100">
+                            <div class="col-md-6 text-white">
+                                <h2 class="mb-4"><i class="fas fa-trophy"></i> Success Stories</h2>
+                                <blockquote class="blockquote">
+                                    <p class="mb-3">"I've been investing with InvestPH for 6 months now and I'm amazed by the consistent daily returns. The GROWFI plans are perfect for my financial goals!"</p>
+                                    <footer class="blockquote-footer text-white-75">
+                                        Maria Santos, <cite title="Source Title">GROWFI 5 Investor</cite>
+                                    </footer>
+                                </blockquote>
+                                <div class="mt-4">
+                                    <div class="row">
+                                        <div class="col-4 text-center">
+                                            <div class="h4 text-warning mb-1">₱125,000</div>
+                                            <small class="text-white-75">Total Earned</small>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <div class="h4 text-success mb-1">180</div>
+                                            <small class="text-white-75">Days Active</small>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <div class="h4 text-info mb-1">99.8%</div>
+                                            <small class="text-white-75">Success Rate</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <div class="bg-white bg-opacity-10 rounded-4 p-4 backdrop-blur">
+                                    <h3 class="text-white mb-3">Ready to Start?</h3>
+                                    <p class="text-white-75 mb-4">Join thousands of successful investors and start earning daily profits with our GROWFI plans.</p>
+                                    <a href="#" class="btn btn-light btn-lg fw-bold px-5 py-3 rounded-pill shadow-lg" onclick="document.querySelector('.growfi-card .invest-btn').click()">
+                                        <i class="fas fa-rocket me-2"></i>Start Investing Now
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GROWFI Investment Modal -->
+<div class="modal fade" id="growfiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-seedling me-2"></i>Invest in <span id="selectedGrowfiName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="growfiInvestmentForm">
+                    <input type="hidden" name="plan_id" id="selectedGrowfiPlanId">
+                    
+                    <!-- Plan Summary -->
+                    <div class="mb-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Investment Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 col-6 text-center mb-3">
+                                        <div class="h5 text-primary mb-1" id="modalInvestmentPrice">₱0</div>
+                                        <small class="text-muted">Investment Price</small>
+                                    </div>
+                                    <div class="col-md-3 col-6 text-center mb-3">
+                                        <div class="h5 text-success mb-1" id="modalDailyProfitAmount">₱0</div>
+                                        <small class="text-muted">Daily Profit</small>
+                                    </div>
+                                    <div class="col-md-3 col-6 text-center mb-3">
+                                        <div class="h5 text-info mb-1" id="modalDurationDays">0</div>
+                                        <small class="text-muted">Duration (Days)</small>
+                                    </div>
+                                    <div class="col-md-3 col-6 text-center mb-3">
+                                        <div class="h5 text-warning mb-1" id="modalTotalRevenue">₱0</div>
+                                        <small class="text-muted">Total Revenue</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-success mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    <strong>Net Profit:</strong> <span id="modalNetProfit">₱0</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        You will receive <span id="modalDailyProfitText">₱0</span> every day for 
+                                        <span id="modalDurationText">0</span> days
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Investment Amount (Fixed) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Investment Amount (Fixed)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-success text-white">₱</span>
+                            <input type="text" class="form-control fw-bold" name="amount" id="modalFixedAmount" 
+                                   readonly style="background-color: #f8f9fa; font-size: 1.2rem;">
+                        </div>
+                        <div class="form-text text-success">
+                            <i class="fas fa-lock me-1"></i>This amount is fixed for the selected GROWFI plan
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Payment Method</label>
+                        <select class="form-select" name="payment_method" required>
+                            <option value="">Choose payment method...</option>
+                            <option value="balance">Account Balance</option>
+                            <option value="gcash">GCash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="paypal">PayPal</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Current Balance Display -->
+                    <div class="mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">Your Current Balance:</span>
+                                    <span class="fw-bold text-primary h5 mb-0">₱{{ user.userprofile.balance|default:"0.00"|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Terms and Conditions -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="agreeGrowfiTerms" required>
+                        <label class="form-check-label" for="agreeGrowfiTerms">
+                            I agree to the <a href="#" target="_blank">GROWFI Terms and Conditions</a> and understand that:
+                            <ul class="mt-2 mb-0">
+                                <li>This is a fixed investment plan with predetermined returns</li>
+                                <li>Daily profits will be credited automatically</li>
+                                <li>Investment duration cannot be changed once started</li>
+                            </ul>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success btn-lg" onclick="submitGrowfiInvestment()">
+                    <i class="fas fa-rocket me-2"></i>Confirm Investment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedGrowfiPlan = null;
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecentInvestments();
+    
+    // Auto-refresh recent investments every 30 seconds
+    setInterval(loadRecentInvestments, 30000);
+    
+    // Add hover effects to GROWFI cards
+    document.querySelectorAll('.growfi-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px)';
+            this.style.boxShadow = '0 15px 35px rgba(0,0,0,0.1)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 5px 15px rgba(0,0,0,0.08)';
+        });
+    });
+
+    // Apply dynamic backgrounds based on data attributes
+    document.querySelectorAll('[data-bg-start][data-bg-end]').forEach(function(el){
+        var s = el.getAttribute('data-bg-start');
+        var e = el.getAttribute('data-bg-end');
+        if (s && e) {
+            el.style.background = 'linear-gradient(135deg, ' + s + ', ' + e + ')';
+        }
+    });
+    var hero = document.querySelector('.hero-section[data-bg]');
+    if (hero) {
+        var url = hero.getAttribute('data-bg');
+        if (url) {
+            hero.style.background = 'linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(32, 201, 151, 0.9)), url(\'' + url + '\') center/cover';
+        }
+    }
+
+    // Wire Invest buttons without inline onclick
+    document.querySelectorAll('.invest-btn[data-plan-id]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            selectGrowfiPlan(
+                this.getAttribute('data-plan-id'),
+                this.getAttribute('data-plan-name'),
+                parseFloat(this.getAttribute('data-amount')),
+                parseFloat(this.getAttribute('data-daily-profit') || this.getAttribute('data-daily-rate') || '0'),
+                parseInt(this.getAttribute('data-duration'), 10)
+            );
+        });
+    });
+});
+
+// GROWFI Calculator Function
+function calculateGrowfiReturns() {
+    const planSelect = document.getElementById('growfiPlan');
+    const selectedOption = planSelect.options[planSelect.selectedIndex];
+    const resultsDiv = document.getElementById('calculationResults');
+    const breakdownDiv = document.getElementById('profitBreakdown');
+    
+    if (!selectedOption.value) {
+        resultsDiv.style.display = 'none';
+        breakdownDiv.style.display = 'none';
+        document.getElementById('investmentAmountDisplay').value = '';
+        return;
+    }
+    
+    const amount = parseInt(selectedOption.dataset.amount);
+    const dailyProfit = parseInt(selectedOption.dataset.profit);
+    const duration = parseInt(selectedOption.dataset.duration);
+    const totalRevenue = parseInt(selectedOption.dataset.revenue);
+    const netProfit = parseInt(selectedOption.dataset.netprofit);
+    
+    // Update display values
+    document.getElementById('investmentAmountDisplay').value = amount.toLocaleString();
+    document.getElementById('dailyProfit').textContent = `₱${dailyProfit.toLocaleString()}`;
+    document.getElementById('duration').textContent = `${duration} days`;
+    document.getElementById('totalRevenue').textContent = `₱${totalRevenue.toLocaleString()}`;
+    document.getElementById('netProfit').textContent = `₱${netProfit.toLocaleString()}`;
+    
+    // Update profit breakdown text
+    document.getElementById('dailyProfitText').textContent = `₱${dailyProfit.toLocaleString()}`;
+    document.getElementById('durationText').textContent = duration;
+    document.getElementById('totalProfitText').textContent = `₱${netProfit.toLocaleString()}`;
+    
+    // Show results
+    resultsDiv.style.display = 'block';
+    breakdownDiv.style.display = 'block';
+}
+
+// Select GROWFI Plan Function
+function selectGrowfiPlan(planId, planName, amount, dailyRateOrProfit, duration) {
+    // If dailyRateOrProfit > 1, treat as fixed daily profit; otherwise treat as percentage
+    const dailyProfit = dailyRateOrProfit > 1
+        ? Math.round(dailyRateOrProfit)
+        : Math.round((amount * (dailyRateOrProfit || 0)) / 100);
+    const totalRevenue = dailyProfit * duration;
+    const netProfit = totalRevenue;
+    
+    selectedGrowfiPlan = {
+        id: planId,
+        name: planName,
+        amount: amount,
+        dailyRate: dailyRateOrProfit,
+        dailyProfit: dailyProfit,
+        duration: duration,
+        totalRevenue: totalRevenue,
+        netProfit: netProfit
+    };
+    
+    // Update modal content
+    document.getElementById('selectedGrowfiPlanId').value = planId;
+    document.getElementById('selectedGrowfiName').textContent = planName;
+    document.getElementById('modalInvestmentPrice').textContent = `₱${amount.toLocaleString()}`;
+    document.getElementById('modalDailyProfitAmount').textContent = `₱${dailyProfit.toLocaleString()}`;
+    document.getElementById('modalDurationDays').textContent = `${duration} days`;
+    document.getElementById('modalTotalRevenue').textContent = `₱${totalRevenue.toLocaleString()}`;
+    document.getElementById('modalNetProfit').textContent = `₱${netProfit.toLocaleString()}`;
+    document.getElementById('modalFixedAmount').value = amount.toLocaleString();
+    document.getElementById('modalDailyProfitText').textContent = `₱${dailyProfit.toLocaleString()}`;
+    document.getElementById('modalDurationText').textContent = duration;
+    
+    // Set the actual amount value for form submission
+    document.querySelector('input[name="amount"]').value = amount;
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('growfiModal')).show();
+}
+
+// Submit GROWFI Investment
+function submitGrowfiInvestment() {
+    const form = document.getElementById('growfiInvestmentForm');
+    const formData = new FormData(form);
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = event.target;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    submitBtn.disabled = true;
+    
+    fetch('/make-investment/' + selectedGrowfiPlan.id + '/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('growfiModal')).hide();
+            showToast('Investment created successfully! Your GROWFI plan is now active.', 'success');
+            setTimeout(() => {
+                window.location.href = '/my-investments/';
+            }, 2000);
+        } else {
+            showToast(data.message || 'Error creating investment', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error submitting investment. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function loadRecentInvestments() {
+    fetch('/api/recent-investments/')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('recentInvestments');
+            if (tbody && data.investments) {
+                tbody.innerHTML = data.investments.map(investment => `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle me-2" style="width: 32px; height: 32px; line-height: 32px; font-size: 0.8rem; text-align: center;">
+                                    ${investment.investor.slice(0, 2).toUpperCase()}
+                                </div>
+                                ${investment.investor}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-${investment.plan_color}">${investment.plan}</span>
+                        </td>
+                        <td class="fw-bold text-success">₱${investment.amount}</td>
+                        <td class="text-info">₱${investment.daily_return}</td>
+                        <td class="text-muted">${investment.time_ago}</td>
+                    </tr>
+                `).join('');
+            }
+        })
+        .catch(error => console.error('Error loading recent investments:', error));
+}
+
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastElement.role = 'alert';
+    toastElement.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toastElement);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1080';
+    document.body.appendChild(container);
+    return container;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Legacy functions for backward compatibility
+function calculateReturns() {
+    console.log('Legacy function called');
+}
+
+function selectPlan() {
+    console.log('Legacy function called');
+}
+
+function updateModalCalculation() {
+    console.log('Legacy function called');
+}
+
+function submitInvestment() {
+    console.log('Legacy function called');
+}
+</script>
+
+<style>
+/* Enhanced Hero Section */
+.hero-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(32, 201, 151, 0.9));
+    z-index: 1;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.stats-card {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Image Enhancements */
+.img-fluid {
+    transition: all 0.3s ease;
+}
+
+.img-fluid:hover {
+    transform: scale(1.02);
+}
+
+/* Card Image Enhancements */
+.card-img-top {
+    transition: all 0.3s ease;
+    filter: brightness(0.9);
+}
+
+.growfi-card:hover .card-img-top {
+    filter: brightness(1);
+    transform: scale(1.05);
+}
+
+/* Overlay Effects */
+.bg-gradient-to-r {
+    background: linear-gradient(to right, var(--bs-success) 0%, transparent 100%);
+}
+
+.from-success\/20 {
+    --bs-success: rgba(40, 167, 69, 0.2);
+}
+
+.from-primary\/20 {
+    --bs-primary: rgba(13, 110, 253, 0.2);
+}
+
+.to-transparent {
+    --bs-transparent: transparent;
+}
+
+/* Text Shadows and Enhanced Typography */
+.text-white-75 {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.bg-opacity-10 {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Rounded Corners */
+.rounded-4 {
+    border-radius: 1rem !important;
+}
+
+/* Enhanced Card Animations */
+.growfi-card {
+    overflow: hidden;
+    border-radius: 1rem;
+}
+
+.growfi-card .card-img-top {
+    border-radius: 0;
+}
+
+/* Process Section Enhancements */
+.bg-white {
+    background-color: white !important;
+}
+
+.text-primary {
+    color: #0d6efd !important;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-info {
+    color: #17a2b8 !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+/* Mobile Responsive Enhancements */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 300px !important;
+    }
+    
+    .img-fluid {
+        height: 250px !important;
+    }
+    
+    .card-img-top {
+        height: 150px !important;
+    }
+    
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Parallax Effect for Background Images */
+@media (min-width: 768px) {
+    .parallax-bg {
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+}
+
+/* Enhanced Shadow Effects */
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.shadow-xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Image Loading Animation */
+@keyframes imageLoad {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.img-fluid {
+    animation: imageLoad 0.6s ease-out;
+}
+
+/* Gradient Text Effects */
+.gradient-text {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Enhanced Button Hover Effects */
+.invest-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Backdrop Blur Effect */
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhanced Blockquote Styles */
+.blockquote {
+    border-left: 4px solid rgba(255, 255, 255, 0.3);
+    padding-left: 1.5rem;
+    margin-left: 0;
+}
+
+.blockquote p {
+    font-style: italic;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Success Stories Animation */
+.success-stats {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Rounded Pill Buttons */
+.rounded-pill {
+    border-radius: 50rem !important;
+}
+
+/* Enhanced Call-to-Action */
+.btn-light:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* GROWFI Card Styles */
+.growfi-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.growfi-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.growfi-card .card-header {
+    border: none;
+    padding: 2rem 1.5rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.growfi-card .card-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.growfi-card:hover .card-header::before {
+    transform: rotate(45deg);
+}
+
+.invest-btn {
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.invest-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+}
+
+.invest-btn:hover::before {
+    width: 100%;
+    height: 100%;
+}
+
+.invest-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Calculator Styles */
+.card.border-success {
+    border-width: 2px !important;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+.form-select, .form-control {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.modal-header {
+    border: none;
+    padding: 1.5rem 2rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    border: none;
+    padding: 1.5rem 2rem;
+    background: #f8f9fa;
+}
+
+/* Alert and Badge Styles */
+.alert {
+    border: none;
+    border-radius: 10px;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* Animation Effects */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.growfi-card {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.growfi-card:nth-child(1) { animation-delay: 0.1s; }
+.growfi-card:nth-child(2) { animation-delay: 0.2s; }
+.growfi-card:nth-child(3) { animation-delay: 0.3s; }
+.growfi-card:nth-child(4) { animation-delay: 0.4s; }
+.growfi-card:nth-child(5) { animation-delay: 0.5s; }
+.growfi-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .growfi-card .card-header {
+        padding: 1.5rem 1rem 1rem;
+    }
+    
+    .growfi-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-body, .modal-header, .modal-footer {
+        padding: 1rem;
+    }
+    
+    .h1 {
+        font-size: 1.5rem;
+    }
+    
+    .h3 {
+        font-size: 1.25rem;
+    }
+}
+
+/* Loading States */
+.btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Table Styles */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th {
+    border: none;
+    background: #f8f9fa;
+    font-weight: 600;
+    padding: 1rem;
+}
+
+.table td {
+    border: none;
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #f1f3f4;
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Recent Investments Animation */
+#recentInvestments tr {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Input Group Styles */
+.input-group-text {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    font-weight: bold;
+}
+
+/* Success States */
+.text-success {
+    color: #28a745 !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #28a745;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #20c997;
+}
+</style>
+{% endblock %}

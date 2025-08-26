@@ -312,29 +312,33 @@ print(f"🔍 Firebase Debug - RENDER_EXTERNAL_HOSTNAME: {os.environ.get('RENDER_
 
 try:
     if not firebase_admin._apps:
-        # For production (Render.com), use hardcoded credentials
+        # For production (Render.com), use environment variables for credentials
         if IS_PRODUCTION:
-            print("🔥 Using production Firebase credentials for Render.com")
-            # For Render.com, use hard-coded credentials
-            firebase_creds = {
-                "type": "service_account",
-                "project_id": "investment-6d6f7",
-                "private_key_id": "a8f39ea0b077dd4da8483f04a742fd2aab925fc3",
-                "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDd+CUC3F2Gwt/Z\nnHl/bIg8cOlW8FBu+lnxYIsbNW2zCRm8EWRTTqHIFFklE01y6GGEDHzzZphxE2Bj\nck/7jytkG9decAk2qRMOXAcK5qGO37ErOScD05QrGLrswKwcIKp6bM6aiVOGthgt\nW6OhIRnal56weun6VG5CxR+wzI7hfHWZ3aOXstP+daNH4mBpsjGDgIEVdcVqG57W\nBJemeqNXIBKVRGBhkZQLqsRpPvMQVMHkAYTvoGHs9VFyzaNJkrHDy5WOsYwB52h5\nPHd0u286T0Bk8J45F5/IDsQq3wyUNndhuK7raMICc64gAaqVmdd71tBxrBlJonlk\n72nLBbonAgMBAAECggEAauwKYAtone6nR7rBJ+lO4tZ9ABz4kczUoJohx/R/qDtd\nAyPZkOuSsL9khaB7sTtRJfuiANlN20I7Lww0jPfVLf7fSqVrOsJM5KDd35li/2Cv\nhiOcsJItkGj0OfFBtrbhh+F70CMQcharJMY81vQL8SkSDu7WYHhlOJKeBlszBFg6\nuBDbbgTmFlLSZL6enxzkQnY8623ExqEQejso7lddUaYcbXxZZRICdGMLgvgsfH7t\nnXPhpyC0tH8+zzjwL+bvX/0xfAf8Nm24pn+sWwBYbrXwhufg22vB7Tqqupb9LQXx\nOt/VGD1XyE8ike8BWKxpw8xmroLc/jtPRF/q/Uh+KQKBgQD3jpFPk6DWX5I6LH2H\nHGWo5khNP3patRg5TM9Lf8GhQxW8pw/GYTrL5nhS2ol8XtfyQaz/QS87hWmoFlqa\n0unZ7cqxrD8xI1Z9XgQjFK4Og3hklr6Tu4vKGO8vGe2h/XJWwB937Gw0s1pS3quY\n5av+csxbICdW5772p0VPrM/w2wKBgQDliiucj97ei1iIyxJujei46vuhsbZKy0hQ\n51ngeRPZsbqSn4gYVu8gIIvhiZ5p3gD5aON2a3cL+ZGWQIPfYiy2iDDeXEBiS0l1\nk93Mp2ASdbP4h5Gook72zV/CTjG7hNPbeBx4jvp50TZQwuaSuUft+LtbZu49blFU\ncJW2ZbSHpQKBgQDpQ2xG2GtwNEO8DxoFCsv712l/aHXpLMTzkR2vHWWdh3He/mgN\n3KYjZToxj/yGtXOzsRDKwGg6JJ8HJHEhe+WgVMFuo0g0DAE+Ri2NxLmxsU3rMmPH\nHqw8tTwDXOIehouLlKLSRHM9QVa1yV1Vx+xF6XQH1YdcCyhUkA7uYX7aiwKBgFq3\ngcbtgUp4zfO6Nj2lLh2vGOXtozrqHlmDJZ02nObDfBYooJPl/7m1wzLOveHfUIlB\nr+wEStdbufMk6jllxoAZUR8AXJ28XXrvhpA0ch65j/ggNCvugcC+qCLV3ofa1hP9\n41quP0XXrly6un+wZEIjtIBKLMvwhooVuMWOaovVAoGBAI51FTSfXhZ8UxbqH+rz\nk6590a7ICBZ74win/QA3nET9Kt6KHiq5v8qIHlBGc7CasY+/6CLnJs+5FanbusGz\nVR7dJyVc8X7nhsaT8/8/2gVjPql+cdhkpIQhtVn4zTKWUz59/f/TMDy18ab7VC69\n5VQm4ZDyHHmVsdRXjPN7Hiby\n-----END PRIVATE KEY-----\n",
-                "client_email": "firebase-adminsdk-fbsvc@investment-6d6f7.iam.gserviceaccount.com",
-                "client_id": "113203784259300491698",
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40investment-6d6f7.iam.gserviceaccount.com",
-                "universe_domain": "googleapis.com"
-            }
-            cred = credentials.Certificate(firebase_creds)
-            firebase_admin.initialize_app(cred, {
-                'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'   
-            })
-            FIREBASE_INITIALIZED = True
-            print("✅ Firebase Admin SDK initialized successfully with production credentials!")
+            print("🔥 Using production Firebase credentials from environment variables")
+            
+            # Get Firebase credentials from environment variables
+            firebase_project_id = os.environ.get('FIREBASE_PROJECT_ID')
+            firebase_private_key = os.environ.get('FIREBASE_PRIVATE_KEY')
+            firebase_client_email = os.environ.get('FIREBASE_CLIENT_EMAIL')
+            
+            if firebase_project_id and firebase_private_key and firebase_client_email:
+                firebase_creds = {
+                    "type": "service_account",
+                    "project_id": firebase_project_id,
+                    "private_key": firebase_private_key.replace('\\n', '\n'),
+                    "client_email": firebase_client_email,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                }
+                cred = credentials.Certificate(firebase_creds)
+                firebase_admin.initialize_app(cred, {
+                    'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'   
+                })
+                FIREBASE_INITIALIZED = True
+                print("✅ Firebase Admin SDK initialized successfully with production credentials!")
+            else:
+                print("❌ Firebase credentials not found in environment variables")
         else:
             # For local development, try to use Firebase too
             print("🔥 Attempting to initialize Firebase for local development...")
@@ -370,8 +374,8 @@ FIREBASE_CLIENT_CONFIG = {
     "databaseURL": "https://investment-6d6f7-default-rtdb.firebaseio.com",
     "projectId": "investment-6d6f7",
     "storageBucket": "investment-6d6f7.firebasestorage.app",
-    "messagingSenderId": "113203784259",
-    "appId": "1:534129560092:web:d07eff2cd2466059d16dd9",
+    "messagingSenderId": "201737488989",
+    "appId": "1:201737488989:web:507864017e2e868a565bb4",
     "measurementId": "G-9VRMN7QCFN"
 }
 

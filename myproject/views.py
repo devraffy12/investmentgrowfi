@@ -13,6 +13,7 @@ import json
 import uuid
 import requests
 import logging
+import os  # Added missing import
 from datetime import datetime, timedelta
 import re  # for phone normalization
 from django.views.decorators.csrf import csrf_exempt
@@ -20,19 +21,31 @@ from typing import Optional
 import firebase_admin
 from firebase_admin import credentials
 
-# Set up logging
+# Set up logging    
 logger = logging.getLogger(__name__)
-
 
 # Safe Firebase imports
 try:
     import firebase_admin
     from firebase_admin import credentials, auth as firebase_auth, db as firebase_db, firestore
     from .firebase_app import get_firebase_app
-    FIREBASE_AVAILABLE = True
-    print("🔥 Firebase modules imported successfully")
+    # For development, disable Firebase to avoid JWT errors
+    import os
+    if not os.environ.get('RENDER_EXTERNAL_HOSTNAME'):  # Local development
+        print("🔧 Development mode: Firebase disabled to avoid JWT signature errors")
+        print("📝 User registration will work but data won't be saved to Firebase")
+        FIREBASE_AVAILABLE = False
+    else:
+        # Test if Firebase is actually working by trying to get the app
+        try:
+            test_app = get_firebase_app()
+            FIREBASE_AVAILABLE = True
+            print("✅ Firebase connection test successful")
+        except Exception as firebase_test_error:
+            print(f"❌ Firebase connection test failed: {firebase_test_error}")
+            FIREBASE_AVAILABLE = False
 except ImportError as e:
-    print(f"❌ Firebase not available: {e}")
+    print(f"Firebase not available: {e}")
     FIREBASE_AVAILABLE = False
 
 def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None):
@@ -134,19 +147,12 @@ def _ensure_firebase_user(phone_number: Optional[str] = None, email: Optional[st
 def save_user_to_firebase_realtime_db(user, phone_number, additional_data=None):
     """Save user data to both Firebase Realtime Database and Firestore with enhanced error handling"""
     if not FIREBASE_AVAILABLE:
-        print("⚠️ Firebase modules not available, skipping user save")
-        return False
-    
-    # Check if Firebase is actually initialized (production check)
-    from django.conf import settings
-    if not getattr(settings, 'FIREBASE_INITIALIZED', False):
-        print("⚠️ Firebase not initialized in settings, skipping user save")
+        print("⚠️ Firebase not available, skipping user save")
         return False
         
     try:
         # Get Firebase app
         app = get_firebase_app()
-        print(f"🔥 Firebase app retrieved: {app.name}")
         
         # Get Realtime Database reference
         ref = firebase_db.reference('/', app=app)

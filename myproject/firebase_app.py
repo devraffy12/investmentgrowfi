@@ -1,5 +1,7 @@
 import os
+import json
 from typing import Optional
+from pathlib import Path
 
 import firebase_admin
 from firebase_admin import credentials
@@ -20,47 +22,81 @@ def get_firebase_app() -> firebase_admin.App:
     if _firebase_app is not None:
         return _firebase_app
 
-    # Try to get existing app first (from settings.py)
+    # If already initialized (e.g., in settings.py), just reuse it
     try:
         _firebase_app = firebase_admin.get_app()
-        print("🔥 Using existing Firebase app from settings.py")
         return _firebase_app
     except ValueError:
-        # No app exists, need to initialize
-        print("🔥 No existing Firebase app found, initializing new one")
+        # Not initialized yet, proceed to initialize
         pass
 
-    # Check if Firebase is already initialized in settings
-    if hasattr(settings, 'FIREBASE_INITIALIZED') and settings.FIREBASE_INITIALIZED:
-        try:
-            _firebase_app = firebase_admin.get_app()
-            print("✅ Firebase app retrieved successfully")
-            return _firebase_app
-        except ValueError:
-            print("⚠️ Settings says Firebase is initialized but no app found")
-
-    # Fallback: try to initialize with credentials file
-    creds_path = getattr(settings, 'FIREBASE_CREDENTIALS_FILE', None) or os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-    if creds_path and os.path.exists(creds_path):
-        print(f"🔥 Trying to initialize Firebase with credentials file: {creds_path}")
-        cred = credentials.Certificate(creds_path)
-        try:
-            _firebase_app = firebase_admin.initialize_app(cred)
-            print("✅ Firebase initialized with credentials file")
-            return _firebase_app
-        except ValueError as e:
-            print(f"⚠️ Could not initialize Firebase: {e}")
-            # Try to get existing app
+    # Check if we're in production (Render.com)
+    is_production = bool(os.environ.get('RENDER_EXTERNAL_HOSTNAME'))
+    
+    if is_production:
+        print("🔥 Firebase App: Initializing for production using environment variables")
+        # For production, use environment variables
+        firebase_project_id = os.environ.get('FIREBASE_PROJECT_ID')
+        firebase_private_key = os.environ.get('FIREBASE_PRIVATE_KEY')
+        firebase_client_email = os.environ.get('FIREBASE_CLIENT_EMAIL')
+        
+        if firebase_project_id and firebase_private_key and firebase_client_email:
+            # Fix escaped newlines in private key
+            firebase_private_key = firebase_private_key.replace('\\n', '\n')
+            
+            firebase_creds = {
+                "type": "service_account",
+                "project_id": firebase_project_id,
+                "private_key": firebase_private_key,
+                "client_email": firebase_client_email,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            }
+            
             try:
-                _firebase_app = firebase_admin.get_app()
+                cred = credentials.Certificate(firebase_creds)
+                _firebase_app = firebase_admin.initialize_app(cred, {
+                    'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'
+                })
+                print("✅ Firebase App: Production initialization successful!")
                 return _firebase_app
-            except ValueError:
-                pass
+            except Exception as e:
+                print(f"❌ Firebase App: Production initialization failed: {e}")
+                raise RuntimeError(f'Firebase production initialization failed: {e}')
+        else:
+            raise RuntimeError('Firebase production credentials not found in environment variables')
+    else:
+        print("🔥 Firebase App: Initializing for local development")
+        # For local development, try to use the service account file
+        firebase_service_account_path = Path(settings.BASE_DIR) / 'firebase-service-account.json'
+        
+        if firebase_service_account_path.exists():
+            try:
+                # Read and fix the JSON file
+                with open(firebase_service_account_path, 'r') as f:
+                    firebase_creds = json.load(f)
+                
+                # Fix escaped newlines in private key
+                if 'private_key' in firebase_creds:
+                    firebase_creds['private_key'] = firebase_creds['private_key'].replace('\\n', '\n')
+                
+                cred = credentials.Certificate(firebase_creds)
+                _firebase_app = firebase_admin.initialize_app(cred, {
+                    'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'
+                })
+                print("✅ Firebase App: Local development initialization successful!")
+                return _firebase_app
+            except Exception as e:
+                print(f"❌ Firebase App: Local development initialization failed: {e}")
+                # For now, let's just warn but not fail completely
+                print("⚠️ Continuing without Firebase - registration will work but data won't be saved to Firebase")
+                raise RuntimeError(f'Firebase local development initialization failed: {e}')
+        else:
+            print("⚠️ Firebase service account file not found - continuing without Firebase")
+            raise RuntimeError('Firebase service account file not found for local development')
 
-    # Last resort - raise error
-    raise RuntimeError(
-        '❌ Firebase not available. Check if Firebase is properly configured in settings.py'
-    )
+    raise RuntimeError('Firebase initialization failed - no valid configuration found')
 
 
 def get_firestore_client() -> firestore.Client:

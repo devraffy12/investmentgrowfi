@@ -305,64 +305,12 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Firebase Configuration
+# Firebase initialization is handled in myproject/firebase_app.py
 FIREBASE_INITIALIZED = False
 print(f"🔍 Firebase Debug - IS_PRODUCTION: {IS_PRODUCTION}")
 print(f"🔍 Firebase Debug - ENVIRONMENT: {ENVIRONMENT}")
 print(f"🔍 Firebase Debug - RENDER_EXTERNAL_HOSTNAME: {os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'None')}")
-
-try:
-    if not firebase_admin._apps:
-        # For production (Render.com), use environment variables for credentials
-        if IS_PRODUCTION:
-            print("🔥 Using production Firebase credentials from environment variables")
-            
-            # Get Firebase credentials from environment variables
-            firebase_project_id = os.environ.get('FIREBASE_PROJECT_ID')
-            firebase_private_key = os.environ.get('FIREBASE_PRIVATE_KEY')
-            firebase_client_email = os.environ.get('FIREBASE_CLIENT_EMAIL')
-            
-            if firebase_project_id and firebase_private_key and firebase_client_email:
-                firebase_creds = {
-                    "type": "service_account",
-                    "project_id": firebase_project_id,
-                    "private_key": firebase_private_key.replace('\\n', '\n'),
-                    "client_email": firebase_client_email,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                }
-                cred = credentials.Certificate(firebase_creds)
-                firebase_admin.initialize_app(cred, {
-                    'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'   
-                })
-                FIREBASE_INITIALIZED = True
-                print("✅ Firebase Admin SDK initialized successfully with production credentials!")
-            else:
-                print("❌ Firebase credentials not found in environment variables")
-        else:
-            # For local development, try to use Firebase too
-            print("🔥 Attempting to initialize Firebase for local development...")
-            firebase_service_account_path = BASE_DIR / 'firebase-service-account.json'
-            if firebase_service_account_path.exists():
-                try:
-                    cred = credentials.Certificate(str(firebase_service_account_path))
-                    firebase_admin.initialize_app(cred, {
-                        'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'   
-                    })
-                    FIREBASE_INITIALIZED = True
-                    print("✅ Firebase Admin SDK initialized successfully with local file!")
-                except Exception as local_error:
-                    print(f"⚠️ Could not initialize Firebase locally: {local_error}")
-                    print("🔥 Firebase will be enabled automatically in production on Render.com")
-                    FIREBASE_INITIALIZED = False
-            else:
-                print("⚠️ Firebase credentials file not found - Firebase disabled for local development")
-                print("🔥 Firebase will be enabled automatically in production on Render.com")
-                FIREBASE_INITIALIZED = False
-except Exception as e:
-    print(f"⚠️ Warning: Could not initialize Firebase Admin SDK: {e}")
-    print("Firebase features will be disabled")
-    FIREBASE_INITIALIZED = False
+print("🔥 Firebase initialization will be handled by firebase_app.py when needed")
 
 # Firebase Credentials File Setting (for firebase_app.py)
 FIREBASE_CREDENTIALS_FILE = str(BASE_DIR / 'firebase-service-account.json')

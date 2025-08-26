@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 try:
     import firebase_admin
     from firebase_admin import credentials, auth as firebase_auth, db as firebase_db, firestore
-    from .firebase_app import get_firebase_app
+    from .firebase_app import get_firebase_app  
     # Test if Firebase is actually working by trying to get the app
     try:
         test_app = get_firebase_app()

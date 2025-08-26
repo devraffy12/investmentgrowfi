@@ -254,7 +254,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Static files storage
 if IS_PRODUCTION:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # Use ManifestStaticFilesStorage instead of CompressedManifestStaticFilesStorage to avoid manifest issues
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 else:
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 

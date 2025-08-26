@@ -10,5 +10,7 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: ENVIRONMENT
+        value: "production"
       - key: DJANGO_SETTINGS_MODULE
         value: "investmentdb.settings"

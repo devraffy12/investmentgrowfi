@@ -58,23 +58,37 @@ def get_firebase_app() -> firebase_admin.App:
                 # Fix private key formatting
                 private_key = firebase_private_key.replace('\\n', '\n')
                 
+                # Ensure required fields are not None
                 cred_dict = {
                     "type": firebase_type,
                     "project_id": firebase_project_id,
-                    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
+                    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID', ''),
                     "private_key": private_key,
                     "client_email": firebase_client_email,
-                    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
+                    "client_id": os.getenv('FIREBASE_CLIENT_ID', ''),
                     "auth_uri": os.getenv('FIREBASE_AUTH_URI', 'https://accounts.google.com/o/oauth2/auth'),
                     "token_uri": os.getenv('FIREBASE_TOKEN_URI', 'https://oauth2.googleapis.com/token'),
                     "auth_provider_x509_cert_url": os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL', 'https://www.googleapis.com/oauth2/v1/certs'),
-                    "client_x509_cert_url": os.getenv('FIREBASE_CLIENT_X509_CERT_URL'),
+                    "client_x509_cert_url": os.getenv('FIREBASE_CLIENT_X509_CERT_URL', ''),
                     "universe_domain": os.getenv('FIREBASE_UNIVERSE_DOMAIN', 'googleapis.com')
                 }
+                
+                # Validate that we have a proper service account structure
+                if cred_dict["type"] != "service_account":
+                    raise ValueError("Invalid service account type")
+                if not cred_dict["project_id"] or not cred_dict["client_email"]:
+                    raise ValueError("Missing required project_id or client_email")
+                if not private_key.startswith("-----BEGIN PRIVATE KEY-----"):
+                    raise ValueError("Invalid private key format")
+                
                 cred = credentials.Certificate(cred_dict)
                 print("🔥 Firebase initialized with individual environment variables")
             except Exception as e:
                 print(f"❌ Error creating credentials from environment variables: {e}")
+                print(f"   Firebase Type: {firebase_type}")
+                print(f"   Project ID: {firebase_project_id}")
+                print(f"   Client Email: {firebase_client_email}")
+                print(f"   Private Key Present: {bool(firebase_private_key)}")
     
     # Method 3: Try credentials file (for local development)
     if not cred:
@@ -86,15 +100,21 @@ def get_firebase_app() -> firebase_admin.App:
             except Exception as e:
                 print(f"❌ Error loading credentials file: {e}")
     
-    # If no credentials found, raise error
+    # If no credentials found, log warning but don't crash the app
     if not cred:
-        error_msg = (
-            'Firebase credentials not found. Please set one of:\n'
-            '1. GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable\n'
-            '2. Individual Firebase environment variables (FIREBASE_TYPE, FIREBASE_PROJECT_ID, etc.)\n'
-            '3. settings.FIREBASE_CREDENTIALS_FILE or GOOGLE_APPLICATION_CREDENTIALS file path'
-        )
-        raise RuntimeError(error_msg)
+        print("⚠️ Firebase credentials not found. Please set one of:")
+        print("   1. GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable")
+        print("   2. Individual Firebase environment variables (FIREBASE_TYPE, FIREBASE_PROJECT_ID, etc.)")
+        print("   3. settings.FIREBASE_CREDENTIALS_FILE or GOOGLE_APPLICATION_CREDENTIALS file path")
+        print("🔄 App will continue without Firebase - registration will work but data won't sync to Firebase")
+        
+        # Return a dummy app that will be handled gracefully
+        class DummyFirebaseApp:
+            def __init__(self):
+                self.project_id = "firebase-unavailable"
+        
+        _firebase_app = DummyFirebaseApp()
+        return _firebase_app
 
     # Initialize Firebase app
     try:

@@ -34,17 +34,36 @@ def get_firebase_app() -> firebase_admin.App:
     cred = None
     
     # Method 1: Try environment variable JSON credentials (for production)
-    json_creds = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+    json_creds = os.getenv('FIREBASE_CREDENTIALS_JSON') or os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
     if json_creds:
         try:
             cred_dict = json.loads(json_creds)
             # Fix private key formatting
             if 'private_key' in cred_dict:
                 cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+            
+            # Validate the JSON structure
+            required_fields = ['type', 'project_id', 'private_key', 'client_email']
+            missing_fields = [field for field in required_fields if not cred_dict.get(field)]
+            
+            if missing_fields:
+                raise ValueError(f"Missing required fields in JSON credentials: {missing_fields}")
+            
+            if cred_dict['type'] != 'service_account':
+                raise ValueError(f"Invalid service account type: {cred_dict['type']}")
+            
             cred = credentials.Certificate(cred_dict)
             print("🔥 Firebase initialized with JSON environment credentials")
+            print(f"✅ Project ID: {cred_dict['project_id']}")
+            print(f"✅ Client Email: {cred_dict['client_email']}")
+        except json.JSONDecodeError as e:
+            print(f"❌ Error parsing JSON credentials: Invalid JSON format - {e}")
         except Exception as e:
             print(f"❌ Error parsing JSON credentials: {e}")
+            print(f"   JSON length: {len(json_creds)} characters")
+            print(f"   JSON preview: {json_creds[:100]}...")
+    else:
+        print("⚠️ No JSON credentials found in environment variables")
     
     # Method 2: Try individual environment variables (for production)
     if not cred:
@@ -103,7 +122,7 @@ def get_firebase_app() -> firebase_admin.App:
     # If no credentials found, log warning but don't crash the app
     if not cred:
         print("⚠️ Firebase credentials not found. Please set one of:")
-        print("   1. GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable")
+        print("   1. FIREBASE_CREDENTIALS_JSON environment variable")
         print("   2. Individual Firebase environment variables (FIREBASE_TYPE, FIREBASE_PROJECT_ID, etc.)")
         print("   3. settings.FIREBASE_CREDENTIALS_FILE or GOOGLE_APPLICATION_CREDENTIALS file path")
         print("🔄 App will continue without Firebase - registration will work but data won't sync to Firebase")

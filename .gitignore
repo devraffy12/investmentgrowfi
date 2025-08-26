@@ -55,4 +55,3 @@ local_settings.py
 *-firebase-adminsdk-*.json
 firebase-credentials.json
 firebase-service-account.json
-firebase-service-account-new.json

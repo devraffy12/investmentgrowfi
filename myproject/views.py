@@ -386,9 +386,17 @@ def firebase_login(request):
                 elif digits_only.startswith('09') and len(digits_only) == 11:
                     # 09xxxxxxxxx format - convert to +639xxxxxxxxx
                     clean_phone = '+63' + digits_only[1:]
+                elif digits_only.startswith('099') and len(digits_only) == 12:
+                    # 099xxxxxxxxx format - remove first two chars "09", keep "9xxxxxxxxx"
+                    clean_phone = '+63' + digits_only[2:]  # Remove "09", keep rest
+                elif digits_only.startswith('99') and len(digits_only) == 11:
+                    # 99xxxxxxxxx format - remove first char "9", keep "9xxxxxxxxx"  
+                    clean_phone = '+63' + digits_only[1:]  # Remove first "9", keep rest
+                elif digits_only.startswith('9') and len(digits_only) == 10:
+                    # 9xxxxxxxxx format - add +63
+                    clean_phone = '+63' + digits_only
                 elif len(digits_only) >= 10:
-                    # Handle various formats by extracting the last 10 digits
-                    # This covers cases like 099xxxxxxxx, 99xxxxxxxx, etc.
+                    # Handle remaining edge cases by extracting the last 10 digits
                     last_10_digits = digits_only[-10:]
                     if last_10_digits.startswith('9'):
                         clean_phone = '+63' + last_10_digits

@@ -23,12 +23,21 @@ from firebase_admin import credentials
 
 # Set up logging    
 logger = logging.getLogger(__name__)
+import os, json, firebase_admin
+from firebase_admin import credentials
+
+cred_dict = json.loads(os.environ["FIREBASE_CREDENTIALS_JSON"])
+cred = credentials.Certificate(cred_dict)
+
+firebase_admin.initialize_app(cred, {
+    "databaseURL": os.environ["FIREBASE_DATABASE_URL"]
+})
 
 # Safe Firebase imports
 try:
     import firebase_admin
     from firebase_admin import credentials, auth as firebase_auth, db as firebase_db, firestore
-    from .firebase_app import get_firebase_app
+    from .firebase_app import get_firebase_app  
     # Test if Firebase is actually working by trying to get the app
     try:
         test_app = get_firebase_app()

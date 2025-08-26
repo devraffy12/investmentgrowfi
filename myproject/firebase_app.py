@@ -120,12 +120,14 @@ def get_firebase_app() -> firebase_admin.App:
     try:
         # Include database URL if available
         config = {}
-        database_url = os.getenv('FIREBASE_DATABASE_URL')
+        database_url = os.getenv('FIREBASE_DATABASE_URL', 'https://investment-6d6f7-default-rtdb.firebaseio.com')
         if database_url:
             config['databaseURL'] = database_url
+            print(f"🔗 Using Firebase Database URL: {database_url}")
             
         _firebase_app = firebase_admin.initialize_app(cred, config)
         print(f"✅ Firebase app initialized successfully with project: {cred.project_id}")
+        print(f"✅ Firebase Database URL configured: {database_url}")
     except ValueError as e:
         if "already exists" in str(e).lower():
             # If default app already exists, reuse it
@@ -135,6 +137,7 @@ def get_firebase_app() -> firebase_admin.App:
             raise e
     except Exception as e:
         print(f"❌ Error initializing Firebase app: {e}")
+        print(f"❌ Config used: {config}")
         raise e
     
     return _firebase_app

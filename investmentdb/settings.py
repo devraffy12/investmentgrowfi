@@ -316,6 +316,9 @@ print("🔥 Firebase initialization will be handled by firebase_app.py when need
 # Firebase Credentials File Setting (for firebase_app.py)
 FIREBASE_CREDENTIALS_FILE = str(BASE_DIR / 'firebase-service-account.json')
 
+# Firebase Database URL
+FIREBASE_DATABASE_URL = os.environ.get('FIREBASE_DATABASE_URL', 'https://investment-6d6f7-default-rtdb.firebaseio.com')
+
 # Firebase Client Config (for frontend use)
 FIREBASE_CLIENT_CONFIG = {
     "apiKey": "AIzaSyBbVKoWwHBfvDRGCEGMYHc9KRlpQ-BsOJQ",

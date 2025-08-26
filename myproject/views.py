@@ -32,8 +32,13 @@ try:
     # Test if Firebase is actually working by trying to get the app
     try:
         test_app = get_firebase_app()
-        FIREBASE_AVAILABLE = True
-        print("✅ Firebase connection test successful")
+        # Check if we got a dummy app (indicates Firebase is unavailable)
+        if hasattr(test_app, 'project_id') and test_app.project_id == "firebase-unavailable":
+            FIREBASE_AVAILABLE = False
+            print("❌ Firebase unavailable - dummy app detected")
+        else:
+            FIREBASE_AVAILABLE = True
+            print("✅ Firebase connection test successful")
     except Exception as firebase_test_error:
         print(f"❌ Firebase connection test failed: {firebase_test_error}")
         print("⚠️ Firebase disabled - registration will continue without Firebase")
@@ -41,6 +46,8 @@ try:
 except ImportError as e:
     print(f"Firebase not available: {e}")
     FIREBASE_AVAILABLE = False
+
+print(f"🔥 Firebase Status: {'✅ Available' if FIREBASE_AVAILABLE else '❌ Unavailable'}")
 
 def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None):
     """Internal helper to build masked recent deposit/withdrawal list.
@@ -144,23 +151,27 @@ def save_user_to_firebase_realtime_db(user, phone_number, additional_data=None):
         print("⚠️ Firebase not available, skipping user save")
         return False
         
+    print(f"🔥 Starting Firebase save for user: {phone_number}")
+    
     try:
         # Get Firebase app
         app = get_firebase_app()
+        print(f"✅ Firebase app obtained: {type(app)}")
         
-        # Get Realtime Database reference
-        ref = firebase_db.reference('/', app=app)
-        
-        # Get Firestore client
-        db = firestore.client(app=app)
-        
+        # Check if we got a dummy app (Firebase unavailable)
+        if hasattr(app, 'project_id') and app.project_id == "firebase-unavailable":
+            print("❌ Firebase is unavailable - dummy app detected")
+            return False
+            
         # Get user profile for referral code
         try:
             profile = UserProfile.objects.get(user=user)
             referral_code = profile.referral_code
             referred_by_username = profile.referred_by.username if profile.referred_by else None
             balance = float(profile.balance) if profile.balance else 0.0
+            print(f"✅ User profile data loaded: balance={balance}, referral_code={referral_code}")
         except UserProfile.DoesNotExist:
+            print("⚠️ UserProfile not found, using default values")
             referral_code = None
             referred_by_username = None
             balance = 0.0
@@ -188,36 +199,60 @@ def save_user_to_firebase_realtime_db(user, phone_number, additional_data=None):
         # Add additional data if provided
         if additional_data:
             user_data.update(additional_data)
+            print(f"✅ Additional data added: {list(additional_data.keys())}")
         
         # Clean phone number for Firebase key (remove +, spaces, etc.)
         firebase_key = phone_number.replace('+', '').replace(' ', '').replace('-', '')
+        print(f"✅ Firebase key generated: {firebase_key}")
         
         # 1. Save to Firebase Realtime Database under 'users' node
-        users_ref = ref.child('users')
-        users_ref.child(firebase_key).set(user_data)
-        print(f"✅ User data saved to Firebase Realtime Database: {firebase_key}")
+        try:
+            ref = firebase_db.reference('/', app=app)
+            users_ref = ref.child('users')
+            users_ref.child(firebase_key).set(user_data)
+            print(f"✅ User data saved to Firebase Realtime Database: {firebase_key}")
+        except Exception as rtdb_error:
+            print(f"❌ Failed to save to Realtime Database: {rtdb_error}")
+            # Continue with Firestore even if RTDB fails
         
         # 2. Save to Firestore collection 'users'
-        firestore_user_data = user_data.copy()
-        firestore_user_data['firebase_key'] = firebase_key
-        firestore_user_data['created_at'] = firestore.SERVER_TIMESTAMP
-        firestore_user_data['updated_at'] = firestore.SERVER_TIMESTAMP
-        
-        doc_ref = db.collection('users').document(firebase_key)
-        doc_ref.set(firestore_user_data)
-        print(f"✅ User data saved to Firestore: {firebase_key}")
+        try:
+            db = firestore.client(app=app)
+            firestore_user_data = user_data.copy()
+            firestore_user_data['firebase_key'] = firebase_key
+            firestore_user_data['created_at'] = firestore.SERVER_TIMESTAMP
+            firestore_user_data['updated_at'] = firestore.SERVER_TIMESTAMP
+            
+            doc_ref = db.collection('users').document(firebase_key)
+            doc_ref.set(firestore_user_data)
+            print(f"✅ User data saved to Firestore: {firebase_key}")
+        except Exception as firestore_error:
+            print(f"❌ Failed to save to Firestore: {firestore_error}")
         
         # 3. Also save under 'referral_codes' node for easy lookup (Realtime DB)
         if referral_code:
-            referral_ref = ref.child('referral_codes')
-            referral_ref.child(referral_code).set({
-                'user_id': user.id,
-                'username': user.username,
-                'phone_number': phone_number,
-                'firebase_key': firebase_key,
-                'created_at': timezone.now().isoformat()
-            })
-            print(f"✅ Referral code saved to Firebase: {referral_code}")
+            try:
+                referral_ref = ref.child('referral_codes')
+                referral_ref.child(referral_code).set({
+                    'user_id': user.id,
+                    'username': user.username,
+                    'phone_number': phone_number,
+                    'firebase_key': firebase_key,
+                    'created_at': timezone.now().isoformat()
+                })
+                print(f"✅ Referral code saved to Firebase: {referral_code}")
+            except Exception as ref_error:
+                print(f"❌ Failed to save referral code: {ref_error}")
+        
+        print(f"🎉 Firebase save completed for user: {phone_number}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error saving user to Firebase: {e}")
+        import traceback
+        print(f"❌ Full traceback:")
+        traceback.print_exc()
+        return False
             
             # Save referral to Firestore as well
             db.collection('referral_codes').document(referral_code).set({

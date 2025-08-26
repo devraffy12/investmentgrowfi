@@ -35,7 +35,30 @@ def get_firebase_app() -> firebase_admin.App:
     
     if is_production:
         print("🔥 Firebase App: Initializing for production using environment variables")
-        # For production, use environment variables
+        
+        # Try FIREBASE_CREDENTIALS_JSON first (our preferred method)
+        firebase_credentials_json = os.environ.get('FIREBASE_CREDENTIALS_JSON')
+        
+        if firebase_credentials_json:
+            try:
+                # Parse the JSON credentials
+                firebase_creds = json.loads(firebase_credentials_json)
+                
+                # Fix escaped newlines in private key
+                if 'private_key' in firebase_creds:
+                    firebase_creds['private_key'] = firebase_creds['private_key'].replace('\\n', '\n')
+                
+                cred = credentials.Certificate(firebase_creds)
+                _firebase_app = firebase_admin.initialize_app(cred, {
+                    'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'
+                })
+                print("✅ Firebase App: Production initialization successful with FIREBASE_CREDENTIALS_JSON!")
+                return _firebase_app
+            except Exception as e:
+                print(f"❌ Firebase App: Production initialization failed with FIREBASE_CREDENTIALS_JSON: {e}")
+                # Fall back to individual environment variables
+        
+        # Fallback: Try individual environment variables
         firebase_project_id = os.environ.get('FIREBASE_PROJECT_ID')
         firebase_private_key = os.environ.get('FIREBASE_PRIVATE_KEY')
         firebase_client_email = os.environ.get('FIREBASE_CLIENT_EMAIL')
@@ -59,12 +82,14 @@ def get_firebase_app() -> firebase_admin.App:
                 _firebase_app = firebase_admin.initialize_app(cred, {
                     'databaseURL': 'https://investment-6d6f7-default-rtdb.firebaseio.com'
                 })
-                print("✅ Firebase App: Production initialization successful!")
+                print("✅ Firebase App: Production initialization successful with individual env vars!")
                 return _firebase_app
             except Exception as e:
-                print(f"❌ Firebase App: Production initialization failed: {e}")
+                print(f"❌ Firebase App: Production initialization failed with individual env vars: {e}")
                 raise RuntimeError(f'Firebase production initialization failed: {e}')
         else:
+            print(f"❌ Missing Firebase credentials. FIREBASE_CREDENTIALS_JSON: {'✓' if firebase_credentials_json else '✗'}")
+            print(f"   Individual vars - PROJECT_ID: {'✓' if firebase_project_id else '✗'}, PRIVATE_KEY: {'✓' if firebase_private_key else '✗'}, CLIENT_EMAIL: {'✓' if firebase_client_email else '✗'}")
             raise RuntimeError('Firebase production credentials not found in environment variables')
     else:
         print("🔥 Firebase App: Initializing for local development")

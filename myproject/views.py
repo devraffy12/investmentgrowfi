@@ -253,49 +253,7 @@ def save_user_to_firebase_realtime_db(user, phone_number, additional_data=None):
         print(f"❌ Full traceback:")
         traceback.print_exc()
         return False
-            
-            # Save referral to Firestore as well
-            db.collection('referral_codes').document(referral_code).set({
-                'user_id': user.id,
-                'username': user.username,
-                'phone_number': phone_number,
-                'firebase_key': firebase_key,
-                'created_at': firestore.SERVER_TIMESTAMP
-            })
-            print(f"✅ Referral code saved to Firestore: {referral_code}")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Error saving user to Firebase: {e}")
-        print(f"   This is a non-critical error - registration will continue")
-        import traceback
-        traceback.print_exc()
-        # Don't raise the exception - let registration continue
-        return False
-        users_ref = ref.child('users')
-        users_ref.child(firebase_key).set(user_data)
-        
-        # Also save under 'referral_codes' node for easy lookup
-        if referral_code:
-            referral_ref = ref.child('referral_codes')
-            referral_ref.child(referral_code).set({
-                'user_id': user.id,
-                'username': user.username,
-                'phone_number': phone_number,
-                'firebase_key': firebase_key,
-                'created_at': timezone.now().isoformat()
-            })
-        
-        print(f"✅ User data saved to Firebase Realtime Database: {firebase_key}")
-        print(f"✅ Referral code saved to Firebase: {referral_code}")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Error saving user to Firebase Realtime Database: {e}")
-        print(f"   This is a non-critical error - registration will continue")
-        # Don't raise the exception - let registration continue
-        return False
+
 
 def update_user_in_firebase_realtime_db(user, phone_number, additional_data=None):
     """Update user data in both Firebase Realtime Database and Firestore"""

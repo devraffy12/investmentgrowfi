@@ -29,21 +29,15 @@ try:
     import firebase_admin
     from firebase_admin import credentials, auth as firebase_auth, db as firebase_db, firestore
     from .firebase_app import get_firebase_app
-    # For development, disable Firebase to avoid JWT errors
-    import os
-    if not os.environ.get('RENDER_EXTERNAL_HOSTNAME'):  # Local development
-        print("🔧 Development mode: Firebase disabled to avoid JWT signature errors")
-        print("📝 User registration will work but data won't be saved to Firebase")
+    # Test if Firebase is actually working by trying to get the app
+    try:
+        test_app = get_firebase_app()
+        FIREBASE_AVAILABLE = True
+        print("✅ Firebase connection test successful")
+    except Exception as firebase_test_error:
+        print(f"❌ Firebase connection test failed: {firebase_test_error}")
+        print("⚠️ Firebase disabled - registration will continue without Firebase")
         FIREBASE_AVAILABLE = False
-    else:
-        # Test if Firebase is actually working by trying to get the app
-        try:
-            test_app = get_firebase_app()
-            FIREBASE_AVAILABLE = True
-            print("✅ Firebase connection test successful")
-        except Exception as firebase_test_error:
-            print(f"❌ Firebase connection test failed: {firebase_test_error}")
-            FIREBASE_AVAILABLE = False
 except ImportError as e:
     print(f"Firebase not available: {e}")
     FIREBASE_AVAILABLE = False

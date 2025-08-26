@@ -77,7 +77,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
     'https://*.vercel.app',
     'https://*.onrender.com',
-    'https://investmentgrowfi.onrender.com',
+    'https://investmentgrowfi-iu47.onrender.com',
     'https://cloud.la2568.site',
     'https://*.la2568.site',
 ]
@@ -104,7 +104,7 @@ if IS_PRODUCTION:
         '.railway.app',
         '.vercel.app',
         '.onrender.com',
-        'investmentgrowfi.onrender.com',
+        'investmentgrowfi-iu47.onrender.com',
         '52.77.112.163',  # Galaxy callback IP
         os.environ.get('ALLOWED_HOST', ''),
     ]
@@ -332,7 +332,7 @@ FIREBASE_CLIENT_CONFIG = {
 }
 
 # Site URL for callbacks
-SITE_URL = os.environ.get('SITE_URL', 'https://investmentgrowfi.onrender.com' if IS_PRODUCTION else 'http://127.0.0.1:8000')
+SITE_URL = os.environ.get('SITE_URL', 'https://investmentgrowfi-iu47.onrender.com' if IS_PRODUCTION else 'http://127.0.0.1:8000')
 
 # ========================================
 # GALAXY PAYMENT API CONFIGURATION

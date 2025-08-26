@@ -374,16 +374,30 @@ def firebase_login(request):
         # Prefer phone as username if available, otherwise email, else uid
         username = None
         if phone_number:
-            # Normalize to +63 if it's a PH number starting with 09/9/63
+            # Smart phone normalization for Philippine numbers
             clean_phone = phone_number.replace(' ', '').replace('-', '')
             if not clean_phone.startswith('+63'):
-                digits = re.sub(r'\D', '', clean_phone)
-                if digits.startswith('63'):
-                    clean_phone = '+' + digits
-                elif digits.startswith('09'):
-                    clean_phone = '+63' + digits[1:]  # Remove only '0', keep '9...'
-                elif digits.startswith('9'):
-                    clean_phone = '+63' + digits
+                # Remove all non-digits first
+                digits_only = re.sub(r'\D', '', clean_phone)
+                
+                if digits_only.startswith('63') and len(digits_only) >= 12:
+                    # 639xxxxxxxxx format
+                    clean_phone = '+' + digits_only
+                elif digits_only.startswith('09') and len(digits_only) == 11:
+                    # 09xxxxxxxxx format - convert to +639xxxxxxxxx
+                    clean_phone = '+63' + digits_only[1:]
+                elif len(digits_only) >= 10:
+                    # Handle various formats by extracting the last 10 digits
+                    # This covers cases like 099xxxxxxxx, 99xxxxxxxx, etc.
+                    last_10_digits = digits_only[-10:]
+                    if last_10_digits.startswith('9'):
+                        clean_phone = '+63' + last_10_digits
+                    else:
+                        # If doesn't start with 9, might be invalid, but try anyway
+                        clean_phone = '+63' + digits_only
+                else:
+                    # Fallback: just add +63 to whatever digits we have
+                    clean_phone = '+63' + digits_only if digits_only else clean_phone
             username = clean_phone
         elif email:
             username = email
@@ -566,13 +580,30 @@ def register(request):
         
         # Clean phone number - remove spaces and ensure +63 format
         clean_phone = phone.replace(' ', '').replace('-', '')
+        
+        # Smart phone normalization for Philippine numbers
         if not clean_phone.startswith('+63'):
-            if clean_phone.startswith('63'):
-                clean_phone = '+' + clean_phone
-            elif clean_phone.startswith('09'):
-                clean_phone = '+63' + clean_phone[1:]  # Remove only '0', keep '9...'
-            elif clean_phone.startswith('9'):
-                clean_phone = '+63' + clean_phone
+            # Remove all non-digits first
+            digits_only = ''.join(filter(str.isdigit, clean_phone))
+            
+            if digits_only.startswith('63') and len(digits_only) >= 12:
+                # 639xxxxxxxxx format
+                clean_phone = '+' + digits_only
+            elif digits_only.startswith('09') and len(digits_only) == 11:
+                # 09xxxxxxxxx format - convert to +639xxxxxxxxx
+                clean_phone = '+63' + digits_only[1:]
+            elif len(digits_only) >= 10:
+                # Handle various formats by extracting the last 10 digits
+                # This covers cases like 099xxxxxxxx, 99xxxxxxxx, etc.
+                last_10_digits = digits_only[-10:]
+                if last_10_digits.startswith('9'):
+                    clean_phone = '+63' + last_10_digits
+                else:
+                    # If doesn't start with 9, might be invalid, but try anyway
+                    clean_phone = '+63' + digits_only
+            else:
+                # Fallback: just add +63 to whatever digits we have
+                clean_phone = '+63' + digits_only if digits_only else clean_phone
         
         # Validate password confirmation
         if password != confirm_password:
@@ -814,13 +845,30 @@ def user_login(request):
         
         # Clean phone number - ensure +63 format for authentication
         clean_phone = phone.replace(' ', '').replace('-', '')
+        
+        # Smart phone normalization for Philippine numbers
         if not clean_phone.startswith('+63'):
-            if clean_phone.startswith('63'):
-                clean_phone = '+' + clean_phone
-            elif clean_phone.startswith('09'):
-                clean_phone = '+63' + clean_phone[1:]  # Remove only '0', keep '9...'
-            elif clean_phone.startswith('9'):
-                clean_phone = '+63' + clean_phone
+            # Remove all non-digits first
+            digits_only = ''.join(filter(str.isdigit, clean_phone))
+            
+            if digits_only.startswith('63') and len(digits_only) >= 12:
+                # 639xxxxxxxxx format
+                clean_phone = '+' + digits_only
+            elif digits_only.startswith('09') and len(digits_only) == 11:
+                # 09xxxxxxxxx format - convert to +639xxxxxxxxx
+                clean_phone = '+63' + digits_only[1:]
+            elif len(digits_only) >= 10:
+                # Handle various formats by extracting the last 10 digits
+                # This covers cases like 099xxxxxxxx, 99xxxxxxxx, etc.
+                last_10_digits = digits_only[-10:]
+                if last_10_digits.startswith('9'):
+                    clean_phone = '+63' + last_10_digits
+                else:
+                    # If doesn't start with 9, might be invalid, but try anyway
+                    clean_phone = '+63' + digits_only
+            else:
+                # Fallback: just add +63 to whatever digits we have
+                clean_phone = '+63' + digits_only if digits_only else clean_phone
         
         print(f"Cleaned phone: {clean_phone}")
         

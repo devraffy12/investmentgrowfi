@@ -1,0 +1,6 @@
+# Deployment Trigger
+# This file triggers a redeploy on Render.com
+# Last updated: August 26, 2025
+
+DEPLOYMENT_VERSION=1.0.3
+FIREBASE_SETUP_COMPLETE=true

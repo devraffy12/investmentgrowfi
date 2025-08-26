@@ -30,8 +30,9 @@ try:
     from firebase_admin import credentials, auth as firebase_auth, db as firebase_db, firestore
     from .firebase_app import get_firebase_app
     FIREBASE_AVAILABLE = True
+    print("🔥 Firebase modules imported successfully")
 except ImportError as e:
-    print(f"Firebase not available: {e}")
+    print(f"❌ Firebase not available: {e}")
     FIREBASE_AVAILABLE = False
 
 def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None):
@@ -133,12 +134,19 @@ def _ensure_firebase_user(phone_number: Optional[str] = None, email: Optional[st
 def save_user_to_firebase_realtime_db(user, phone_number, additional_data=None):
     """Save user data to both Firebase Realtime Database and Firestore with enhanced error handling"""
     if not FIREBASE_AVAILABLE:
-        print("⚠️ Firebase not available, skipping user save")
+        print("⚠️ Firebase modules not available, skipping user save")
+        return False
+    
+    # Check if Firebase is actually initialized (production check)
+    from django.conf import settings
+    if not getattr(settings, 'FIREBASE_INITIALIZED', False):
+        print("⚠️ Firebase not initialized in settings, skipping user save")
         return False
         
     try:
         # Get Firebase app
         app = get_firebase_app()
+        print(f"🔥 Firebase app retrieved: {app.name}")
         
         # Get Realtime Database reference
         ref = firebase_db.reference('/', app=app)

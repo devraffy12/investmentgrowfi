@@ -20,53 +20,40 @@ def get_firebase_app() -> firebase_admin.App:
     if _firebase_app is not None:
         return _firebase_app
 
-    # Try to get existing app first (from settings.py)
+    # If already initialized (e.g., in settings.py), just reuse it
     try:
         _firebase_app = firebase_admin.get_app()
-        print("🔥 Using existing Firebase app from settings.py")
         return _firebase_app
     except ValueError:
-        # No app exists, need to initialize
-        print("🔥 No existing Firebase app found, initializing new one")
+        # Not initialized yet, proceed to initialize
         pass
 
-    # Check if Firebase is already initialized in settings
-    if hasattr(settings, 'FIREBASE_INITIALIZED') and settings.FIREBASE_INITIALIZED:
+    # Determine credentials file path
+    creds_path = getattr(settings, 'FIREBASE_CREDENTIALS_FILE', None) or os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    if not creds_path or not os.path.exists(creds_path):
+        # If there is an already initialized app at the firebase_admin level, reuse it
         try:
             _firebase_app = firebase_admin.get_app()
-            print("✅ Firebase app retrieved successfully")
             return _firebase_app
         except ValueError:
-            print("⚠️ Settings says Firebase is initialized but no app found")
+            raise RuntimeError(
+                'Firebase credentials file not found. Set settings.FIREBASE_CREDENTIALS_FILE or GOOGLE_APPLICATION_CREDENTIALS.'
+            )
 
-    # Fallback: try to initialize with credentials file
-    creds_path = getattr(settings, 'FIREBASE_CREDENTIALS_FILE', None) or os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-    if creds_path and os.path.exists(creds_path):
-        print(f"🔥 Trying to initialize Firebase with credentials file: {creds_path}")
-        cred = credentials.Certificate(creds_path)
-        try:
-            _firebase_app = firebase_admin.initialize_app(cred)
-            print("✅ Firebase initialized with credentials file")
-            return _firebase_app
-        except ValueError as e:
-            print(f"⚠️ Could not initialize Firebase: {e}")
-            # Try to get existing app
-            try:
-                _firebase_app = firebase_admin.get_app()
-                return _firebase_app
-            except ValueError:
-                pass
-
-    # Last resort - raise error
-    raise RuntimeError(
-        '❌ Firebase not available. Check if Firebase is properly configured in settings.py'
-    )
+    cred = credentials.Certificate(creds_path)
+    try:
+        _firebase_app = firebase_admin.initialize_app(cred)
+    except ValueError:
+        # If default app already exists, reuse it
+        _firebase_app = firebase_admin.get_app()
+    return _firebase_app
 
 
 def get_firestore_client() -> firestore.Client:
     """Return a Firestore client bound to the initialized Firebase app."""
     app = get_firebase_app()
     return firestore.client(app=app)
+
 
 
 

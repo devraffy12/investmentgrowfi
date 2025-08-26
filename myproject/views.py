@@ -381,7 +381,7 @@ def firebase_login(request):
                 if digits.startswith('63'):
                     clean_phone = '+' + digits
                 elif digits.startswith('09'):
-                    clean_phone = '+63' + digits[1:]
+                    clean_phone = '+63' + digits[1:]  # Remove only '0', keep '9...'
                 elif digits.startswith('9'):
                     clean_phone = '+63' + digits
             username = clean_phone
@@ -570,7 +570,7 @@ def register(request):
             if clean_phone.startswith('63'):
                 clean_phone = '+' + clean_phone
             elif clean_phone.startswith('09'):
-                clean_phone = '+63' + clean_phone[1:]
+                clean_phone = '+63' + clean_phone[1:]  # Remove only '0', keep '9...'
             elif clean_phone.startswith('9'):
                 clean_phone = '+63' + clean_phone
         
@@ -818,7 +818,7 @@ def user_login(request):
             if clean_phone.startswith('63'):
                 clean_phone = '+' + clean_phone
             elif clean_phone.startswith('09'):
-                clean_phone = '+63' + clean_phone[1:]
+                clean_phone = '+63' + clean_phone[1:]  # Remove only '0', keep '9...'
             elif clean_phone.startswith('9'):
                 clean_phone = '+63' + clean_phone
         

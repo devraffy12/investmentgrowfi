@@ -239,20 +239,7 @@
                 </div>
             </a>
             
-            <a href="#" class="settings-card" onclick="showSecurityModal()">
-                <div class="settings-icon security">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <div class="settings-content">
-                    <h4>Security Settings</h4>
-                    <p>Password and 2FA management</p>
-                </div>
-                <div class="settings-meta">
-                    <span class="badge secure">Secure</span>
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </a>
-            
+        
             <a href="{% url 'support' %}" class="settings-card">
                 <div class="settings-icon support">
                     <i class="fas fa-headset"></i>
@@ -260,16 +247,38 @@
                 <div class="settings-content">
                     <h4>Customer Support</h4>
                     <p>Get help from our team 24/7</p>
+                    <div class="support-contact">
+                        <span class="contact-handle">@Growfiinvestment</span>
+                    </div>
                 </div>
                 <div class="settings-meta">
                     <span class="badge online">Online</span>
                     <i class="fas fa-chevron-right"></i>
                 </div>
             </a>
+            
+            <a href="https://t.me/Growfiplan" target="_blank" class="settings-card">
+                <div class="settings-icon community">
+                    <i class="fab fa-telegram-plane"></i>
+                </div>
+                <div class="settings-content">
+                    <h4>GrowFi Community</h4>
+                    <p>Join our official Telegram group</p>
+                    <div class="support-contact">
+                        <span class="contact-handle">t.me/Growfiplan</span>
+                    </div>
+                </div>
+                <div class="settings-meta">
+                    <span class="badge community">Active</span>
+                    <i class="fas fa-external-link-alt"></i>
+                </div>
+            </a>
         </div>
     </div>
 
-    <!-- Support Banner -->
+   
+
+    <!-- Original Support Banner -->
     <div class="dashboard-section">
         <div class="support-banner">
             <div class="support-content">
@@ -280,11 +289,37 @@
                     <h3>Need Assistance?</h3>
                     <p>Our support team is available 24/7 via Telegram for instant help</p>
                 </div>
-                <a href="https://t.me/trustlongterm" target="_blank" class="support-btn">
+                <a href="https://t.me/Growfiinvestment" target="_blank" class="support-btn">
                     <i class="fab fa-telegram-plane"></i>
                     <span>Contact Support</span>
                 </a>
             </div>
+        </div>
+    </div>
+
+    <!-- Settings & Tools -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h2><i class="fas fa-cog"></i> Additional Settings</h2>
+            <p>More account management options</p>
+        </div>
+        
+        <div class="settings-grid">
+            <a href="{% url 'transaction_history' %}" class="settings-card">
+                <div class="settings-icon history">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="settings-content">
+                    <h4>Transaction History</h4>
+                    <p>View all financial activities</p>
+                </div>
+                <div class="settings-meta">
+                    <span class="badge info">Recent</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+         
         </div>
     </div>
 
@@ -986,6 +1021,7 @@
 .settings-icon.history { background: var(--success-gradient); }
 .settings-icon.security { background: var(--warning-gradient); }
 .settings-icon.support { background: var(--telegram-gradient); }
+.settings-icon.community { background: var(--whatsapp-gradient); }
 
 .settings-content {
     flex: 1;
@@ -1001,7 +1037,21 @@
 .settings-content p {
     font-size: 0.8rem;
     color: #64748b;
-    margin: 0;
+    margin: 0 0 0.5rem 0;
+}
+
+.support-contact {
+    margin-top: 0.25rem;
+}
+
+.contact-handle {
+    font-size: 0.75rem;
+    color: #0088cc;
+    font-weight: 600;
+    font-family: monospace;
+    background: rgba(0, 136, 204, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
 .settings-meta {
@@ -1021,6 +1071,7 @@
 .badge.info { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
 .badge.secure { background: rgba(245, 158, 11, 0.1); color: #d97706; }
 .badge.online { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+.badge.community { background: rgba(37, 211, 102, 0.1); color: #128c7e; }
 
 .settings-meta i {
     color: #94a3b8;
@@ -1031,6 +1082,144 @@
 .settings-card:hover .settings-meta i {
     color: #667eea;
     transform: translateX(4px);
+}
+
+/* Support Panel */
+.support-panel {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #e2e8f0;
+}
+
+.support-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0;
+}
+
+.support-info-card {
+    padding: 2rem;
+    border-right: 1px solid #e2e8f0;
+    transition: var(--transition);
+}
+
+.support-info-card:last-child {
+    border-right: none;
+}
+
+.support-info-card:hover {
+    background: rgba(102, 126, 234, 0.02);
+}
+
+.support-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.support-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.support-card-icon.telegram {
+    background: var(--telegram-gradient);
+}
+
+.support-card-icon.community {
+    background: var(--whatsapp-gradient);
+}
+
+.support-card-title h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.support-card-title p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.support-card-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.contact-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.contact-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.contact-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0088cc;
+    font-family: monospace;
+    background: rgba(0, 136, 204, 0.1);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: white;
+    transition: var(--transition);
+    width: fit-content;
+}
+
+.contact-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    color: white;
+    text-decoration: none;
+}
+
+.contact-btn.support-btn {
+    background: var(--telegram-gradient);
+}
+
+.contact-btn.community-btn {
+    background: var(--whatsapp-gradient);
+}
+
+.contact-btn.support-btn:hover {
+    box-shadow: 0 6px 20px rgba(0, 136, 204, 0.3);
+}
+
+.contact-btn.community-btn:hover {
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
 }
 
 /* Support Banner */
@@ -1371,6 +1560,30 @@
     
     .info-panel {
         padding: 1.5rem;
+    }
+    
+    .support-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .support-info-card {
+        padding: 1.5rem;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .support-info-card:last-child {
+        border-bottom: none;
+    }
+    
+    .support-card-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .contact-btn {
+        align-self: center;
     }
 }
 

@@ -7,25 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    primary: '#6366f1',
-                    'primary-dark': '#4f46e5',
-                    'primary-light': '#818cf8',
-                    success: '#10b981',
-                    danger: '#ef4444',
-                    warning: '#f59e0b',
-                    'gradient-start': '#667eea',
-                    'gradient-end': '#764ba2',
-                }
-            }
-        }
-    }
-</script>
 <style>
 /* Enhanced Font System */
 body {
@@ -42,30 +23,45 @@ body {
     background-size: cover;
 }
 
-.font-poppins {
-    font-family: 'Poppins', sans-serif;
+.gradient-bg {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
 }
 
-/* Advanced Animations */
-@keyframes float {
-    0%, 100% { 
-        transform: translateY(0px) rotate(0deg); 
-        opacity: 0.7;
-    }
-    50% { 
-        transform: translateY(-15px) rotate(5deg); 
-        opacity: 1;
-    }
+.logo-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-pulse-custom {
+    animation: pulse 2s infinite;
+}
+
+.animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
 }
 
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(40px) scale(0.95);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
     }
 }
 
@@ -79,704 +75,26 @@ body {
         transform: translateX(0);
     }
 }
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.05);
-        opacity: 0.9;
-    }
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: -200px 0;
-    }
-    100% {
-        background-position: calc(200px + 100%) 0;
-    }
-}
-
-@keyframes glow {
-    0%, 100% {
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-    }
-    50% {
-        box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
-    }
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* Animation Classes */
-.animate-fade-in-up {
-    animation: fadeInUp 1s ease-out;
-}
-
-.animate-slide-in-left {
-    animation: slideInLeft 0.8s ease-out;
-}
-
-.animate-slide-in-right {
-    animation: slideInRight 0.8s ease-out;
-}
-
-.floating-shape {
-    animation: float 8s ease-in-out infinite;
-}
-
-.animate-pulse-custom {
-    animation: pulse 2s ease-in-out infinite;
-}
-
-.animate-glow {
-    animation: glow 3s ease-in-out infinite;
-}
-
-/* Enhanced Background */
-.gradient-bg {
-    background-size: 300% 300%;
-    animation: gradientShift 8s ease infinite;
-}
-
-/* Enhanced Container */
-.main-container {
-    /* Removed backdrop-filter blur effects */
-}
-
-/* Logo Enhancement */
-.logo-container {
-    position: relative;
-    overflow: hidden;
-}
-
-.logo-container::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 3s infinite;
-    border-radius: inherit;
-}
-
-/* Enhanced Input Styling */
-.input-group {
-    position: relative;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.input-group:focus-within .input-icon {
-    color: #6366f1;
-    transform: scale(1.15) rotate(5deg);
-}
-
-.input-group:focus-within input {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
-}
-
-.input-group input {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Enhanced Phone Input - Desktop */
-.phone-container {
-    position: relative;
-    display: flex;
-    border: 1px solid #d1d5db;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    background: white;
-    min-height: 56px;
-    align-items: stretch;
-}
-
-.phone-container:focus-within {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.phone-prefix {
-    background: #f9fafb;
-    color: #374151;
-    padding: 16px 18px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    flex-grow: 0;
-    font-size: 16px;
-    min-width: 80px;
-    max-width: 80px;
-    width: 80px;
-    user-select: none;
-    pointer-events: none;
-    border-right: 1px solid #e5e7eb;
-}
-
-.phone-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    padding: 16px 18px;
-    font-size: 16px;
-    font-weight: 500;
-    background: transparent;
-    color: #111827;
-}
-
-.phone-input::placeholder {
-    color: #9ca3af;
-    font-weight: 400;
-}
-
-/* Enhanced Button Styles */
-.btn-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    border: none;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-    min-height: 56px;
-}
-
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.6s ease;
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
-    background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
-}
-
-.btn-primary:hover::before {
-    left: 100%;
-}
-
-.btn-primary:active {
-    transform: translateY(-1px) scale(1.01);
-    transition: all 0.1s ease;
-}
-
-.btn-outline {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(55, 65, 81, 0.8);
-    color: #374151 !important;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 56px;
-}
-
-.btn-outline::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 100%;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    transition: width 0.4s ease;
-    z-index: -1;
-}
-
-.btn-outline:hover {
-    color: white;
-    border-color: #6366f1;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
-}
-
-.btn-outline:hover::before {
-    width: 100%;
-}
-
-/* Enhanced Form Card */
-.form-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.form-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #6366f1, #818cf8, #a855f7, #ec4899);
-    background-size: 300% 100%;
-    animation: gradientShift 3s ease infinite;
-}
-
-/* Password Toggle Enhancement */
-.password-toggle {
-    transition: all 0.3s ease;
-}
-
-.password-toggle:hover {
-    transform: scale(1.1);
-    color: #6366f1;
-}
-
-/* Hide browser styling */
-input[type="password"]::-ms-reveal,
-input[type="password"]::-ms-clear {
-    display: none;
-}
-
-input[type="password"]::-webkit-credentials-auto-fill-button,
-input[type="password"]::-webkit-strong-password-auto-fill-button {
-    display: none !important;
-}
-
-/* Enhanced autocomplete styling */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.95) inset !important;
-    -webkit-text-fill-color: #374151 !important;
-    transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Loading Spinner */
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* MOBILE RESPONSIVE FIXES */
-@media (max-width: 768px) {
-    .main-container {
-        padding: 16px;
-        margin: 0;
-        max-width: 100%;
-    }
-    
-    .form-card {
-        padding: 32px 24px;
-        border-radius: 24px;
-        margin-bottom: 24px;
-        /* Removed box-shadow */
-    }
-    
-    /* Header adjustments for mobile */
-    h1.font-poppins {
-        font-size: 2.5rem;
-        line-height: 1.2;
-        margin-bottom: 16px;
-    }
-    
-    .logo-container {
-        width: 80px;
-        height: 80px;
-        margin-bottom: 24px;
-    }
-    
-    /* Enhanced phone input for mobile */
-    .phone-container {
-        border-radius: 16px;
-        min-height: 64px;
-        border: 1px solid #d1d5db;
-    }
-    
-    .phone-prefix {
-        padding: 18px 20px;
-        font-size: 17px;
-        min-width: 85px;
-        background: #f9fafb;
-        color: #374151;
-        border-right: 1px solid #e5e7eb;
-    }
-    
-    .phone-input {
-        padding: 18px 20px;
-        font-size: 18px;
-        font-weight: 500;
-    }
-    
-    /* Enhanced password input for mobile */
-    .input-group input {
-        padding: 18px 20px;
-        padding-right: 60px;
-        font-size: 18px;
-        border-radius: 16px;
-        min-height: 64px;
-        box-sizing: border-box;
-        border: 1px solid #d1d5db;
-    }
-    
-    .input-group input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    .password-toggle {
-        right: 20px;
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    /* Enhanced buttons for mobile */
-    button[type="submit"] {
-        padding: 18px 24px;
-        font-size: 18px;
-        font-weight: 600;
-        border-radius: 16px;
-        min-height: 64px;
-    }
-    
-    /* Label improvements */
-    label {
-        font-size: 16px;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-}
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
-        min-height: 70px; /* Increased from 64px to 70px */
-        display: flex;
-        align-items: stretch;
-        position: relative;
-    }
-    
-    .phone-prefix {
-        padding: 20px 24px; /* Increased padding */
-        font-size: 18px; /* Increased from 17px */
-        font-weight: 700;
-        min-width: 100px; /* Increased from 90px */
-        max-width: 100px;
-        width: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        flex-grow: 0;
-        user-select: none;
-        pointer-events: none;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .phone-input {
-        padding: 20px 24px; /* Increased padding */
-        font-size: 20px; /* Increased from 19px */
-        font-weight: 500;
-        flex: 1;
-        line-height: 1.4;
-        border-left: 1px solid rgba(255,255,255,0.3);
-        position: relative;
-        z-index: 1;
-    }
-    
-    .phone-input::placeholder {
-        font-size: 18px;
-    }
-    
-    /* FIXED: Enhanced password input for mobile */
-    .input-group input {
-        padding: 20px 24px; /* Increased padding */
-        padding-right: 70px; /* Increased from 65px */
-        font-size: 20px; /* Increased from 19px */
-        font-weight: 500;
-        border-radius: 20px;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
-        min-height: 70px; /* Increased from 64px */
-        box-sizing: border-box;
-        line-height: 1.4;
-        border: 2px solid #e5e7eb;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .input-group input::placeholder {
-        font-size: 18px;
-        color: #9ca3af;
-    }
-    
-    .password-toggle {
-        right: 24px; /* Increased from 22px */
-        width: 48px; /* Increased from 44px */
-        height: 48px; /* Increased from 44px */
-        font-size: 20px; /* Increased from 19px */
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* FIXED: Enhanced buttons for mobile */
-    .btn-primary, .btn-outline {
-        padding: 20px 28px; /* Increased padding */
-        font-size: 19px; /* Increased from 18px */
-        font-weight: 700;
-        border-radius: 20px;
-        min-height: 68px; /* Increased from 60px */
-        line-height: 1.4;
-    }
-    
-    /* Label improvements */
-    label {
-        font-size: 17px; /* Increased from 16px */
-        margin-bottom: 14px; /* Increased from 12px */
-        font-weight: 700;
-        line-height: 1.4;
-    }
-    
-    /* Floating shapes adjustments for mobile */
-    .floating-shape {
-        opacity: 0.3;
-    }
-    
-    /* Ensure proper touch targets */
-    button, input, [role="button"] {
-        min-height: 48px; /* Increased from 44px */
-    }
-}
-
-/* Extra small mobile devices (320px and up) */
-@media (max-width: 480px) {
-    .main-container {
-        padding: 12px;
-    }
-    
-    .form-card {
-        padding: 28px 20px;
-        margin-bottom: 20px;
-    }
-    
-    h1.font-poppins {
-        font-size: 2.25rem;
-    }
-    
-    .phone-prefix {
-        padding: 18px 22px;
-        font-size: 17px;
-        min-width: 95px;
-        max-width: 95px;
-        width: 95px;
-        flex-shrink: 0;
-        flex-grow: 0;
-        user-select: none;
-        pointer-events: none;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .phone-input {
-        padding: 18px 22px;
-        font-size: 19px;
-        border-left: 1px solid rgba(255,255,255,0.3);
-        position: relative;
-        z-index: 1;
-    }
-    
-    .input-group input {
-        padding: 18px 22px;
-        padding-right: 65px;
-        font-size: 19px;
-        min-height: 65px;
-    }
-    
-    .password-toggle {
-        right: 22px;
-        width: 45px;
-        height: 45px;
-        font-size: 18px;
-    }
-    
-    .btn-primary, .btn-outline {
-        padding: 18px 24px;
-        font-size: 18px;
-        min-height: 62px;
-    }
-    
-    label {
-        font-size: 16px;
-    }
-}
-
-/* Large mobile devices (iPhone Plus, etc.) */
-@media (min-width: 414px) and (max-width: 768px) {
-    .phone-container {
-        min-height: 75px;
-    }
-    
-    .phone-prefix {
-        padding: 22px 26px;
-        font-size: 19px;
-        min-width: 105px;
-        max-width: 105px;
-        width: 105px;
-        flex-shrink: 0;
-        flex-grow: 0;
-        user-select: none;
-        pointer-events: none;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .phone-input {
-        padding: 22px 26px;
-        font-size: 21px;
-        border-left: 1px solid rgba(255,255,255,0.3);
-        position: relative;
-        z-index: 1;
-    }
-    
-    .input-group input {
-        padding: 22px 26px;
-        padding-right: 75px;
-        font-size: 21px;
-        min-height: 75px;
-    }
-    
-    .password-toggle {
-        right: 26px;
-        width: 50px;
-        height: 50px;
-        font-size: 21px;
-    }
-    
-    .btn-primary, .btn-outline {
-        padding: 22px 30px;
-        font-size: 20px;
-        min-height: 72px;
-    }
-    
-    label {
-        font-size: 18px;
-        margin-bottom: 16px;
-    }
-}
-
-/* Android Chrome specific fixes */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-    input[type="text"], input[type="password"], input[type="tel"] {
-        -webkit-appearance: none;
-        appearance: none;
-    }
-}
-
-/* iOS Safari specific fixes */
-@supports (-webkit-touch-callout: none) {
-    input[type="text"], input[type="password"], input[type="tel"] {
-        -webkit-appearance: none;
-        border-radius: 20px;
-    }
-}
-
-/* Accessibility Improvements */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-/* Focus Indicators */
-.phone-container:focus-within,
-.input-group input:focus,
-.btn-primary:focus,
-.btn-outline:focus {
-    outline: 2px solid #6366f1;
-    outline-offset: 2px;
-}
-
-/* High Contrast Mode */
-@media (prefers-contrast: high) {
-    .phone-container {
-        border: 2px solid #000;
-    }
-}
-
-/* Enhanced transparent form styling */
-.card input::placeholder {
-    color: rgba(0, 0, 0, 0.6) !important;
-}
-
-.card input:focus {
-    color: #000000 !important;
-}
-
-.card .border-bottom:focus-within {
-    border-bottom-color: rgba(0, 0, 0, 0.8) !important;
-}
-
-/* Hover effects for inputs */
-.card input:hover {
-    color: rgba(0, 0, 0, 0.9) !important;
-}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen gradient-bg py-4 sm:py-6 px-2 sm:px-4 flex items-center justify-center relative overflow-hidden">
+<div class="min-vh-100 gradient-bg py-4 py-sm-5 px-2 px-sm-4 d-flex align-items-center justify-content-center position-relative overflow-hidden">
     <!-- Main Content Container -->
-    <div class="main-container w-full max-w-md mx-auto relative z-10 px-4 sm:px-0">
+    <div class="w-100" style="max-width: 448px;">
         <!-- Enhanced Header Section -->
-        <div class="text-center mb-6 sm:mb-8 animate-fade-in-up">
+        <div class="text-center mb-4 mb-sm-5 animate-fade-in-up">
             <!-- Premium Logo Design -->
-            <div class="logo-container w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 overflow-hidden">
-                <div class="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center">
-                    <img src="{% static 'GrowFi.png' %}" alt="GrowFi Logo" class="w-12 h-12 object-contain">
+            <div class="logo-container d-flex align-items-center justify-content-center mx-auto mb-4 overflow-hidden" style="width: 80px; height: 80px; border-radius: 24px;">
+                <div class="d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border-radius: 16px;">
+                    <img src="{% static 'GrowFi.png' %}" alt="GrowFi Logo" class="object-fit-contain" style="width: 48px; height: 48px;">
                 </div>
             </div>
             
             <!-- Enhanced Typography -->
-            <h1 class="font-poppins text-4xl font-bold text-black mb-3 tracking-tight">
+            <h1 class="fw-bold text-black mb-3" style="font-family: 'Poppins', sans-serif; font-size: 2.5rem; letter-spacing: -0.025em;">
                 Welcome Back to 
-                <span class="text-black font-bold animate-pulse-custom">
+                <span class="text-black fw-bold animate-pulse-custom">
                     GrowFi
                 </span>
             </h1>
@@ -785,89 +103,87 @@ input:-webkit-autofill:focus {
         <!-- Enhanced Error Messages -->
         {% if messages %}
             {% for message in messages %}
-                <div class="mb-6 p-4 rounded-2xl bg-red-50/90 backdrop-blur-sm border border-red-200 animate-slide-in-left">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-exclamation-triangle text-red-500 text-sm"></i>
+                <div class="mb-4 p-4 rounded-4 animate-slide-in-left" style="background: rgba(254, 242, 242, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(248, 113, 113, 0.2);">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px; background: rgba(254, 226, 226, 1); border-radius: 50%;">
+                            <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 14px;"></i>
                         </div>
-                        <span class="text-red-700 font-medium">{{ message }}</span>
+                        <span class="fw-medium" style="color: #b91c1c;">{{ message }}</span>
                     </div>
                 </div>
             {% endfor %}
         {% endif %}
 
-      <div class="card border-0" style="width: 350px; background: transparent;">
-    <div class="card-body p-4">
-        <form id="loginForm" method="post" action="{% url 'login' %}">
-            {% csrf_token %}
-            
-            <!-- Phone Number -->
-            <div class="mb-3">
-                <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Phone Number</label>
-                <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-flag me-2 text-dark opacity-75"></i>
-                        <span class="fw-bold me-2 text-dark">+63</span>
-                        <input 
-                            class="border-0 text-dark flex-grow-1 p-0" 
-                            style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
-                            placeholder="9XX XXX XXXX"
-                            id="phone" 
-                            name="phone" 
-                            required 
-                            maxlength="13"
-                        >
+   
+             <div class="card border-0 mx-auto" style="max-width: 420px; background: transparent;">
+            <div class="card-body p-4">
+                <form id="loginForm" method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Phone Number -->
+                    <div class="mb-4">
+                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Phone Number</label>
+                        <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold me-3 text-dark">+63</span>
+                                <input 
+                                    class="border-0 text-dark w-100 p-0 icon-processed" 
+                                    style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
+                                    placeholder="9XX XXX XXXX"
+                                    id="phone" 
+                                    name="phone" 
+                                    required 
+                                    maxlength="13"
+                                >
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Password -->
-            <div class="mb-4">
-                <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Password</label>
-                <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
-                    <input 
-                        class="border-0 text-dark w-100 p-0 pe-5" 
-                        style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
-                        placeholder="Enter your password"
-                        id="password" 
-                        name="password" 
-                        required
-                    >
+                    
+                    <!-- Password -->
+                    <div class="mb-4">
+                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Password</label>
+                        <div class="position-relative p-3 rounded-3" style="background: rgba(255,255,255,0.9); border: 2px solid rgba(0,0,0,0.1); backdrop-filter: blur(10px);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-lock me-3 text-dark opacity-75" style="width: 20px; text-align: center;"></i>
+                                <input 
+                                    type="password"
+                                    class="border-0 text-dark w-100 p-0 icon-processed" 
+                                    style="outline: none; box-shadow: none; font-size: 16px; background: transparent; font-weight: 600;"
+                                    placeholder="Enter your password"
+                                    id="password" 
+                                    name="password" 
+                                    required 
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
                     <button 
-                        type="button" 
-                        class="position-absolute end-0 top-50 translate-middle-y border-0 bg-transparent text-dark opacity-75 p-2 me-2"
-                        onclick="togglePassword()"
-                        style="cursor: pointer;"
+                        type="submit" 
+                        class="btn w-100 py-3 rounded-3 fw-bold text-white"
+                        style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; font-size: 18px; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);"
                     >
-                        <i id="password-icon" class="fas fa-eye"></i>
+                        Sign In
                     </button>
-                </div>
+                </form>
             </div>
-            
-            
-            <!-- Sign In Button -->
-            <button 
-                type="submit" 
-                class="btn w-100 text-white fw-bold py-3 rounded-pill border-0"
-                style="background: linear-gradient(135deg, #dc2545 0%, #6f42c1 100%); font-size: 16px; min-height: 56px;"
-            >
-                SIGN IN
-            </button>
-        </form>
-    </div>
-</div>
+        </div>
+
 
         <!-- Enhanced Register Link -->
         <div class="text-center mt-4">
             <a 
                 href="{% url 'register' %}" 
-                class="inline-flex items-center justify-center w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 border-2 border-white/30 hover:border-white/50 hover:bg-white/10"
-                style="text-decoration: none;"
+                class="btn w-100 py-3 rounded-4 fw-semibold text-white text-decoration-none d-flex align-items-center justify-content-center"
+                style="border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); transition: all 0.3s ease;"
+                onmouseover="this.style.borderColor='rgba(255, 255, 255, 0.5)'; this.style.background='rgba(255, 255, 255, 0.1)'"
+                onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.3)'; this.style.background='rgba(255, 255, 255, 0.1)'"
             >
-                <span class="flex items-center gap-3">
-                    <i class="fas fa-user-plus text-lg"></i>
-                    <span>Don't have an account? Create one</span>
-                    <i class="fas fa-external-link-alt text-sm opacity-70"></i>
+                <span class="d-flex align-items-center">
+                    <i class="fas fa-user-plus me-3" style="font-size: 18px;"></i>
+                    <span class="me-3">Don't have an account? Create one</span>
+                    <i class="fas fa-external-link-alt" style="font-size: 14px; opacity: 0.7;"></i>
                 </span>
             </a>
         </div>
@@ -876,22 +192,6 @@ input:-webkit-autofill:focus {
 </div>
 
 <script>
-// Toggle password visibility
-function togglePassword() {
-    const passwordField = document.getElementById('password');
-    const passwordIcon = document.getElementById('password-icon');
-    
-    if (passwordField.type === 'password') {
-        passwordField.type = 'text';
-        passwordIcon.classList.remove('fa-eye');
-        passwordIcon.classList.add('fa-eye-slash');
-    } else {
-        passwordField.type = 'password';
-        passwordIcon.classList.remove('fa-eye-slash');
-        passwordIcon.classList.add('fa-eye');
-    }
-}
-
 // Form submission handling 
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     const phone = document.getElementById('phone').value.trim();

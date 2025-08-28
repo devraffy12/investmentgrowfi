@@ -886,6 +886,11 @@ def user_login(request):
         
         if user is not None:
             login(request, user)
+            
+            # Update last login time
+            user.last_login = timezone.now()
+            user.save()
+            
             print(f"User logged in successfully: {user.username}")
             
             # 🔥 Update user login data in Firebase Realtime Database
@@ -894,9 +899,18 @@ def user_login(request):
                 firebase_data = {
                     'last_login_time': timezone.now().isoformat(),
                     'balance': float(profile.balance),
-                    'is_online': True
+                    'is_online': True,
+                    'login_count': (profile.login_count or 0) + 1 if hasattr(profile, 'login_count') else 1,
+                    'last_successful_login': timezone.now().isoformat(),
+                    'platform': 'web_django'
                 }
                 update_user_in_firebase_realtime_db(user, clean_phone, firebase_data)
+                
+                # Track login in Django session for debugging
+                request.session['user_phone'] = clean_phone
+                request.session['login_time'] = timezone.now().isoformat()
+                request.session['user_id'] = user.id
+                
             except UserProfile.DoesNotExist:
                 # If no profile exists, create one and save to Firebase
                 profile = UserProfile.objects.create(
@@ -907,20 +921,62 @@ def user_login(request):
                     'balance': 0.0,
                     'account_type': 'standard',
                     'status': 'active',
-                    'is_online': True
+                    'is_online': True,
+                    'login_count': 1,
+                    'first_login': timezone.now().isoformat(),
+                    'platform': 'web_django'
                 }
                 save_user_to_firebase_realtime_db(user, clean_phone, firebase_data)
+                
+                # Track in session
+                request.session['user_phone'] = clean_phone
+                request.session['login_time'] = timezone.now().isoformat()
+                request.session['user_id'] = user.id
             
             return redirect('dashboard')
         else:
             print("Authentication failed")
-            messages.error(request, 'Invalid phone number or password')
+            
+            # 🔍 Enhanced debugging for failed login
+            try:
+                # Check if user exists
+                user_exists = User.objects.filter(username=clean_phone).exists()
+                if user_exists:
+                    user_obj = User.objects.get(username=clean_phone)
+                    print(f"❌ User exists but auth failed:")
+                    print(f"   - Username: {user_obj.username}")
+                    print(f"   - Is Active: {user_obj.is_active}")
+                    print(f"   - Last Login: {user_obj.last_login}")
+                    print(f"   - Date Joined: {user_obj.date_joined}")
+                    
+                    # Test if password works with direct check
+                    if user_obj.check_password(password):
+                        print(f"   - Password Check: ✅ WORKS (Django auth issue)")
+                        messages.error(request, 'Authentication system error. Please try again.')
+                    else:
+                        print(f"   - Password Check: ❌ WRONG PASSWORD")
+                        messages.error(request, 'Invalid password. Please check your password and try again.')
+                else:
+                    print(f"❌ User does not exist: {clean_phone}")
+                    
+                    # Check for similar phone numbers
+                    similar_users = User.objects.filter(username__contains=clean_phone[-8:])
+                    if similar_users.exists():
+                        print(f"   💡 Found similar users:")
+                        for u in similar_users[:3]:
+                            print(f"      - {u.username}")
+                    
+                    messages.error(request, 'Account not found. Please check your phone number or register first.')
+                    
+            except Exception as debug_error:
+                print(f"❌ Debug error: {debug_error}")
+                messages.error(request, 'Invalid phone number or password')
     
     return render(request, 'myproject/login.html')
 
 @login_required
 def dashboard(request):
-    """User dashboard view with proper balance calculations"""  
+    """User dashboard view with enhanced session tracking"""  
     try:
         profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
@@ -929,6 +985,32 @@ def dashboard(request):
             user=request.user,
             phone_number=request.user.username
         )
+    
+    # 🔍 Session health check and tracking
+    session_info = {
+        'session_key': request.session.session_key,
+        'user_phone': request.session.get('user_phone', 'Unknown'),
+        'login_time': request.session.get('login_time', 'Unknown'),
+        'session_age': request.session.get_expiry_age(),
+        'session_expires': request.session.get_expiry_date(),
+    }
+    
+    # Log session info for debugging
+    print(f"📊 Dashboard access by {request.user.username}:")
+    print(f"   Session Key: {session_info['session_key']}")
+    print(f"   Session Age: {session_info['session_age']} seconds")
+    print(f"   Expires: {session_info['session_expires']}")
+    
+    # Update Firebase with dashboard access
+    try:
+        firebase_data = {
+            'last_dashboard_access': timezone.now().isoformat(),
+            'is_online': True,
+            'session_key_hash': hash(session_info['session_key']) if session_info['session_key'] else None
+        }
+        update_user_in_firebase_realtime_db(request.user, request.user.username, firebase_data)
+    except Exception as firebase_error:
+        print(f"⚠️ Firebase update error in dashboard: {firebase_error}")
     
     active_investments = Investment.objects.filter(user=request.user, status='active')
     recent_transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')[:5]

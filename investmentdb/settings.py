@@ -64,11 +64,13 @@ else:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
 
-# Session and Cookie Security
+# Session and Cookie Security - Enhanced for persistence
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days for better user experience
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep users logged in
+SESSION_SAVE_EVERY_REQUEST = True  # Ensure session persists
+SESSION_COOKIE_SAMESITE = 'Lax'  # Better compatibility with Render.com
 
 CSRF_COOKIE_SECURE = IS_PRODUCTION
 CSRF_COOKIE_HTTPONLY = True
@@ -210,9 +212,12 @@ else:
         }
     }
 
-# Session storage
-SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
-SESSION_CACHE_ALIAS = 'default'
+# Session storage - Fixed for Render.com persistence
+# Using database sessions instead of cached_db to prevent session loss
+# when cache is cleared on Render.com deployments
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request to prevent loss
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days instead of 1 day for better UX
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

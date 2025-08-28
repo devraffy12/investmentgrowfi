@@ -6,15 +6,6 @@
 
 <!-- Investment Plans Professional Interface -->
 <div class="investment-container">
-    <!-- Animated Background -->
-    <div class="background-animation">
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-        </div>
-    </div>
 
     <!-- Header Section -->
     <div class="header-section">
@@ -47,10 +38,8 @@
     <!-- Enhanced Stats Overview -->
     <div class="stats-container">
         <div class="stat-card premium">
-            <div class="stat-background"></div>
             <div class="stat-icon bg-blue">
                 <i class="fas fa-users"></i>
-                <div class="icon-glow"></div>
             </div>
             <div class="stat-info">
                 <div class="stat-number">{{ plans|length }}</div>
@@ -60,13 +49,10 @@
                     <span>Active</span>
                 </div>
             </div>
-            <div class="stat-sparkle"></div>
         </div>
         <div class="stat-card premium">
-            <div class="stat-background"></div>
             <div class="stat-icon bg-green">
                 <i class="fas fa-trophy"></i>
-                <div class="icon-glow"></div>
             </div>
             <div class="stat-info">
                 <div class="stat-number">99%</div>
@@ -76,7 +62,6 @@
                     <span>+2.3%</span>
                 </div>
             </div>
-            <div class="stat-sparkle"></div>
         </div>
     </div>
 
@@ -84,22 +69,15 @@
     <div class="plans-grid">
         {% for plan in plans %}
         <div class="plan-card premium-card" data-plan="{{ forloop.counter }}">
-            <!-- Card Background Effects -->
-            <div class="card-background"></div>
-            <div class="card-glow"></div>
-            
             <!-- Premium Badge -->
             <div class="plan-badge premium-badge">
                 <span class="badge-text">Plan {{ forloop.counter }}</span>
-                <div class="badge-shine"></div>
-                <div class="badge-particles"></div>
             </div>
             
             <!-- Enhanced Header -->
             <div class="plan-header">
                 <div class="plan-title">{{ plan.name|upper }}</div>
                 <div class="plan-subtitle">Premium Investment</div>
-                <div class="header-pattern"></div>
             </div>
             
             <!-- Enhanced Image Section -->
@@ -122,8 +100,6 @@
                     {% else %}
                         <img src="{% static 'GrowFi.png' %}" alt="{{ plan.name }}" class="product-image">
                     {% endif %}
-                    <div class="image-overlay"></div>
-                    <div class="image-frame"></div>
                 </div>
             </div>
             
@@ -133,7 +109,6 @@
                     <div class="detail-item glass-effect">
                         <div class="detail-icon bg-emerald">
                             <i class="fas fa-wallet"></i>
-                            <div class="icon-pulse"></div>
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Investment</span>
@@ -147,7 +122,6 @@
                     <div class="detail-item glass-effect">
                         <div class="detail-icon bg-blue">
                             <i class="fas fa-coins"></i>
-                            <div class="icon-pulse"></div>
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Daily Profit</span>
@@ -161,7 +135,6 @@
                     <div class="detail-item glass-effect">
                         <div class="detail-icon bg-purple">
                             <i class="fas fa-calendar-alt"></i>
-                            <div class="icon-pulse"></div>
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Duration</span>
@@ -175,7 +148,6 @@
                     <div class="detail-item highlight glass-effect">
                         <div class="detail-icon bg-gradient">
                             <i class="fas fa-trophy"></i>
-                            <div class="icon-pulse golden"></div>
                         </div>
                         <div class="detail-content">
                             <span class="detail-label">Total Return</span>
@@ -190,13 +162,10 @@
             
             <!-- Premium Invest Button -->
             <a href="{% url 'make_investment' plan.id %}" class="invest-button premium-button">
-                <div class="button-background"></div>
                 <span class="button-content">
                     <i class="fas fa-rocket"></i>
                     <span class="button-text">Invest Now</span>
                 </span>
-                <div class="button-shine"></div>
-                <div class="button-ripple"></div>
             </a>
         </div>
         {% endfor %}
@@ -214,7 +183,7 @@
     box-sizing: border-box;
 }
 
-/* Enhanced CSS Variables */
+/* Static CSS Variables - No Animations */
 :root {
     --primary-blue: #2563EB;
     --primary-blue-light: #3B82F6;
@@ -228,11 +197,10 @@
     --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     --gradient-gold: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
     --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --glass-bg: rgba(255, 255, 255, 0.08);
-    --glass-border: rgba(255, 255, 255, 0.18);
-    --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
-    --backdrop-blur: blur(16px);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow-standard: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
     
     /* Professional Color Palette */
     --neutral-50: #F8FAFC;
@@ -247,77 +215,21 @@
     --neutral-900: #0F172A;
 }
 
-/* Container with Enhanced Background */
+/* Static Container */
 .investment-container {
     min-height: 100vh;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f8fafc 40%, #ffffff 100%);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     position: relative;
-    overflow-x: hidden;
 }
 
-/* Animated Background */
-.background-animation {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-}
+/* Remove Animated Background */
 
-.floating-shapes {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.shape {
-    position: absolute;
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-    border-radius: 50%;
-    animation: float 20s infinite ease-in-out;
-}
-
-.shape-1 {
-    width: 300px;
-    height: 300px;
-    top: 10%;
-    left: -10%;
-    animation-delay: 0s;
-}
-
-.shape-2 {
-    width: 200px;
-    height: 200px;
-    top: 60%;
-    right: -5%;
-    animation-delay: 7s;
-}
-
-.shape-3 {
-    width: 150px;
-    height: 150px;
-    top: 30%;
-    left: 80%;
-    animation-delay: 14s;
-}
-
-.shape-4 {
-    width: 100px;
-    height: 100px;
-    top: 80%;
-    left: 20%;
-    animation-delay: 21s;
-}
-
-/* Enhanced Header Section */
+/* Static Header Section */
 .header-section {
     position: relative;
     padding: 2.5rem 1rem 2rem;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: var(--backdrop-blur);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     margin-bottom: 1.5rem;
     z-index: 10;
@@ -366,8 +278,6 @@
 .header-icon {
     color: #3b82f6;
     font-size: 2rem;
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
-    animation: iconPulse 2s infinite ease-in-out;
 }
 
 .page-subtitle {
@@ -389,7 +299,6 @@
     text-align: center;
     padding: 0.5rem 1rem;
     background: var(--glass-bg);
-    backdrop-filter: var(--backdrop-blur);
     border: 1px solid var(--glass-border);
     border-radius: 1rem;
 }
@@ -433,7 +342,7 @@
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
-/* Enhanced Stats Container */
+/* Static Stats Container */
 .stats-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -446,7 +355,6 @@
 
 .stat-card.premium {
     background: var(--glass-bg);
-    backdrop-filter: var(--backdrop-blur);
     border-radius: 1.5rem;
     padding: 1.25rem;
     display: flex;
@@ -454,26 +362,11 @@
     gap: 1rem;
     border: 1px solid var(--glass-border);
     position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stat-card.premium:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-premium);
-    background: rgba(255, 255, 255, 0.15);
+    box-shadow: var(--shadow-standard);
 }
 
 .stat-background {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.stat-card.premium:hover .stat-background {
-    opacity: 1;
+    display: none;
 }
 
 .stat-icon {
@@ -486,25 +379,17 @@
     color: white;
     font-size: 1.1rem;
     position: relative;
-    overflow: hidden;
 }
 
 .icon-glow {
-    position: absolute;
-    inset: 0;
-    background: inherit;
-    filter: blur(10px);
-    opacity: 0.6;
-    z-index: -1;
+    display: none;
 }
 
 .bg-blue { 
     background: linear-gradient(135deg, #3B82F6, #2563EB);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 .bg-green { 
     background: linear-gradient(135deg, #10B981, #059669);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
 }
 
 .stat-info {
@@ -539,14 +424,7 @@
 }
 
 .stat-sparkle {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 4px;
-    height: 4px;
-    background: #3b82f6;
-    border-radius: 50%;
-    animation: sparkle 2s infinite ease-in-out;
+    display: none;
 }
 
 /* Enhanced Plans Grid */
@@ -560,60 +438,25 @@
     z-index: 5;
 }
 
-/* Premium Plan Card */
+/* Static Plan Cards */
 .plan-card.premium-card {
     background: var(--glass-bg);
-    backdrop-filter: var(--backdrop-blur);
     border-radius: 1.5rem;
     overflow: hidden;
     border: 1px solid var(--glass-border);
     position: relative;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: fadeInUp 0.8s ease-out;
-    animation-fill-mode: both;
-}
-
-.plan-card.premium-card:nth-child(1) { animation-delay: 0.1s; }
-.plan-card.premium-card:nth-child(2) { animation-delay: 0.2s; }
-.plan-card.premium-card:nth-child(3) { animation-delay: 0.3s; }
-.plan-card.premium-card:nth-child(4) { animation-delay: 0.4s; }
-.plan-card.premium-card:nth-child(5) { animation-delay: 0.5s; }
-.plan-card.premium-card:nth-child(6) { animation-delay: 0.6s; }
-
-.plan-card.premium-card:hover {
-    transform: translateY(-12px) scale(1.03);
-    box-shadow: var(--shadow-premium);
-    background: rgba(255, 255, 255, 0.15);
+    box-shadow: var(--shadow-standard);
 }
 
 .card-background {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.plan-card.premium-card:hover .card-background {
-    opacity: 1;
+    display: none;
 }
 
 .card-glow {
-    position: absolute;
-    inset: -2px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
-    border-radius: 1.5rem;
-    opacity: 0;
-    filter: blur(10px);
-    transition: opacity 0.4s ease;
-    z-index: -1;
+    display: none;
 }
 
-.plan-card.premium-card:hover .card-glow {
-    opacity: 1;
-}
-
-/* Premium Badge */
+/* Static Badge */
 .plan-badge.premium-badge {
     position: absolute;
     top: 1rem;
@@ -628,42 +471,27 @@
     letter-spacing: 0.5px;
     z-index: 10;
     position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
 }
 
 .badge-shine {
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    animation: shine 3s infinite;
+    display: none;
 }
 
 .badge-particles {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 1px, transparent 1px);
-    animation: particles 4s infinite ease-in-out;
+    display: none;
 }
 
-/* Enhanced Plan Header */
+/* Static Plan Header */
 .plan-header {
     padding: 1.25rem;
     text-align: center;
     background: rgba(248, 250, 252, 0.8);
-    backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
-    overflow: hidden;
 }
 
 .header-pattern {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    display: none;
 }
 
 .plan-title {
@@ -687,16 +515,14 @@
     z-index: 2;
 }
 
-/* Enhanced Plan Image */
+/* Static Plan Image */
 .plan-image {
     position: relative;
     height: 4.5rem;
     background: rgba(248, 250, 252, 0.6);
-    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
 }
 
 .image-container {
@@ -713,45 +539,17 @@
     max-height: 90%;
     object-fit: contain;
     border-radius: 0.75rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-}
-
-.plan-card.premium-card:hover .product-image {
-    transform: scale(1.15) rotate(2deg);
-    filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.2));
 }
 
 .image-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.plan-card.premium-card:hover .image-overlay {
-    opacity: 1;
+    display: none;
 }
 
 .image-frame {
-    position: absolute;
-    inset: 0.5rem;
-    border: 2px solid transparent;
-    border-radius: 0.75rem;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2)) border-box;
-    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    display: none;
 }
 
-.plan-card.premium-card:hover .image-frame {
-    opacity: 1;
-}
-
-/* Enhanced Plan Details */
+/* Static Plan Details */
 .plan-details {
     padding: 1.25rem;
 }
@@ -769,27 +567,13 @@
     padding: 0.75rem;
     border-radius: 1rem;
     background: var(--glass-bg);
-    backdrop-filter: var(--backdrop-blur);
     border: 1px solid var(--glass-border);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
-}
-
-.detail-item.glass-effect:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateX(4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .detail-item.highlight {
     background: rgba(16, 185, 129, 0.08);
     border-color: rgba(16, 185, 129, 0.2);
-}
-
-.detail-item.highlight:hover {
-    background: rgba(16, 185, 129, 0.15);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
 }
 
 .detail-icon {
@@ -803,20 +587,14 @@
     font-size: 0.875rem;
     flex-shrink: 0;
     position: relative;
-    overflow: hidden;
 }
 
 .icon-pulse {
-    position: absolute;
-    inset: 0;
-    background: inherit;
-    border-radius: inherit;
-    animation: iconPulse 2s infinite ease-in-out;
-    opacity: 0.6;
+    display: none;
 }
 
 .icon-pulse.golden {
-    animation: goldenPulse 2s infinite ease-in-out;
+    display: none;
 }
 
 .bg-emerald { background: linear-gradient(135deg, #10B981, #059669); }
@@ -849,38 +627,26 @@
 
 .detail-value.amount { 
     color: #10B981; 
-    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 .detail-value.daily { 
     color: #3B82F6; 
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 }
 .detail-value.total { 
     color: #F59E0B; 
     font-size: 0.9rem;
     font-weight: 900;
-    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
 .detail-arrow {
     color: var(--neutral-400);
     font-size: 0.75rem;
-    transition: all 0.3s ease;
-    opacity: 0;
-    transform: translateX(-10px);
-}
-
-.detail-item.glass-effect:hover .detail-arrow {
-    opacity: 1;
-    transform: translateX(0);
-    color: var(--primary-blue);
 }
 
 .detail-arrow.golden {
     color: #F59E0B;
 }
 
-/* Premium Invest Button */
+/* Static Invest Button */
 .invest-button.premium-button {
     display: block;
     width: 100%;
@@ -892,8 +658,6 @@
     font-weight: 800;
     text-align: center;
     position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
     cursor: pointer;
     text-transform: uppercase;
@@ -901,26 +665,8 @@
     font-family: 'Poppins', sans-serif;
 }
 
-.invest-button.premium-button:hover {
-    background: linear-gradient(135deg, #059669, #047857);
-    transform: translateY(-2px);
-    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
-}
-
-.invest-button.premium-button:active {
-    transform: translateY(0);
-}
-
 .button-background {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.invest-button.premium-button:hover .button-background {
-    opacity: 1;
+    display: none;
 }
 
 .button-content {
@@ -937,96 +683,14 @@
 }
 
 .button-shine {
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    transition: left 0.6s ease;
-}
-
-.invest-button.premium-button:hover .button-shine {
-    left: 100%;
+    display: none;
 }
 
 .button-ripple {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-    opacity: 0;
-    transform: scale(0);
-    transition: all 0.3s ease;
+    display: none;
 }
 
-.invest-button.premium-button:active .button-ripple {
-    opacity: 1;
-    transform: scale(1);
-}
-
-/* Enhanced Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes shine {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    25% { transform: translateY(-20px) rotate(1deg); }
-    50% { transform: translateY(-10px) rotate(0deg); }
-    75% { transform: translateY(-30px) rotate(-1deg); }
-}
-
-@keyframes iconPulse {
-    0%, 100% { 
-        transform: scale(1);
-        opacity: 0.6;
-    }
-    50% { 
-        transform: scale(1.1);
-        opacity: 0.8;
-    }
-}
-
-@keyframes goldenPulse {
-    0%, 100% { 
-        transform: scale(1);
-        opacity: 0.6;
-        box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
-    }
-    50% { 
-        transform: scale(1.15);
-        opacity: 0.9;
-        box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
-    }
-}
-
-@keyframes sparkle {
-    0%, 100% { 
-        opacity: 0.3;
-        transform: scale(0.8);
-    }
-    50% { 
-        opacity: 1;
-        transform: scale(1.2);
-    }
-}
-
-@keyframes particles {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.8; }
-}
+/* All animations removed for static design */
 
 /* Enhanced Responsive Design */
 @media (max-width: 640px) {

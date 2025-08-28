@@ -218,7 +218,7 @@
                     <div class="amount-info">
                         <span class="info-text">Fixed amount for {{ plan.name }}</span>
                         <div class="amount-breakdown">
-                            <span>Daily Return: {% if plan.name == "GROWFI 1" %}₱56{% elif plan.name == "GROWFI 2" %}₱88{% elif plan.name == "GROWFI 3" %}₱150{% elif plan.name == "GROWFI 4" %}₱190{% elif plan.name == "GROWFI 5" %}₱250{% elif plan.name == "GROWFI 6" %}₱350{% elif plan.name == "GROWFI 7" %}₱450{% endif %}</span>
+                            <span>Daily Return: {% if plan.name == "GROWFI 1" %}₱150{% elif plan.name == "GROWFI 2" %}₱200{% elif plan.name == "GROWFI 3" %}₱225{% elif plan.name == "GROWFI 4" %}₱570{% elif plan.name == "GROWFI 5" %}₱1125{% elif plan.name == "GROWFI 6" %}₱2100{% elif plan.name == "GROWFI 7" %}₱3150{% elif plan.name == "GROWFI 8" %}₱3850{% endif %}</span>
                         </div>
                     </div>
                 </div>
@@ -329,13 +329,14 @@
                     <div class="summary-content">
                         <span class="summary-label">Total Revenue</span>
                         <span class="summary-value">
-                            {% if plan.name == "GROWFI 1" %}₱1,680
-                            {% elif plan.name == "GROWFI 2" %}₱2,640
+                            {% if plan.name == "GROWFI 1" %}₱3,000
+                            {% elif plan.name == "GROWFI 2" %}₱4,000
                             {% elif plan.name == "GROWFI 3" %}₱4,500
                             {% elif plan.name == "GROWFI 4" %}₱11,400
                             {% elif plan.name == "GROWFI 5" %}₱22,500
                             {% elif plan.name == "GROWFI 6" %}₱42,000
                             {% elif plan.name == "GROWFI 7" %}₱63,000
+                            {% elif plan.name == "GROWFI 8" %}₱77,000
                             {% endif %}
                         </span>
                     </div>
@@ -348,13 +349,14 @@
                     <div class="summary-content">
                         <span class="summary-label">Net Profit</span>
                         <span class="summary-value">
-                            {% if plan.name == "GROWFI 1" %}₱1,680
-                            {% elif plan.name == "GROWFI 2" %}₱2,640
+                            {% if plan.name == "GROWFI 1" %}₱3,000
+                            {% elif plan.name == "GROWFI 2" %}₱4,000
                             {% elif plan.name == "GROWFI 3" %}₱4,500
                             {% elif plan.name == "GROWFI 4" %}₱11,400
                             {% elif plan.name == "GROWFI 5" %}₱22,500
                             {% elif plan.name == "GROWFI 6" %}₱42,000
                             {% elif plan.name == "GROWFI 7" %}₱63,000
+                            {% elif plan.name == "GROWFI 8" %}₱77,000
                             {% endif %}
                         </span>
                     </div>
@@ -367,13 +369,14 @@
                     <div class="calc-item">
                         <span class="calc-label">Daily Payout</span>
                         <span class="calc-value">
-                            {% if plan.name == "GROWFI 1" %}₱56 × 30 days
-                            {% elif plan.name == "GROWFI 2" %}₱88 × 30 days
-                            {% elif plan.name == "GROWFI 3" %}₱150 × 30 days
-                            {% elif plan.name == "GROWFI 4" %}₱190 × 60 days
-                            {% elif plan.name == "GROWFI 5" %}₱250 × 90 days
-                            {% elif plan.name == "GROWFI 6" %}₱350 × 120 days
-                            {% elif plan.name == "GROWFI 7" %}₱450 × 140 days
+                            {% if plan.name == "GROWFI 1" %}₱150 × 20 days
+                            {% elif plan.name == "GROWFI 2" %}₱200 × 20 days
+                            {% elif plan.name == "GROWFI 3" %}₱225 × 20 days
+                            {% elif plan.name == "GROWFI 4" %}₱570 × 20 days
+                            {% elif plan.name == "GROWFI 5" %}₱1125 × 20 days
+                            {% elif plan.name == "GROWFI 6" %}₱2100 × 20 days
+                            {% elif plan.name == "GROWFI 7" %}₱3150 × 20 days
+                            {% elif plan.name == "GROWFI 8" %}₱3850 × 20 days
                             {% endif %}
                         </span>
                     </div>
@@ -383,13 +386,14 @@
                     <div class="calc-item">
                         <span class="calc-label">Return on Investment (ROI)</span>
                         <span class="calc-value highlight">
-                            {% if plan.name == "GROWFI 1" %}100%
-                            {% elif plan.name == "GROWFI 2" %}100%
-                            {% elif plan.name == "GROWFI 3" %}100%
-                            {% elif plan.name == "GROWFI 4" %}100%
-                            {% elif plan.name == "GROWFI 5" %}100%
-                            {% elif plan.name == "GROWFI 6" %}100%
-                            {% elif plan.name == "GROWFI 7" %}100%
+                            {% if plan.name == "GROWFI 1" %}900%
+                            {% elif plan.name == "GROWFI 2" %}471%
+                            {% elif plan.name == "GROWFI 3" %}105%
+                            {% elif plan.name == "GROWFI 4" %}226%
+                            {% elif plan.name == "GROWFI 5" %}350%
+                            {% elif plan.name == "GROWFI 6" %}500%
+                            {% elif plan.name == "GROWFI 7" %}600%
+                            {% elif plan.name == "GROWFI 8" %}600%
                             {% endif %}
                         </span>
                     </div>
@@ -399,13 +403,14 @@
                     <div class="calc-item">
                         <span class="calc-label">Total Return</span>
                         <span class="calc-value">
-                            {% if plan.name == "GROWFI 1" %}₱1,680 (100% profit)
-                            {% elif plan.name == "GROWFI 2" %}₱2,640 (100% profit)
-                            {% elif plan.name == "GROWFI 3" %}₱4,500 (100% profit)
-                            {% elif plan.name == "GROWFI 4" %}₱11,400 (100% profit)
-                            {% elif plan.name == "GROWFI 5" %}₱22,500 (100% profit)
-                            {% elif plan.name == "GROWFI 6" %}₱42,000 (100% profit)
-                            {% elif plan.name == "GROWFI 7" %}₱63,000 (100% profit)
+                            {% if plan.name == "GROWFI 1" %}₱3,000 (900% profit)
+                            {% elif plan.name == "GROWFI 2" %}₱4,000 (471% profit)
+                            {% elif plan.name == "GROWFI 3" %}₱4,500 (105% profit)
+                            {% elif plan.name == "GROWFI 4" %}₱11,400 (226% profit)
+                            {% elif plan.name == "GROWFI 5" %}₱22,500 (350% profit)
+                            {% elif plan.name == "GROWFI 6" %}₱42,000 (500% profit)
+                            {% elif plan.name == "GROWFI 7" %}₱63,000 (600% profit)
+                            {% elif plan.name == "GROWFI 8" %}₱77,000 (600% profit)
                             {% endif %}
                         </span>
                     </div>

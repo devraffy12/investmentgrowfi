@@ -843,140 +843,234 @@ def register(request):
     return render(request, 'myproject/register.html', context)
 
 def user_login(request):
-    """User login view"""
+    """Enhanced user login view with improved persistence and error handling"""
     if request.method == 'POST':
-        phone = request.POST.get('phone', '')  # Fixed: using 'phone' field from login form
+        phone = request.POST.get('phone', '')  # Using 'phone' field from login form
         password = request.POST.get('password', '')
         
         # Debug: Print form data
-        print(f"Login attempt - Phone: {phone}, Password: {'*' * len(password)}")
+        print(f"🔐 Login attempt - Phone: {phone}, Password: {'*' * len(password)}")
         
-        # Clean phone number - ensure +63 format for authentication
-        clean_phone = phone.replace(' ', '').replace('-', '')
-        
-        # Smart phone normalization for Philippine numbers
-        if not clean_phone.startswith('+63'):
-            # Remove all non-digits first
+        # Enhanced phone number normalization
+        def normalize_phone_number(raw_phone):
+            """Normalize phone number to consistent +63 format"""
+            if not raw_phone:
+                return ''
+                
+            # Remove all non-digit characters except +
+            clean_phone = raw_phone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            
+            # If already in +63 format, return as is
+            if clean_phone.startswith('+63'):
+                return clean_phone
+                
+            # Extract digits only
             digits_only = ''.join(filter(str.isdigit, clean_phone))
             
+            # Handle different Philippine number formats
             if digits_only.startswith('63') and len(digits_only) >= 12:
                 # 639xxxxxxxxx format
-                clean_phone = '+' + digits_only
+                return '+' + digits_only
             elif digits_only.startswith('09') and len(digits_only) == 11:
                 # 09xxxxxxxxx format - convert to +639xxxxxxxxx
-                clean_phone = '+63' + digits_only[1:]
+                return '+63' + digits_only[1:]
+            elif digits_only.startswith('9') and len(digits_only) == 10:
+                # 9xxxxxxxxx format - add +63
+                return '+63' + digits_only
             elif len(digits_only) >= 10:
-                # Handle various formats by extracting the last 10 digits
-                # This covers cases like 099xxxxxxxx, 99xxxxxxxx, etc.
+                # Handle edge cases by extracting last 10 digits
                 last_10_digits = digits_only[-10:]
                 if last_10_digits.startswith('9'):
-                    clean_phone = '+63' + last_10_digits
+                    return '+63' + last_10_digits
                 else:
-                    # If doesn't start with 9, might be invalid, but try anyway
-                    clean_phone = '+63' + digits_only
-            else:
-                # Fallback: just add +63 to whatever digits we have
-                clean_phone = '+63' + digits_only if digits_only else clean_phone
-        
-        print(f"Cleaned phone: {clean_phone}")
-        
-        # Authenticate using the cleaned phone number as username
-        user = authenticate(request, username=clean_phone, password=password)
-        print(f"Authentication result: {user}")
-        
-        if user is not None:
-            login(request, user)
+                    # Try with full digits
+                    return '+63' + digits_only
             
-            # Update last login time
-            user.last_login = timezone.now()
-            user.save()
+            # Fallback: return original if can't normalize
+            return clean_phone
+        
+        clean_phone = normalize_phone_number(phone)
+        print(f"📱 Normalized phone: {clean_phone}")
+        
+        # Validate phone number format
+        if not clean_phone.startswith('+63') or len(clean_phone) < 13:
+            print(f"❌ Invalid phone format: {clean_phone}")
+            messages.error(request, 'Please enter a valid Philippine phone number (e.g., 09xxxxxxxxx)')
+            return render(request, 'myproject/login.html')
+        
+        # Try multiple authentication strategies for better compatibility
+        auth_strategies = [
+            clean_phone,  # Primary normalized format
+            phone,        # Original input
+        ]
+        
+        # Add alternative formats for backward compatibility
+        if clean_phone.startswith('+63'):
+            digits = clean_phone[3:]  # Remove +63
+            auth_strategies.extend([
+                '09' + digits[1:] if digits.startswith('9') else '09' + digits,  # 09xxxxxxxxx
+                '639' + digits[1:] if digits.startswith('9') else '639' + digits,  # 639xxxxxxxxx
+            ])
+        
+        authenticated_user = None
+        used_username = None
+        
+        # Try each authentication strategy
+        for username_attempt in auth_strategies:
+            print(f"🔍 Trying authentication with: {username_attempt}")
+            user = authenticate(request, username=username_attempt, password=password)
+            if user is not None:
+                authenticated_user = user
+                used_username = username_attempt
+                print(f"✅ Authentication successful with: {username_attempt}")
+                break
+        
+        if authenticated_user is not None:
+            # Successful authentication
+            login(request, authenticated_user)
             
-            print(f"User logged in successfully: {user.username}")
+            # Update last login time with timezone awareness
+            authenticated_user.last_login = timezone.now()
+            authenticated_user.save()
             
-            # 🔥 Update user login data in Firebase Realtime Database
+            print(f"✅ User logged in successfully: {authenticated_user.username}")
+            
+            # Ensure user profile exists and is properly configured
             try:
-                profile = UserProfile.objects.get(user=user)
+                profile = UserProfile.objects.get(user=authenticated_user)
+                # Update profile phone number to normalized format if needed
+                if profile.phone_number != clean_phone:
+                    profile.phone_number = clean_phone
+                    profile.save()
+                    print(f"📱 Updated profile phone to normalized format: {clean_phone}")
+                    
+            except UserProfile.DoesNotExist:
+                # Create profile if it doesn't exist
+                profile = UserProfile.objects.create(
+                    user=authenticated_user,
+                    phone_number=clean_phone
+                )
+                print(f"📱 Created new profile for user: {clean_phone}")
+            
+            # Enhanced session management for persistence
+            try:
+                # Set session data for tracking and debugging
+                request.session['user_phone'] = clean_phone
+                request.session['login_time'] = timezone.now().isoformat()
+                request.session['user_id'] = authenticated_user.id
+                request.session['session_created'] = timezone.now().isoformat()
+                request.session['login_method'] = 'django_auth'
+                
+                # Force session save to ensure persistence
+                request.session.save()
+                
+                # Update Firebase with enhanced login tracking
                 firebase_data = {
                     'last_login_time': timezone.now().isoformat(),
                     'balance': float(profile.balance),
                     'is_online': True,
-                    'login_count': (profile.login_count or 0) + 1 if hasattr(profile, 'login_count') else 1,
+                    'login_count': getattr(profile, 'login_count', 0) + 1,
                     'last_successful_login': timezone.now().isoformat(),
-                    'platform': 'web_django'
+                    'platform': 'web_django',
+                    'session_key_hash': hash(request.session.session_key) if request.session.session_key else None,
+                    'user_agent': request.META.get('HTTP_USER_AGENT', '')[:200],  # Limit length
+                    'ip_address': request.META.get('REMOTE_ADDR', ''),
+                    'username_used': used_username,  # Track which format worked
+                    'normalized_phone': clean_phone,
+                    'account_status': 'active',
+                    'login_success': True
                 }
-                update_user_in_firebase_realtime_db(user, clean_phone, firebase_data)
                 
-                # Track login in Django session for debugging
-                request.session['user_phone'] = clean_phone
-                request.session['login_time'] = timezone.now().isoformat()
-                request.session['user_id'] = user.id
+                # Update Firebase (non-blocking - don't fail login if this fails)
+                try:
+                    update_user_in_firebase_realtime_db(authenticated_user, clean_phone, firebase_data)
+                    print(f"🔥 Firebase updated successfully")
+                except Exception as firebase_error:
+                    print(f"⚠️ Firebase update failed (non-critical): {firebase_error}")
                 
-            except UserProfile.DoesNotExist:
-                # If no profile exists, create one and save to Firebase
-                profile = UserProfile.objects.create(
-                    user=user,
-                    phone_number=clean_phone
-                )
-                firebase_data = {
-                    'balance': 0.0,
-                    'account_type': 'standard',
-                    'status': 'active',
-                    'is_online': True,
-                    'login_count': 1,
-                    'first_login': timezone.now().isoformat(),
-                    'platform': 'web_django'
-                }
-                save_user_to_firebase_realtime_db(user, clean_phone, firebase_data)
+                # Success message
+                messages.success(request, f'Welcome back! Logged in successfully.')
                 
-                # Track in session
-                request.session['user_phone'] = clean_phone
-                request.session['login_time'] = timezone.now().isoformat()
-                request.session['user_id'] = user.id
+            except Exception as session_error:
+                print(f"⚠️ Session setup error (non-critical): {session_error}")
             
             return redirect('dashboard')
-        else:
-            print("Authentication failed")
             
-            # 🔍 Enhanced debugging for failed login
-            try:
-                # Check if user exists
-                user_exists = User.objects.filter(username=clean_phone).exists()
-                if user_exists:
-                    user_obj = User.objects.get(username=clean_phone)
-                    print(f"❌ User exists but auth failed:")
-                    print(f"   - Username: {user_obj.username}")
-                    print(f"   - Is Active: {user_obj.is_active}")
-                    print(f"   - Last Login: {user_obj.last_login}")
-                    print(f"   - Date Joined: {user_obj.date_joined}")
-                    
-                    # Test if password works with direct check
-                    if user_obj.check_password(password):
-                        print(f"   - Password Check: ✅ WORKS (Django auth issue)")
-                        messages.error(request, 'Authentication system error. Please try again.')
-                    else:
-                        print(f"   - Password Check: ❌ WRONG PASSWORD")
-                        messages.error(request, 'Invalid password. Please check your password and try again.')
+        else:
+            # Authentication failed - enhanced debugging
+            print("❌ Authentication failed for all strategies")
+            
+            # Comprehensive user existence check
+            user_found = None
+            search_strategies = auth_strategies
+            
+            for search_username in search_strategies:
+                try:
+                    user_found = User.objects.get(username=search_username)
+                    print(f"👤 User found with username: {search_username}")
+                    break
+                except User.DoesNotExist:
+                    continue
+            
+            if user_found:
+                print(f"📊 User details:")
+                print(f"   - ID: {user_found.id}")
+                print(f"   - Username: {user_found.username}")
+                print(f"   - Is Active: {user_found.is_active}")
+                print(f"   - Last Login: {user_found.last_login}")
+                print(f"   - Date Joined: {user_found.date_joined}")
+                
+                # Check if user is inactive
+                if not user_found.is_active:
+                    print(f"   ❌ User account is inactive")
+                    messages.error(request, 'Your account has been deactivated. Please contact support.')
                 else:
-                    print(f"❌ User does not exist: {clean_phone}")
+                    # Test password
+                    if user_found.check_password(password):
+                        print(f"   ✅ Password is correct (Django auth system issue)")
+                        messages.error(request, 'Login system temporarily unavailable. Please try again in a moment.')
+                        
+                        # Log this as a critical issue
+                        print(f"🚨 CRITICAL: Password correct but authentication failed for {user_found.username}")
+                    else:
+                        print(f"   ❌ Password is incorrect")
+                        messages.error(request, 'Invalid password. Please check your password and try again.')
+                        
+            else:
+                # User not found - check for similar users
+                print(f"❌ No user found for any username variation")
+                
+                # Search for similar phone numbers (last 8 digits)
+                if len(clean_phone) >= 8:
+                    last_digits = clean_phone[-8:]
+                    similar_users = User.objects.filter(username__contains=last_digits)[:5]
                     
-                    # Check for similar phone numbers
-                    similar_users = User.objects.filter(username__contains=clean_phone[-8:])
                     if similar_users.exists():
-                        print(f"   💡 Found similar users:")
-                        for u in similar_users[:3]:
-                            print(f"      - {u.username}")
-                    
-                    messages.error(request, 'Account not found. Please check your phone number or register first.')
-                    
-            except Exception as debug_error:
-                print(f"❌ Debug error: {debug_error}")
-                messages.error(request, 'Invalid phone number or password')
+                        print(f"💡 Found {similar_users.count()} users with similar phone numbers:")
+                        for u in similar_users:
+                            print(f"      - {u.username} (joined: {u.date_joined})")
+                        
+                        messages.error(request, 'Account not found. Please check your phone number or register first.')
+                    else:
+                        print(f"❌ No similar users found")
+                        messages.error(request, 'Account not found. Please check your phone number or register first.')
+                else:
+                    messages.error(request, 'Invalid phone number format. Please try again.')
+            
+            # Log failed login attempt for security
+            try:
+                print(f"🔐 Failed login attempt logged:")
+                print(f"   - Phone attempts: {auth_strategies}")
+                print(f"   - IP: {request.META.get('REMOTE_ADDR', 'Unknown')}")
+                print(f"   - User Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')[:100]}")
+            except Exception as log_error:
+                print(f"⚠️ Failed to log login attempt: {log_error}")
     
     return render(request, 'myproject/login.html')
 
 @login_required
 def dashboard(request):
-    """User dashboard view with enhanced session tracking"""  
+    """Enhanced user dashboard view with improved session tracking and persistence"""  
     try:
         profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
@@ -986,13 +1080,15 @@ def dashboard(request):
             phone_number=request.user.username
         )
     
-    # 🔍 Session health check and tracking
+    # 🔍 Enhanced session health check and automatic renewal
     session_info = {
         'session_key': request.session.session_key,
         'user_phone': request.session.get('user_phone', 'Unknown'),
         'login_time': request.session.get('login_time', 'Unknown'),
         'session_age': request.session.get_expiry_age(),
         'session_expires': request.session.get_expiry_date(),
+        'user_id': request.session.get('user_id', 'Unknown'),
+        'login_method': request.session.get('login_method', 'Unknown')
     }
     
     # Log session info for debugging
@@ -1001,169 +1097,221 @@ def dashboard(request):
     print(f"   Session Age: {session_info['session_age']} seconds")
     print(f"   Expires: {session_info['session_expires']}")
     
-    # Update Firebase with dashboard access
+    # Automatic session renewal if near expiry (less than 1 day left)
+    if session_info['session_age'] and session_info['session_age'] < 86400:  # Less than 24 hours
+        request.session.set_expiry(7 * 24 * 60 * 60)  # Extend for 7 more days
+        print(f"🔄 Session automatically renewed for user: {request.user.username}")
+    
+    # Update session tracking data
+    request.session['last_dashboard_access'] = timezone.now().isoformat()
+    request.session['dashboard_access_count'] = request.session.get('dashboard_access_count', 0) + 1
+    
+    # Enhanced Firebase tracking with error handling
     try:
         firebase_data = {
             'last_dashboard_access': timezone.now().isoformat(),
             'is_online': True,
-            'session_key_hash': hash(session_info['session_key']) if session_info['session_key'] else None
+            'session_key_hash': hash(session_info['session_key']) if session_info['session_key'] else None,
+            'session_age_seconds': session_info['session_age'],
+            'dashboard_visits': request.session.get('dashboard_access_count', 1),
+            'last_activity': timezone.now().isoformat(),
+            'platform': 'web_django_dashboard',
+            'user_agent_hash': hash(request.META.get('HTTP_USER_AGENT', ''))[:10] if request.META.get('HTTP_USER_AGENT') else None
         }
-        update_user_in_firebase_realtime_db(request.user, request.user.username, firebase_data)
-    except Exception as firebase_error:
-        print(f"⚠️ Firebase update error in dashboard: {firebase_error}")
-    
-    active_investments = Investment.objects.filter(user=request.user, status='active')
-    recent_transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')[:5]
-    notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
-    
-    # Calculate total active investment
-    total_active_investment = active_investments.aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    # Calculate total invested (all time)
-    total_invested = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='investment',
-        status='completed'
-    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    # Calculate total earnings (all time) - daily payouts + referral bonuses (WITHDRAWABLE)
-    total_earnings = Transaction.objects.filter(
-        user=request.user,
-        transaction_type__in=['daily_payout', 'referral_bonus'],
-        status='completed'
-    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    # Calculate today's earnings
-    today = timezone.now().date()
-    today_earnings = Transaction.objects.filter(
-        user=request.user,
-        transaction_type__in=['daily_payout', 'referral_bonus'],
-        status='completed',
-        created_at__date=today
-    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    # Calculate withdrawable balance (earnings minus withdrawals)
-    total_withdrawn = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='withdrawal',
-        status='completed'
-    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    withdrawable_balance = total_earnings - total_withdrawn
-    
-    # Registration bonus (non-withdrawable)
-    registration_bonus = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='registration_bonus',
-        status='completed'
-    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    # Total balance = withdrawable + non-withdrawable bonus + deposits
-    total_deposits = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='deposit',
-        status='completed'
-    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
-    
-    # Available balance = withdrawable + deposits + bonus - investments
-    available_balance = withdrawable_balance + registration_bonus + total_deposits - total_invested
-    
-    # Update profile balance
-    profile.balance = available_balance
-    profile.total_invested = total_invested
-    profile.total_earnings = total_earnings 
-    profile.save()
-    
-    # Calculate performance analytics only if user has investments
-    performance_analytics = None
-    if active_investments.exists():
-        # Calculate ROI (Return on Investment)
-        if total_invested > 0:
-            roi_percentage = ((total_earnings / total_invested) * 100)
-        else:
-            roi_percentage = 0
-            
-        # Calculate risk score based on diversification and investment amounts
-        unique_plans = active_investments.values('plan').distinct().count()
-        total_investments = active_investments.count()
         
-        if total_investments >= 3 and unique_plans >= 2:
-            risk_score = "Low"
-            risk_percentage = 25
-        elif total_investments >= 2:
-            risk_score = "Medium"
-            risk_percentage = 60
-        else:
-            risk_score = "High"
-            risk_percentage = 85
+        # Non-blocking Firebase update
+        update_user_in_firebase_realtime_db(request.user, request.user.username, firebase_data)
+        print(f"🔥 Firebase dashboard tracking updated")
+        
+    except Exception as firebase_error:
+        print(f"⚠️ Firebase dashboard update error (non-critical): {firebase_error}")
+    
+    # Get dashboard data with enhanced error handling
+    try:
+        active_investments = Investment.objects.filter(user=request.user, status='active')
+        recent_transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')[:5]
+        notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
+        
+        # Calculate total active investment
+        total_active_investment = active_investments.aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Calculate total invested (all time)
+        total_invested = Transaction.objects.filter(
+            user=request.user,
+            transaction_type='investment',
+            status='completed'
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Calculate total earnings (all time) - daily payouts + referral bonuses (WITHDRAWABLE)
+        total_earnings = Transaction.objects.filter(
+            user=request.user,
+            transaction_type__in=['daily_payout', 'referral_bonus'],
+            status='completed'
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Calculate today's earnings
+        today = timezone.now().date()
+        today_earnings = Transaction.objects.filter(
+            user=request.user,
+            transaction_type__in=['daily_payout', 'referral_bonus'],
+            status='completed',
+            created_at__date=today
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Calculate withdrawable balance (earnings minus withdrawals)
+        total_withdrawn = Transaction.objects.filter(
+            user=request.user,
+            transaction_type='withdrawal',
+            status='completed'
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        withdrawable_balance = total_earnings - total_withdrawn
+        
+        # Registration bonus (non-withdrawable)
+        registration_bonus = Transaction.objects.filter(
+            user=request.user,
+            transaction_type='registration_bonus',
+            status='completed'
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Total balance = withdrawable + non-withdrawable bonus + deposits
+        total_deposits = Transaction.objects.filter(
+            user=request.user,
+            transaction_type='deposit',
+            status='completed'
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        
+        # Available balance = withdrawable + deposits + bonus - investments
+        available_balance = withdrawable_balance + registration_bonus + total_deposits - total_invested
+        
+        # Update profile balance
+        profile.balance = available_balance
+        profile.total_invested = total_invested
+        profile.total_earnings = total_earnings 
+        profile.save()
+        
+        # Calculate performance analytics only if user has investments
+        performance_analytics = None
+        if active_investments.exists():
+            # Calculate ROI (Return on Investment)
+            if total_invested > 0:
+                roi_percentage = ((total_earnings / total_invested) * 100)
+            else:
+                roi_percentage = 0
+                
+            # Calculate risk score based on diversification and investment amounts
+            unique_plans = active_investments.values('plan').distinct().count()
+            total_investments = active_investments.count()
             
-        # Calculate diversification score
-        if unique_plans >= 3:
-            diversification = "Excellent"
-        elif unique_plans >= 2:
-            diversification = "Good"
-        else:
-            diversification = "Poor"
-            
-        # Calculate average daily earnings
-        total_days = sum([inv.days_completed for inv in active_investments])
-        if total_days > 0:
-            avg_daily_earnings = total_earnings / total_days
-        else:
-            avg_daily_earnings = 0
-            
-        performance_analytics = {
-            'roi_percentage': round(roi_percentage, 1),
-            'risk_score': risk_score,
-            'risk_percentage': risk_percentage,
-            'diversification': diversification,
-            'total_investments': total_investments,
-            'unique_plans': unique_plans,
-            'avg_daily_earnings': avg_daily_earnings,
-            'days_invested': total_days,
+            if total_investments >= 3 and unique_plans >= 2:
+                risk_score = "Low"
+                risk_percentage = 25
+            elif total_investments >= 2:
+                risk_score = "Medium"
+                risk_percentage = 60
+            else:
+                risk_score = "High"
+                risk_percentage = 85
+                
+            # Calculate diversification score
+            if unique_plans >= 3:
+                diversification = "Excellent"
+            elif unique_plans >= 2:
+                diversification = "Good"
+            else:
+                diversification = "Poor"
+                
+            # Calculate average daily earnings
+            total_days = sum([inv.days_completed for inv in active_investments])
+            if total_days > 0:
+                avg_daily_earnings = total_earnings / total_days
+            else:
+                avg_daily_earnings = 0
+                
+            performance_analytics = {
+                'roi_percentage': round(roi_percentage, 1),
+                'risk_score': risk_score,
+                'risk_percentage': risk_percentage,
+                'diversification': diversification,
+                'total_investments': total_investments,
+                'unique_plans': unique_plans,
+                'avg_daily_earnings': avg_daily_earnings,
+                'days_invested': total_days,
+            }
+        
+        # Add referral statistics to dashboard
+        referred_users = User.objects.filter(userprofile__referred_by=request.user).select_related('userprofile')
+        
+        # Calculate team stats
+        total_referrals = referred_users.count()
+        active_referrals = referred_users.filter(is_active=True).count()
+        
+        # Calculate referral earnings
+        referral_earnings = Transaction.objects.filter(
+            user=request.user,
+            transaction_type='referral_bonus',
+            status='completed'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Calculate team investment volume
+        team_total_invested = 0
+        for referred_user in referred_users:
+            user_investments = Investment.objects.filter(user=referred_user, status='active')
+            user_total_invested = user_investments.aggregate(total=Sum('amount'))['total'] or 0
+            team_total_invested += user_total_invested
+        
+        # Enhanced context with session info for debugging
+        context = {
+            'profile': profile,
+            'active_investments': active_investments,
+            'recent_transactions': recent_transactions,
+            'notifications': notifications,
+            'total_active_investment': total_active_investment,
+            'total_invested': total_invested,
+            'total_earnings': total_earnings,
+            'today_earnings': today_earnings,
+            'withdrawable_balance': withdrawable_balance,
+            'registration_bonus': registration_bonus,
+            'available_balance': available_balance,
+            'performance_analytics': performance_analytics,
+            # Add referral statistics
+            'total_referrals': total_referrals,
+            'active_referrals': active_referrals,
+            'referral_earnings': referral_earnings,
+            'team_total_invested': team_total_invested,
+            # Session info for debugging (in development only)
+            'session_info': session_info if request.user.is_staff else None,
         }
-    
-    # Add referral statistics to dashboard
-    referred_users = User.objects.filter(userprofile__referred_by=request.user).select_related('userprofile')
-    
-    # Calculate team stats
-    total_referrals = referred_users.count()
-    active_referrals = referred_users.filter(is_active=True).count()
-    
-    # Calculate referral earnings
-    referral_earnings = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='referral_bonus',
-        status='completed'
-    ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    # Calculate team investment volume
-    team_total_invested = 0
-    for referred_user in referred_users:
-        user_investments = Investment.objects.filter(user=referred_user, status='active')
-        user_total_invested = user_investments.aggregate(total=Sum('amount'))['total'] or 0
-        team_total_invested += user_total_invested
-    
-    context = {
-        'profile': profile,
-        'active_investments': active_investments,
-        'recent_transactions': recent_transactions,
-        'notifications': notifications,
-        'total_active_investment': total_active_investment,
-        'total_invested': total_invested,
-        'total_earnings': total_earnings,
-        'today_earnings': today_earnings,
-        'withdrawable_balance': withdrawable_balance,
-        'registration_bonus': registration_bonus,
-        'available_balance': available_balance,
-        'performance_analytics': performance_analytics,
-        # Add referral statistics
-        'total_referrals': total_referrals,
-        'active_referrals': active_referrals,
-        'referral_earnings': referral_earnings,
-        'team_total_invested': team_total_invested,
-    }
-    return render(request, 'myproject/dashboard.html', context)
+        
+        return render(request, 'myproject/dashboard.html', context)
+        
+    except Exception as e:
+        print(f"❌ Dashboard error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Fallback context in case of errors
+        context = {
+            'profile': profile,
+            'active_investments': [],
+            'recent_transactions': [],
+            'notifications': [],
+            'total_active_investment': Decimal('0.00'),
+            'total_invested': Decimal('0.00'),
+            'total_earnings': Decimal('0.00'),
+            'today_earnings': Decimal('0.00'),
+            'withdrawable_balance': Decimal('0.00'),
+            'registration_bonus': Decimal('0.00'),
+            'available_balance': profile.balance,
+            'performance_analytics': None,
+            'total_referrals': 0,
+            'active_referrals': 0,
+            'referral_earnings': 0,
+            'team_total_invested': 0,
+            'error_message': 'Dashboard temporarily unavailable. Please refresh the page.',
+        }
+        
+        return render(request, 'myproject/dashboard.html', context)
 
 @login_required
 def investment_plans(request):

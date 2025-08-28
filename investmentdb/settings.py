@@ -64,13 +64,13 @@ else:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
 
-# Session and Cookie Security - Enhanced for persistence
+# Session and Cookie Security - PERMANENT LOGIN (NO EXPIRATION)
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days for better user experience
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep users logged in
-SESSION_SAVE_EVERY_REQUEST = True  # Ensure session persists
-SESSION_COOKIE_SAMESITE = 'Lax'  # Better compatibility with Render.com
+SESSION_COOKIE_AGE = 365 * 24 * 60 * 60  # 1 YEAR (practically permanent)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # NEVER expire when browser closes
+SESSION_SAVE_EVERY_REQUEST = True  # Always renew session on every request
+SESSION_COOKIE_SAMESITE = 'Lax'  # Better compatibility with mobile apps
 
 CSRF_COOKIE_SECURE = IS_PRODUCTION
 CSRF_COOKIE_HTTPONLY = True
@@ -129,6 +129,12 @@ INSTALLED_APPS = [
     'admindashboard',  # New admin dashboard app
 ]
 
+# Authentication backends with phone number format policy
+AUTHENTICATION_BACKENDS = [
+    'phone_policy_auth.PhonePolicyAuthBackend',  # Custom phone format policy backend
+    'django.contrib.auth.backends.ModelBackend',  # Default backend as fallback
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -136,8 +142,12 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'myproject.middleware.SessionPersistenceMiddleware',  # Session persistence fix
+    'myproject.middleware.AuthenticationRecoveryMiddleware',  # Authentication recovery
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'myproject.middleware.SecurityHeadersMiddleware',  # Security headers
+    'myproject.middleware.AntiSourceViewMiddleware',  # Anti-source viewing
 ]
 
 ROOT_URLCONF = 'investmentdb.urls'
@@ -213,11 +223,11 @@ else:
     }
 
 # Session storage - Fixed for Render.com persistence
-# Using database sessions instead of cached_db to prevent session loss
-# when cache is cleared on Render.com deployments
+# Using database sessions for PERMANENT user login - NO EXPIRATION
+# Database sessions are persistent and survive server restarts
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_SAVE_EVERY_REQUEST = True  # Save session on every request to prevent loss
-SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days instead of 1 day for better UX
+SESSION_SAVE_EVERY_REQUEST = True  # Save and renew session on every request
+SESSION_COOKIE_AGE = 365 * 24 * 60 * 60  # 1 YEAR (practically permanent)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

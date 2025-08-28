@@ -53,16 +53,16 @@ class InvestmentPlan(models.Model):
 
     @property
     def daily_profit(self):
-        """Return fixed daily profit mapping for GrowFi plans (1-8)."""
+        """Return fixed daily profit mapping for GrowFi plans (1-8) - 20 DAYS DURATION."""
         mapping = {
-            'GROWFI 1': Decimal('56'),   # ₱300 price, 30 days => 1680 total
-            'GROWFI 2': Decimal('88'),   # ₱700 price, 30 days => 2640 total
-            'GROWFI 3': Decimal('150'),  # ₱2200 price, 60 days => 4500 total
-            'GROWFI 4': Decimal('190'),  # ₱3500 price, 60 days => 11400 total
-            'GROWFI 5': Decimal('250'),  # ₱5000 price, 90 days => 22500 total
-            'GROWFI 6': Decimal('350'),  # ₱7000 price, 120 days => 42000 total
-            'GROWFI 7': Decimal('450'),  # ₱9000 price, 140 days => 63000 total
-            'GROWFI 8': Decimal('550'),  # ₱11000 price, 140 days => 77000 total
+            'GROWFI 1': Decimal('150'),  # ₱300 price, 20 days => 3000 total
+            'GROWFI 2': Decimal('200'),  # ₱700 price, 20 days => 4000 total
+            'GROWFI 3': Decimal('225'),  # ₱2200 price, 20 days => 4500 total
+            'GROWFI 4': Decimal('570'),  # ₱3500 price, 20 days => 11400 total
+            'GROWFI 5': Decimal('1125'), # ₱5000 price, 20 days => 22500 total
+            'GROWFI 6': Decimal('2100'), # ₱7000 price, 20 days => 42000 total
+            'GROWFI 7': Decimal('3150'), # ₱9000 price, 20 days => 63000 total
+            'GROWFI 8': Decimal('3850'), # ₱11000 price, 20 days => 77000 total
         }
         if self.name in mapping:
             return mapping[self.name]
@@ -71,16 +71,16 @@ class InvestmentPlan(models.Model):
 
     @property
     def total_revenue(self):
-        """Return fixed total revenue exactly as specified by user."""
+        """Return fixed total revenue for 20-day duration plans."""
         mapping = {
-            'GROWFI 1': Decimal('1680'),
-            'GROWFI 2': Decimal('2640'),
-            'GROWFI 3': Decimal('4500'),   # User specified 4500 (not 9000)
-            'GROWFI 4': Decimal('11400'),
-            'GROWFI 5': Decimal('22500'),
-            'GROWFI 6': Decimal('42000'),  # User specified 42000 (not 30000)
-            'GROWFI 7': Decimal('63000'),
-            'GROWFI 8': Decimal('77000'),  # ₱11000 investment, 140 days, ₱550 daily => 77000 total
+            'GROWFI 1': Decimal('3000'),  # ₱150 daily × 20 days
+            'GROWFI 2': Decimal('4000'),  # ₱200 daily × 20 days
+            'GROWFI 3': Decimal('4500'),  # ₱225 daily × 20 days
+            'GROWFI 4': Decimal('11400'), # ₱570 daily × 20 days
+            'GROWFI 5': Decimal('22500'), # ₱1125 daily × 20 days
+            'GROWFI 6': Decimal('42000'), # ₱2100 daily × 20 days
+            'GROWFI 7': Decimal('63000'), # ₱3150 daily × 20 days
+            'GROWFI 8': Decimal('77000'), # ₱3850 daily × 20 days
         }
         if self.name in mapping:
             return mapping[self.name]

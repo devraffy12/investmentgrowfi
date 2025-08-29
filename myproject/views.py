@@ -139,23 +139,27 @@ def firebase_login_required(view_func):
     
     return _wrapped_view
 
-def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None):
+def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None, public_feed=False):
     """Internal helper to build masked recent deposit/withdrawal list.
     
-    WARNING: This function can expose ALL users' data if user parameter is not provided!
-    Always pass a user parameter to filter data properly.
+    If public_feed=True, shows ALL users' transactions (masked) for live feed display.
+    If user is provided, shows only that user's transactions.
     """
     from django.utils import timezone as _tz
     since = _tz.now() - timedelta(minutes=minutes)
     
-    if user and user.is_authenticated:
-        # SECURITY: Only show current user's transactions
+    if public_feed:
+        # PUBLIC FEED: Show ALL users' deposit/withdrawal transactions (masked)
+        qs = (Transaction.objects.select_related('user')
+              .filter(transaction_type__in=['deposit', 'withdrawal'], created_at__gte=since, status='completed')
+              .order_by('-created_at')[:limit])
+    elif user and user.is_authenticated:
+        # PRIVATE: Only show current user's transactions
         qs = (Transaction.objects.select_related('user')
               .filter(user=user, transaction_type__in=['deposit', 'withdrawal'], created_at__gte=since)
               .order_by('-created_at')[:limit])
     else:
-        # SECURITY: For public API, return empty list to prevent data exposure
-        # Note: Previously this exposed ALL users' data - major security violation!
+        # SECURITY: For unauthenticated requests, return empty list
         qs = Transaction.objects.none()
 
     def _normalize_phone(raw: str) -> str:
@@ -176,21 +180,38 @@ def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None):
 
     results = []
     for tx in qs:
-        user = tx.user  
+        tx_user = tx.user  
         phone_raw = ''
-        if hasattr(user, 'userprofile'):
-            phone_raw = getattr(user.userprofile, 'phone_number', '') or getattr(user.userprofile, 'phone', '')
+        if hasattr(tx_user, 'userprofile'):
+            phone_raw = getattr(tx_user.userprofile, 'phone_number', '') or getattr(tx_user.userprofile, 'phone', '')
         if not phone_raw:
-            phone_raw = user.get_username()
+            phone_raw = tx_user.get_username()
+        
+        # Always mask phone numbers for public feed
+        masked_phone = mask_phone(phone_raw) if public_feed else phone_raw
+        
         results.append({
             'id': tx.id,
             'type': tx.transaction_type,
             'amount': float(tx.amount),
             'created_at': tx.created_at.isoformat(),
-            'user': user.get_username(),  # username (likely phone) but keep masked version below
+            'user': tx_user.get_username(),  # username (likely phone) but keep masked version below
             'phone': mask_phone(phone_raw)
         })
     return results
+
+@require_GET
+def public_live_transactions_api(request):
+    """PUBLIC API: Masked live transaction feed for dashboard display"""
+    try:
+        limit = int(request.GET.get('limit', 30))
+        minutes = int(request.GET.get('minutes', 120))  # Last 2 hours
+    except ValueError:
+        limit, minutes = 30, 120
+    
+    # Get PUBLIC feed with ALL users' transactions (masked)
+    data = _build_deposit_withdrawal_feed(limit, minutes, user=None, public_feed=True)
+    return JsonResponse({'results': data, 'count': len(data), 'public': True})
 
 @require_GET
 @login_required  # SECURITY FIX: Now requires authentication
@@ -203,7 +224,7 @@ def deposits_withdrawals_api(request):
         limit, minutes = 50, 1440
     
     # SECURITY: Only get current user's data
-    data = _build_deposit_withdrawal_feed(limit, minutes, user=request.user)
+    data = _build_deposit_withdrawal_feed(limit, minutes, user=request.user, public_feed=False)
     return JsonResponse({'results': data, 'count': len(data), 'public': False})
 
 @require_GET
@@ -217,7 +238,7 @@ def private_deposits_withdrawals_api(request):
         limit, minutes = 50, 1440
     
     # SECURITY: Only get current user's data
-    data = _build_deposit_withdrawal_feed(limit, minutes, user=request.user)
+    data = _build_deposit_withdrawal_feed(limit, minutes, user=request.user, public_feed=False)
     return JsonResponse({'results': data, 'count': len(data), 'public': False})
 
 def is_ajax(request):

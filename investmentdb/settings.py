@@ -141,9 +141,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'myproject.middleware.PermanentSessionMiddleware',  # PERMANENT sessions - NO EXPIRATION
     'myproject.middleware.SessionPersistenceMiddleware',  # Session persistence fix
     'myproject.middleware.AuthenticationRecoveryMiddleware',  # Authentication recovery
-    'myproject.middleware.PermanentSessionMiddleware',  # PERMANENT sessions - NO EXPIRATION
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'myproject.middleware.SecurityHeadersMiddleware',  # Security headers

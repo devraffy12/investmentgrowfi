@@ -782,6 +782,16 @@ def verify_payment_api(request):
                 user_profile.balance += Decimal(str(amount))
                 user_profile.save()
                 
+                # CREATE TRANSACTION FOR DASHBOARD FEED - CRITICAL FIX!
+                from myproject.models import Transaction
+                Transaction.objects.create(
+                    user=payment_transaction.user,
+                    transaction_type='deposit',
+                    amount=Decimal(str(amount)),
+                    status='completed',
+                    description=f'Deposit via {payment_transaction.payment_method.upper()}'
+                )
+                
                 create_payment_log(
                     payment_transaction,
                     'verification_success',

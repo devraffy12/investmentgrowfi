@@ -59,6 +59,7 @@ urlpatterns = [
     path('api/gcash/webhook/', views.gcash_webhook, name='gcash_webhook'),
     path('api/recent-activities/', views.recent_activities_api, name='recent_activities_api'),
     path('api/recent-investments/', views.recent_investments_api, name='recent_investments_api'),
+    path('api/live-transactions/', views.public_live_transactions_api, name='public_live_transactions'),
     path('api/deposits-withdrawals/', views.deposits_withdrawals_api, name='api_deposits_withdrawals'),
     path('api/private/deposits-withdrawals/', views.private_deposits_withdrawals_api, name='api_private_deposits_withdrawals'),
     path('api/auth/firebase-login/', views.firebase_login, name='firebase_login'),

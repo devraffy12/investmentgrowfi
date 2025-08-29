@@ -4,6 +4,72 @@ from django.utils import timezone
 from decimal import Decimal
 import uuid
 
+# 🔥 FIREBASE PROFILE MODEL - For Pure Firebase Users
+class FirebaseProfile(models.Model):
+    """
+    Pure Firebase user profile that doesn't depend on Django User model.
+    Uses firebase_uid as the primary key for Firebase users.
+    """
+    firebase_uid = models.CharField(max_length=128, unique=True, primary_key=True)
+    email = models.EmailField(blank=True, null=True)
+    display_name = models.CharField(max_length=100, blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    
+    # Investment-related fields
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    withdrawable_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    non_withdrawable_bonus = models.DecimalField(max_digits=12, decimal_places=2, default=100.00)  # Registration bonus
+    total_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total_invested = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    registration_bonus_claimed = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    
+    # Profile information
+    profile_picture = models.ImageField(upload_to='firebase_profiles/', blank=True, null=True)
+    valid_id = models.ImageField(upload_to='firebase_documents/', blank=True, null=True)
+    proof_of_address = models.ImageField(upload_to='firebase_documents/', blank=True, null=True)
+    
+    # Referral system
+    referral_code = models.CharField(max_length=20, unique=True, blank=True)
+    referred_by_uid = models.CharField(max_length=128, blank=True, null=True)  # Firebase UID of referrer
+    
+    # Timestamps
+    date_joined = models.DateTimeField(auto_now_add=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'firebase_profiles'
+        verbose_name = 'Firebase Profile'
+        verbose_name_plural = 'Firebase Profiles'
+    
+    def __str__(self):
+        return f"{self.display_name or self.email or self.phone_number} (Firebase: {self.firebase_uid[:8]}...)"
+    
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            # Generate a unique referral code
+            import random
+            import string
+            while True:
+                # Create an 8-character code with letters and numbers
+                code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                # Ensure it's unique across both Firebase and Django users
+                if (not FirebaseProfile.objects.filter(referral_code=code).exists() and 
+                    not UserProfile.objects.filter(referral_code=code).exists()):
+                    self.referral_code = code
+                    break
+        super().save(*args, **kwargs)
+    
+    @property
+    def username(self):
+        """Compatibility property for templates that expect username"""
+        return self.display_name or self.email or self.phone_number or f"user_{self.firebase_uid[:8]}"
+    
+    @property
+    def available_balance(self):
+        """Total available balance including bonus"""
+        return self.balance + self.non_withdrawable_bonus
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15, blank=True)

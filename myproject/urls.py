@@ -4,7 +4,8 @@ from payments import views as payment_views
 
 urlpatterns = [
     # Public pages
-    path('', views.index, name='index'),
+    path('', views.register, name='index'),  # Changed to register as default page
+    path('home/', views.index, name='home'),  # Moved index to /home/
     path('about/', views.about, name='about'),
     path('terms/', views.terms, name='terms'),
     path('privacy/', views.privacy, name='privacy'),

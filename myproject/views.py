@@ -1,7 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.contrib import messages 
 from django.http import JsonResponse
 from django.utils import timezone
@@ -678,32 +676,148 @@ def register(request):
                 messages.error(request, 'Error validating referral code. Please try again.')
                 return render(request, 'myproject/register.html', {'referral_code': referral_code})
         
-        # Create user with phone as username
+        # 🔥 PURE FIREBASE REGISTRATION - NO Django User creation
         try:
-            user = User.objects.create_user(
-                username=clean_phone,  # Use full phone as username
-                password=password
-            )
+            if not FIREBASE_AVAILABLE:
+                messages.error(request, 'Registration system unavailable. Please try again later.')
+                return render(request, 'myproject/register.html')
             
-            # Create user profile with referral
-            profile = UserProfile.objects.create(
-                user=user,
-                phone_number=clean_phone,
-                referred_by=referrer  # Set the referrer
-            )
+            # Get Firebase app and database reference
+            app = get_firebase_app()
+            if hasattr(app, 'project_id') and app.project_id == "firebase-unavailable":
+                messages.error(request, 'Registration system unavailable. Please try again later.')
+                return render(request, 'myproject/register.html')
             
-            # Give registration bonus (100 pesos, non-withdrawable)
-            profile.balance = Decimal('100.00')
-            profile.registration_bonus_claimed = True
-            profile.save()
+            # Create Firebase key
+            firebase_key = clean_phone.replace('+', '').replace(' ', '').replace('-', '')
             
-            # Create registration bonus transaction
-            Transaction.objects.create(
-                user=user,
-                transaction_type='registration_bonus',
-                amount=Decimal('100.00'),
-                status='completed'
-            )
+            # Get Firebase database reference
+            ref = firebase_db.reference('/', app=app)
+            users_ref = ref.child('users')
+            
+            # Check if phone number already exists in Firebase
+            existing_user = users_ref.child(firebase_key).get()
+            if existing_user:
+                messages.error(request, 'Phone number already registered')
+                return render(request, 'myproject/register.html')
+            
+            # Generate unique referral code for new user
+            import random
+            import string
+            new_referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            
+            # Ensure referral code is unique
+            while True:
+                all_users = users_ref.get() or {}
+                code_exists = any(
+                    user_data and user_data.get('referral_code') == new_referral_code
+                    for user_data in all_users.values()
+                    if user_data
+                )
+                if not code_exists:
+                    break
+                new_referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            
+            # Hash password
+            import hashlib
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            
+            # Create new user data for Firebase
+            user_data = {
+                'phone_number': clean_phone,
+                'password': hashed_password,
+                'balance': 100.00,  # Registration bonus
+                'registration_bonus_claimed': True,
+                'registration_bonus_amount': 100.00,
+                'account_type': 'standard',
+                'status': 'active',
+                'account_status': 'active',
+                'referral_code': new_referral_code,
+                'referred_by': referrer.username if referrer else None,
+                'referred_by_code': referral_code if referral_code else None,
+                'total_referrals': 0,
+                'referral_earnings': 0.0,
+                'date_joined': timezone.now().isoformat(),
+                'created_at': timezone.now().isoformat(),
+                'last_login': None,
+                'login_count': 0,
+                'is_online': False,
+                'transactions': {
+                    'registration_bonus': {
+                        'amount': 100.00,
+                        'type': 'registration_bonus',
+                        'status': 'completed',
+                        'date': timezone.now().isoformat()
+                    }
+                }
+            }
+            
+            # Save user to Firebase
+            users_ref.child(firebase_key).set(user_data)
+            print(f"✅ User saved to Firebase: {clean_phone}")
+            
+            # Handle referral bonus for referrer (Firebase-based)
+            if referrer:
+                try:
+                    # Find referrer in Firebase
+                    referrer_key = None
+                    all_users = users_ref.get() or {}
+                    for user_key, user_data_check in all_users.items():
+                        if user_data_check and user_data_check.get('phone_number') == referrer.username:
+                            referrer_key = user_key
+                            break
+                    
+                    if referrer_key:
+                        referrer_data = users_ref.child(referrer_key).get()
+                        referral_bonus = 15.00  # ₱15 referral bonus
+                        
+                        # Update referrer's Firebase data
+                        referrer_new_balance = float(referrer_data.get('balance', 0)) + referral_bonus
+                        referrer_total_referrals = int(referrer_data.get('total_referrals', 0)) + 1
+                        referrer_earnings = float(referrer_data.get('referral_earnings', 0)) + referral_bonus
+                        
+                        users_ref.child(referrer_key).update({
+                            'balance': referrer_new_balance,
+                            'total_referrals': referrer_total_referrals,
+                            'referral_earnings': referrer_earnings,
+                            'last_referral_date': timezone.now().isoformat()
+                        })
+                        
+                        # Add referral bonus transaction to referrer
+                        referral_transaction_key = f"referral_bonus_{firebase_key}_{int(timezone.now().timestamp())}"
+                        users_ref.child(referrer_key).child('transactions').child(referral_transaction_key).set({
+                            'amount': referral_bonus,
+                            'type': 'referral_bonus',
+                            'status': 'completed',
+                            'date': timezone.now().isoformat(),
+                            'from_user': clean_phone,
+                            'description': f'Referral bonus from {clean_phone}'
+                        })
+                        
+                        print(f"💰 Referral bonus of ₱{referral_bonus} awarded to referrer")
+                    
+                except Exception as referral_error:
+                    print(f"❌ Error processing referral bonus: {referral_error}")
+                    # Don't fail registration, just log the error
+            
+            # Create pure Firebase session for auto-login
+            request.session['firebase_authenticated'] = True
+            request.session['firebase_key'] = firebase_key
+            request.session['user_phone'] = clean_phone
+            request.session['is_authenticated'] = True
+            request.session['firebase_user_data'] = user_data
+            request.session['login_time'] = timezone.now().isoformat()
+            request.session['login_method'] = 'firebase_registration'
+            
+            # Force session save
+            request.session.save()
+            
+            print(f"🎉 Pure Firebase registration successful: {clean_phone}")
+            success_msg = 'Registration successful! You received ₱100 bonus.'
+            if referrer:
+                success_msg += f' Your referrer earned a bonus too!'
+            messages.success(request, success_msg + ' Welcome to GrowFi!')
+            return redirect('dashboard')
             
             # Handle referral bonus for referrer
             if referrer:
@@ -853,120 +967,244 @@ def register(request):
     return render(request, 'myproject/register.html', context)
 
 def user_login(request):
-    """Pure Firebase login - SOLVES 'Account not found' issue"""
+    """Pure Firebase login with improved password authentication"""
     if request.method == 'POST':
         phone = request.POST.get('phone', '')
         password = request.POST.get('password', '')
         
-        print(f"🔐 Firebase login attempt - Phone: {phone}")
+        print(f"🔐 Login attempt - Phone: {phone}")
         
         if not phone or not password:
             messages.error(request, 'Please enter both phone number and password.')
             return render(request, 'myproject/login.html')
         
-        # Import Firebase auth here to avoid circular imports
+        # Direct Firebase authentication without external modules
         try:
-            from firebase_auth import FirebaseAuth
-            firebase_auth = FirebaseAuth()
+            if not FIREBASE_AVAILABLE:
+                messages.error(request, 'Login system unavailable. Please try again later.')
+                return render(request, 'myproject/login.html')
             
-            # Authenticate user with Firebase
-            auth_result = firebase_auth.authenticate_user(phone, password)
+            # Get Firebase app and database reference
+            app = get_firebase_app()
+            if hasattr(app, 'project_id') and app.project_id == "firebase-unavailable":
+                messages.error(request, 'Login system unavailable. Please try again later.')
+                return render(request, 'myproject/login.html')
             
-            if auth_result['success']:
-                # Create session for Firebase user
-                user_data = auth_result['user_data']
-                firebase_key = auth_result['firebase_key']
-                
-                # Set session data
-                request.session['firebase_key'] = firebase_key
-                request.session['user_phone'] = user_data.get('phone_number')
-                request.session['login_time'] = timezone.now().isoformat()
-                request.session['login_method'] = 'firebase_auth'
-                request.session['user_balance'] = user_data.get('balance', 0)
-                request.session['user_name'] = user_data.get('name', '')
-                request.session['is_authenticated'] = True
-                
-                # Force session save
-                request.session.save()
-                
-                print(f"✅ Firebase login successful: {phone}")
-                messages.success(request, 'Welcome back! Logged in successfully.')
-                return redirect('dashboard')
-            else:
-                print(f"❌ Firebase login failed: {auth_result['error']}")
-                messages.error(request, auth_result['error'])
-                
-        except ImportError:
-            print("❌ Firebase auth module not found")
-            messages.error(request, 'Login system temporarily unavailable. Please try again.')
+            # Normalize phone number
+            clean_phone = phone.replace(' ', '').replace('-', '')
+            if not clean_phone.startswith('+63'):
+                digits_only = ''.join(filter(str.isdigit, clean_phone))
+                if digits_only.startswith('63') and len(digits_only) >= 12:
+                    clean_phone = '+' + digits_only
+                elif digits_only.startswith('09') and len(digits_only) == 11:
+                    clean_phone = '+63' + digits_only[1:]
+                elif digits_only.startswith('9') and len(digits_only) == 10:
+                    clean_phone = '+63' + digits_only
+                elif len(digits_only) >= 10:
+                    last_10_digits = digits_only[-10:]
+                    if last_10_digits.startswith('9'):
+                        clean_phone = '+63' + last_10_digits
+                    else:
+                        clean_phone = '+63' + digits_only
+                else:
+                    clean_phone = '+63' + digits_only if digits_only else clean_phone
+            
+            # Create Firebase key
+            firebase_key = clean_phone.replace('+', '').replace(' ', '').replace('-', '')
+            
+            print(f"🔍 Looking for user: {clean_phone} (key: {firebase_key})")
+            
+            # Get user from Firebase
+            ref = firebase_db.reference('/', app=app)
+            users_ref = ref.child('users')
+            user_data = users_ref.child(firebase_key).get()
+            
+            if not user_data:
+                print(f"❌ User not found in Firebase: {clean_phone}")
+                messages.error(request, 'Account not found. Please check your phone number or register first.')
+                return render(request, 'myproject/login.html')
+            
+            # Check account status
+            if user_data.get('status') != 'active' and user_data.get('account_status') != 'active':
+                messages.error(request, 'Account is inactive. Please contact support.')
+                return render(request, 'myproject/login.html')
+            
+            # Verify password
+            stored_password = user_data.get('password', '')
+            if not stored_password:
+                print(f"❌ No password stored for user: {clean_phone}")
+                messages.error(request, 'Account setup incomplete. Please contact support.')
+                return render(request, 'myproject/login.html')
+            
+            # Hash the provided password using SHA256 (same as registration)
+            import hashlib
+            hashed_input_password = hashlib.sha256(password.encode()).hexdigest()
+            
+            print(f"🔐 Password verification:")
+            print(f"   Input password hash: {hashed_input_password[:20]}...")
+            print(f"   Stored password hash: {stored_password[:20]}...")
+            
+            if hashed_input_password != stored_password:
+                print(f"❌ Password verification failed")
+                messages.error(request, 'Invalid password. Please check your password and try again.')
+                return render(request, 'myproject/login.html')
+            
+            # SUCCESS - Create pure Firebase session (NO Django User needed)
+            print(f"✅ Password verified successfully")
+            
+            # Create pure Firebase session
+            request.session['firebase_authenticated'] = True
+            request.session['firebase_key'] = firebase_key
+            request.session['user_phone'] = clean_phone
+            request.session['is_authenticated'] = True
+            request.session['firebase_user_data'] = user_data
+            
+            # Update Firebase login tracking
+            try:
+                login_count = int(user_data.get('login_count', 0)) + 1
+                users_ref.child(firebase_key).update({
+                    'last_login': timezone.now().isoformat(),
+                    'login_count': login_count,
+                    'is_online': True,
+                    'last_login_platform': 'web_django',
+                    'session_id': request.session.session_key
+                })
+                print(f"✅ Firebase login tracking updated")
+            except Exception as e:
+                print(f"⚠️ Firebase tracking update failed: {e}")
+            
+            # Set additional session data
+            request.session['login_time'] = timezone.now().isoformat()
+            request.session['login_method'] = 'firebase_direct'
+            request.session['user_balance'] = user_data.get('balance', 0)
+            request.session['firebase_user_data'] = user_data
+            
+            # Force session save
+            request.session.save()
+            
+            print(f"🎉 Login successful for: {clean_phone}")
+            messages.success(request, 'Welcome back! Successfully logged in.')
+            return redirect('dashboard')
+            
         except Exception as e:
             print(f"❌ Login error: {e}")
+            import traceback
+            traceback.print_exc()
             messages.error(request, 'Login failed. Please try again.')
     
     return render(request, 'myproject/login.html')
 
-def dashboard(request):
-    """Firebase-based dashboard view that works with pure Firebase authentication"""
-    # Check if user is authenticated via Firebase
-    firebase_key = request.session.get('firebase_key')
-    is_authenticated = request.session.get('is_authenticated', False)
+def firebase_login_required(view_func):
+    """Custom decorator that handles both Django and Firebase authentication"""
+    from functools import wraps
     
-    if not firebase_key or not is_authenticated:
-        messages.error(request, 'Please log in to access your dashboard.')
-        return redirect('login')
-    
-    try:
-        # Get user data from Firebase
-        from firebase_auth import FirebaseAuth
-        firebase_auth = FirebaseAuth()
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        # Check Django authentication first
+        if request.user.is_authenticated:
+            return view_func(request, *args, **kwargs)
         
-        if firebase_auth.db:
-            user_data = firebase_auth.db.child('users').child(firebase_key).get()
+        # Check Firebase session authentication
+        firebase_authenticated = request.session.get('firebase_authenticated', False)
+        is_authenticated = request.session.get('is_authenticated', False)
+        firebase_key = request.session.get('firebase_key')
+        
+        if firebase_authenticated and is_authenticated and firebase_key:
+            # Create a mock user object for Firebase-only users
+            class FirebaseUser:
+                def __init__(self, user_data, phone):
+                    self.username = phone
+                    self.phone_number = phone
+                    self.is_authenticated = True
+                    self.firebase_data = user_data
+                    self.balance = user_data.get('balance', 0)
+                    self.id = user_data.get('user_id', f'firebase_{firebase_key}')
+                    
+                def __str__(self):
+                    return self.username
             
-            if not user_data or user_data.get('status') != 'active':
-                # Clear invalid session
-                request.session.flush()
-                messages.error(request, 'Your session has expired. Please log in again.')
-                return redirect('login')
+            # Get Firebase user data
+            firebase_user_data = request.session.get('firebase_user_data', {})
+            user_phone = request.session.get('user_phone', '')
             
-            # Update last activity
-            firebase_auth.db.child('users').child(firebase_key).update({
-                'last_activity': timezone.now().isoformat(),
-                'is_online': True
-            })
+            # Add Firebase user to request
+            request.firebase_user = FirebaseUser(firebase_user_data, user_phone)
+            request.user = request.firebase_user  # Override for compatibility
             
-            # Prepare context for dashboard
-            context = {
-                'user_phone': user_data.get('phone_number', ''),
-                'user_balance': user_data.get('balance', 0),
-                'referral_code': user_data.get('referral_code', ''),
-                'total_referrals': user_data.get('total_referrals', 0),
-                'referral_earnings': user_data.get('referral_earnings', 0),
-                'firebase_user': user_data,
-                'session_info': {
-                    'login_time': request.session.get('login_time', ''),
-                    'login_method': 'firebase_auth',
-                    'session_age': request.session.get_expiry_age() if hasattr(request.session, 'get_expiry_age') else 'Unknown'
-                }
-            }
-            
-            print(f"✅ Firebase dashboard loaded for: {user_data.get('phone_number')}")
-            return render(request, 'myproject/dashboard.html', context)
-        else:
-            print("❌ Firebase database not available")
-            messages.error(request, 'Database temporarily unavailable. Please try again.')
-            return redirect('login')
-            
-    except Exception as e:
-        print(f"❌ Dashboard error: {e}")
-        import traceback
-        traceback.print_exc()
-        messages.error(request, 'Error loading dashboard. Please try logging in again.')
+            return view_func(request, *args, **kwargs)
+        
+        # No authentication found
+        messages.error(request, 'Please log in to access this page.')
         return redirect('login')
+    
+    return _wrapped_view
 
-@login_required
-def dashboard_old(request):
-    """Old Django-based dashboard - kept for reference"""  
+@firebase_login_required
+def dashboard(request):
+    """Enhanced dashboard that works with both Django and Firebase users"""  
+    
+    # Handle Firebase-only users
+    if hasattr(request, 'firebase_user'):
+        print(f"📊 Firebase-only user dashboard access: {request.firebase_user.phone_number}")
+        
+        # Get fresh data from Firebase
+        try:
+            firebase_key = request.session.get('firebase_key')
+            if FIREBASE_AVAILABLE and firebase_key:
+                app = get_firebase_app()
+                ref = firebase_db.reference('/', app=app)
+                users_ref = ref.child('users')
+                fresh_user_data = users_ref.child(firebase_key).get()
+                
+                if fresh_user_data:
+                    # Update session with fresh data
+                    request.session['firebase_user_data'] = fresh_user_data
+                    request.session['user_balance'] = fresh_user_data.get('balance', 0)
+                    request.session.save()
+                    
+                    # Update Firebase user object
+                    request.firebase_user.firebase_data = fresh_user_data
+                    request.firebase_user.balance = fresh_user_data.get('balance', 0)
+        except Exception as e:
+            print(f"⚠️ Error fetching fresh Firebase data: {e}")
+        
+        # Create context for Firebase-only users
+        firebase_data = request.firebase_user.firebase_data
+        context = {
+            'user': request.firebase_user,
+            'profile': {
+                'balance': firebase_data.get('balance', 0),
+                'phone_number': firebase_data.get('phone_number', ''),
+                'referral_code': firebase_data.get('referral_code', ''),
+                'total_invested': firebase_data.get('total_invested', 0),
+                'total_earnings': firebase_data.get('total_earnings', 0),
+            },
+            'active_investments': [],  # TODO: Implement Firebase investments
+            'recent_transactions': [],  # TODO: Implement Firebase transactions
+            'notifications': [],  # TODO: Implement Firebase notifications
+            'total_active_investment': 0,
+            'total_invested': firebase_data.get('total_invested', 0),
+            'total_earnings': firebase_data.get('total_earnings', 0),
+            'today_earnings': 0,
+            'withdrawable_balance': firebase_data.get('balance', 0),
+            'registration_bonus': firebase_data.get('registration_bonus_amount', 100),
+            'available_balance': firebase_data.get('balance', 0),
+            'performance_analytics': None,
+            'total_referrals': firebase_data.get('total_referrals', 0),
+            'active_referrals': firebase_data.get('active_referrals', 0),
+            'referral_earnings': firebase_data.get('referral_earnings', 0),
+            'team_total_invested': firebase_data.get('team_total_invested', 0),
+            'firebase_user': True,
+            'session_info': {
+                'login_method': 'firebase_only',
+                'firebase_key': firebase_key,
+                'user_phone': request.firebase_user.phone_number,
+            }
+        }
+        
+        return render(request, 'myproject/dashboard.html', context)
+    
+    # Handle Django users (existing code)
     try:
         profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:

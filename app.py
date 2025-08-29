@@ -160,9 +160,10 @@ class GrowFiStaticHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     port = int(os.environ.get('PORT', 8000))
     
-    print(f"🚀 Starting GrowFi Investment Platform")
+    print(f"🚀 Starting GrowFi Investment Platform v2.0")
     print(f"📁 Serving from: {os.getcwd()}")
     print(f"🌐 Port: {port}")
+    print(f"⏰ Deploy time: August 29, 2025 - 8:50 PM")
     
     # List available templates
     template_dir = "myproject/templates/myproject"

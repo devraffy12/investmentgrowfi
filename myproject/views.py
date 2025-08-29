@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.contrib import messages 
 from django.http import JsonResponse
 from django.utils import timezone
@@ -18,6 +19,13 @@ from django.views.decorators.csrf import csrf_exempt
 from typing import Optional
 import firebase_admin
 from firebase_admin import credentials
+
+# Import Firebase helpers
+try:
+    from . import firebase  # Import our firebase.py helper module
+except ImportError as e:
+    print(f"Firebase helper module not available: {e}")
+    firebase = None
 
 # Set up logging    
 logger = logging.getLogger(__name__)
@@ -46,6 +54,90 @@ except ImportError as e:
     FIREBASE_AVAILABLE = False
 
 print(f"🔥 Firebase Status: {'✅ Available' if FIREBASE_AVAILABLE else '❌ Unavailable'}")
+
+def firebase_login_required(view_func):
+    """🔥 PURE FIREBASE DECORATOR - Session-based authentication (no token verification)"""
+    from functools import wraps
+    
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        # Check session-based authentication only (simpler approach)
+        firebase_authenticated = request.session.get('firebase_authenticated', False)
+        is_authenticated = request.session.get('is_authenticated', False)
+        firebase_key = request.session.get('firebase_key')
+        
+        print(f"🔍 Auth check - firebase_authenticated: {firebase_authenticated}")
+        print(f"🔍 Auth check - is_authenticated: {is_authenticated}")
+        print(f"🔍 Auth check - firebase_key: {firebase_key}")
+        
+        if firebase_authenticated and is_authenticated and firebase_key:
+            # Create a pure Firebase user object
+            class FirebaseUser:
+                def __init__(self, firebase_key, user_phone, user_data):
+                    self.uid = firebase_key
+                    self.firebase_key = firebase_key
+                    self.phone_number = user_phone
+                    self.username = user_phone
+                    self.email = user_data.get('email', '')
+                    self.display_name = user_data.get('display_name', '')
+                    self.is_authenticated = True
+                    self.firebase_data = user_data
+                    self.is_firebase_user = True
+                    
+                def __str__(self):
+                    return self.username or self.uid
+                    
+                def get_username(self):
+                    return self.username or self.uid
+            
+            # Get session data
+            user_phone = request.session.get('user_phone', '')
+            firebase_user_data = request.session.get('firebase_user_data', {})
+            
+            # Add Firebase user to request
+            request.firebase_user = FirebaseUser(firebase_key, user_phone, firebase_user_data)
+            
+            # Try to find corresponding Django user for compatibility
+            try:
+                from django.contrib.auth.models import User
+                
+                if user_phone:
+                    # Try different phone number formats
+                    phone_variants = [
+                        user_phone,
+                        user_phone.replace('+', ''),
+                        user_phone.replace('+63', '0'),
+                        f"+{user_phone}" if not user_phone.startswith('+') else user_phone,
+                    ]
+                    
+                    django_user = None
+                    for phone_variant in phone_variants:
+                        try:
+                            django_user = User.objects.get(username=phone_variant)
+                            print(f"🔥 Found Django user: {phone_variant}")
+                            break
+                        except User.DoesNotExist:
+                            continue
+                    
+                    if django_user:
+                        request.user = django_user
+                        print(f"🔥 Django user set: {django_user.username}")
+                    else:
+                        print(f"⚠️ No Django user found for: {user_phone}")
+                        
+            except Exception as e:
+                print(f"⚠️ Error finding Django user: {e}")
+            
+            print(f"✅ Firebase user authenticated: {firebase_key}")
+            return view_func(request, *args, **kwargs)
+        
+        # No authentication found
+        print(f"❌ Authentication failed - redirecting to login")
+        print(f"❌ Session keys: {list(request.session.keys())}")
+        messages.error(request, 'Please log in to access this page.')
+        return redirect('login')
+    
+    return _wrapped_view
 
 def _build_deposit_withdrawal_feed(limit: int, minutes: int, user=None):
     """Internal helper to build masked recent deposit/withdrawal list.
@@ -555,7 +647,7 @@ def handle_gcash_webhook(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)    
 
 def index(request):
     """Homepage view - redirects unauthenticated users to register"""
@@ -800,7 +892,7 @@ def register(request):
                     print(f"❌ Error processing referral bonus: {referral_error}")
                     # Don't fail registration, just log the error
             
-            # Create pure Firebase session for auto-login
+            # Create pure Firebase session for auto-login (no tokens needed)
             request.session['firebase_authenticated'] = True
             request.session['firebase_key'] = firebase_key
             request.session['user_phone'] = clean_phone
@@ -1052,7 +1144,7 @@ def user_login(request):
             # SUCCESS - Create pure Firebase session (NO Django User needed)
             print(f"✅ Password verified successfully")
             
-            # Create pure Firebase session
+            # Create pure Firebase session (no tokens needed)
             request.session['firebase_authenticated'] = True
             request.session['firebase_key'] = firebase_key
             request.session['user_phone'] = clean_phone
@@ -1094,153 +1186,128 @@ def user_login(request):
     
     return render(request, 'myproject/login.html')
 
-def firebase_login_required(view_func):
-    """Custom decorator that handles both Django and Firebase authentication"""
-    from functools import wraps
-    
-    @wraps(view_func)
-    def _wrapped_view(request, *args, **kwargs):
-        # Check Django authentication first
-        if request.user.is_authenticated:
-            return view_func(request, *args, **kwargs)
-        
-        # Check Firebase session authentication
-        firebase_authenticated = request.session.get('firebase_authenticated', False)
-        is_authenticated = request.session.get('is_authenticated', False)
-        firebase_key = request.session.get('firebase_key')
-        
-        if firebase_authenticated and is_authenticated and firebase_key:
-            # Create a mock user object for Firebase-only users
-            class FirebaseUser:
-                def __init__(self, user_data, phone):
-                    self.username = phone
-                    self.phone_number = phone
-                    self.is_authenticated = True
-                    self.firebase_data = user_data
-                    self.balance = user_data.get('balance', 0)
-                    self.id = user_data.get('user_id', f'firebase_{firebase_key}')
-                    
-                def __str__(self):
-                    return self.username
-            
-            # Get Firebase user data
-            firebase_user_data = request.session.get('firebase_user_data', {})
-            user_phone = request.session.get('user_phone', '')
-            
-            # Add Firebase user to request
-            request.firebase_user = FirebaseUser(firebase_user_data, user_phone)
-            request.user = request.firebase_user  # Override for compatibility
-            
-            return view_func(request, *args, **kwargs)
-        
-        # No authentication found
-        messages.error(request, 'Please log in to access this page.')
-        return redirect('login')
-    
-    return _wrapped_view
-
 @firebase_login_required
 def dashboard(request):
-    """Enhanced dashboard that works with both Django and Firebase users"""  
+    """🔥 PURE FIREBASE/FIRESTORE DASHBOARD - No Django ORM"""
     
-    # Handle Firebase-only users
-    if hasattr(request, 'firebase_user'):
-        print(f"📊 Firebase-only user dashboard access: {request.firebase_user.phone_number}")
+    # Get Firebase user from decorator
+    firebase_user = request.firebase_user
+    firebase_uid = firebase_user.firebase_key  # This is the Firebase UID
+    
+    print(f"📊 Pure Firebase dashboard access: {firebase_uid}")
+    
+    try:
+        # Initialize Firestore client
+        if not FIREBASE_AVAILABLE:
+            raise Exception("Firebase not available")
+            
+        from firebase_admin import firestore
+        db = firestore.client()
         
-        # Get fresh data from Firebase
-        try:
-            firebase_key = request.session.get('firebase_key')
-            if FIREBASE_AVAILABLE and firebase_key:
-                app = get_firebase_app()
-                ref = firebase_db.reference('/', app=app)
-                users_ref = ref.child('users')
-                fresh_user_data = users_ref.child(firebase_key).get()
-                
-                if fresh_user_data:
-                    # Update session with fresh data
-                    request.session['firebase_user_data'] = fresh_user_data
-                    request.session['user_balance'] = fresh_user_data.get('balance', 0)
-                    request.session.save()
-                    
-                    # Update Firebase user object
-                    request.firebase_user.firebase_data = fresh_user_data
-                    request.firebase_user.balance = fresh_user_data.get('balance', 0)
-        except Exception as e:
-            print(f"⚠️ Error fetching fresh Firebase data: {e}")
+        # Get user document from Firestore
+        user_ref = db.collection('users').document(firebase_uid)
+        user_doc = user_ref.get()
         
-        # Create context for Firebase-only users
-        firebase_data = request.firebase_user.firebase_data
+        if user_doc.exists:
+            # User exists, get data
+            user_data = user_doc.to_dict()
+            print(f"✅ User found in Firestore: {firebase_uid}")
+        else:
+            # Create new user document in Firestore
+            user_data = {
+                'uid': firebase_uid,
+                'email': firebase_user.email,
+                'display_name': firebase_user.display_name,
+                'phone_number': firebase_user.phone_number,
+                'balance': 0.0,
+                'withdrawable_balance': 0.0,
+                'non_withdrawable_bonus': 100.0,  # Registration bonus
+                'total_invested': 0.0,
+                'total_earnings': 0.0,
+                'registration_bonus_claimed': False,
+                'is_verified': False,
+                'referral_code': '',
+                'referred_by_uid': '',
+                'created_at': firestore.SERVER_TIMESTAMP,
+                'last_login': firestore.SERVER_TIMESTAMP,
+            }
+            
+            # Generate referral code
+            import random
+            import string
+            referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            user_data['referral_code'] = referral_code
+            
+            # Save to Firestore
+            user_ref.set(user_data)
+            print(f"✅ New user created in Firestore: {firebase_uid}")
+        
+        # Update last login
+        user_ref.update({'last_login': firestore.SERVER_TIMESTAMP})
+        
+        # Create dashboard context using Firestore data
         context = {
-            'user': request.firebase_user,
-            'profile': {
-                'balance': firebase_data.get('balance', 0),
-                'phone_number': firebase_data.get('phone_number', ''),
-                'referral_code': firebase_data.get('referral_code', ''),
-                'total_invested': firebase_data.get('total_invested', 0),
-                'total_earnings': firebase_data.get('total_earnings', 0),
+            'user': {
+                'username': user_data.get('display_name') or user_data.get('email') or firebase_uid,
+                'phone_number': user_data.get('phone_number', ''),
+                'email': user_data.get('email', ''),
+                'display_name': user_data.get('display_name', ''),
+                'firebase_uid': firebase_uid,
+                'is_firebase': True,
             },
-            'active_investments': [],  # TODO: Implement Firebase investments
-            'recent_transactions': [],  # TODO: Implement Firebase transactions
-            'notifications': [],  # TODO: Implement Firebase notifications
-            'total_active_investment': 0,
-            'total_invested': firebase_data.get('total_invested', 0),
-            'total_earnings': firebase_data.get('total_earnings', 0),
-            'today_earnings': 0,
-            'withdrawable_balance': firebase_data.get('balance', 0),
-            'registration_bonus': firebase_data.get('registration_bonus_amount', 100),
-            'available_balance': firebase_data.get('balance', 0),
+            'profile': {
+                'balance': float(user_data.get('balance', 0)),
+                'withdrawable_balance': float(user_data.get('withdrawable_balance', 0)),
+                'non_withdrawable_bonus': float(user_data.get('non_withdrawable_bonus', 100)),
+                'available_balance': float(user_data.get('balance', 0)) + float(user_data.get('non_withdrawable_bonus', 100)),
+                'phone_number': user_data.get('phone_number', ''),
+                'email': user_data.get('email', ''),
+                'referral_code': user_data.get('referral_code', ''),
+                'total_invested': float(user_data.get('total_invested', 0)),
+                'total_earnings': float(user_data.get('total_earnings', 0)),
+                'registration_bonus_claimed': user_data.get('registration_bonus_claimed', False),
+                'is_verified': user_data.get('is_verified', False),
+            },
+            # Dashboard data (Firebase/Firestore only)
+            'active_investments': [],  # TODO: Query from Firestore investments collection
+            'recent_transactions': [],  # TODO: Query from Firestore transactions collection
+            'notifications': [],  # TODO: Query from Firestore notifications collection
+            'total_active_investment': float(user_data.get('total_invested', 0)),
+            'total_invested': float(user_data.get('total_invested', 0)),
+            'total_earnings': float(user_data.get('total_earnings', 0)),
+            'today_earnings': 0,  # TODO: Calculate from Firestore
+            'withdrawable_balance': float(user_data.get('withdrawable_balance', 0)),
+            'registration_bonus': float(user_data.get('non_withdrawable_bonus', 100)),
             'performance_analytics': None,
-            'total_referrals': firebase_data.get('total_referrals', 0),
-            'active_referrals': firebase_data.get('active_referrals', 0),
-            'referral_earnings': firebase_data.get('referral_earnings', 0),
-            'team_total_invested': firebase_data.get('team_total_invested', 0),
+            'total_referrals': 0,  # TODO: Count from Firestore
+            'active_referrals': 0,  # TODO: Count from Firestore
+            'referral_earnings': 0,  # TODO: Calculate from Firestore
+            'team_total_invested': 0,  # TODO: Calculate from Firestore
             'firebase_user': True,
             'session_info': {
-                'login_method': 'firebase_only',
-                'firebase_key': firebase_key,
-                'user_phone': request.firebase_user.phone_number,
-            }
+                'login_method': 'pure_firebase_firestore',
+                'firebase_uid': firebase_uid,
+                'user_phone': user_data.get('phone_number', ''),
+                'is_firebase': True,
+                'created_at': user_data.get('created_at'),
+                'last_login': user_data.get('last_login'),
+            },
+            # Required dashboard fields
+            'referred_users': [],
+            'total_referral_earnings': 0,
+            'active_referral_count': 0,
         }
         
+        print(f"✅ Pure Firebase/Firestore dashboard context created for: {firebase_uid}")
         return render(request, 'myproject/dashboard.html', context)
-    
-    # Handle Django users (existing code)
-    try:
-        profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        # Create profile if it doesn't exist
-        profile = UserProfile.objects.create(
-            user=request.user,
-            phone_number=request.user.username
-        )
-    
-    # 🔍 Enhanced session health check and automatic renewal
-    session_info = {
-        'session_key': request.session.session_key,
-        'user_phone': request.session.get('user_phone', 'Unknown'),
-        'login_time': request.session.get('login_time', 'Unknown'),
-        'session_age': request.session.get_expiry_age(),
-        'session_expires': request.session.get_expiry_date(),
-        'user_id': request.session.get('user_id', 'Unknown'),
-        'login_method': request.session.get('login_method', 'Unknown')
-    }
-    
-    # Log session info for debugging
-    print(f"📊 Dashboard access by {request.user.username}:")
-    print(f"   Session Key: {session_info['session_key']}")
-    print(f"   Session Age: {session_info['session_age']} seconds")
-    print(f"   Expires: {session_info['session_expires']}")
-    
-    # Automatic session renewal if near expiry (less than 1 day left)
-    if session_info['session_age'] and session_info['session_age'] < 86400:  # Less than 24 hours
-        request.session.set_expiry(7 * 24 * 60 * 60)  # Extend for 7 more days
-        print(f"🔄 Session automatically renewed for user: {request.user.username}")
-    
-    # Update session tracking data
-    request.session['last_dashboard_access'] = timezone.now().isoformat()
-    request.session['dashboard_access_count'] = request.session.get('dashboard_access_count', 0) + 1
-    
-    # Enhanced Firebase tracking with error handling
+        
+    except Exception as e:
+        print(f"❌ Firebase/Firestore dashboard error: {e}")
+        messages.error(request, f'Dashboard error: {str(e)}')
+        return redirect('login')
+
+@login_required  
+def investment_plans(request):
     try:
         firebase_data = {
             'last_dashboard_access': timezone.now().isoformat(),
@@ -1447,33 +1514,36 @@ def dashboard(request):
         
         return render(request, 'myproject/dashboard.html', context)
 
-@login_required
+@firebase_login_required
 def investment_plans(request):
-    """Investment plans view"""
+    """Investment plans view - Fixed to use 20-day duration and correct prices"""
     plans = InvestmentPlan.objects.filter(is_active=True)
     if not plans.exists():
-        # Auto-seed default plans if database just migrated and empty
+        # Auto-seed correct GrowFi plans with 20-day duration and correct prices
         default_plans = [
-            ('GROWFI 1', Decimal('1000.00'), Decimal('1000.00'), Decimal('0.00')),
-            ('GROWFI 2', Decimal('2000.00'), Decimal('2000.00'), Decimal('0.00')),
-            ('GROWFI 3', Decimal('6000.00'), Decimal('6000.00'), Decimal('0.00')),
-            ('GROWFI 4', Decimal('10000.00'), Decimal('10000.00'), Decimal('0.00')),
-            ('GROWFI 5', Decimal('20000.00'), Decimal('20000.00'), Decimal('0.00')),
-            ('GROWFI 6', Decimal('30000.00'), Decimal('30000.00'), Decimal('0.00')),
+            ('GROWFI 1', Decimal('300.00'), Decimal('300.00'), Decimal('0.00')),     # ₱300 price, ₱150 daily, 20 days
+            ('GROWFI 2', Decimal('700.00'), Decimal('700.00'), Decimal('0.00')),     # ₱700 price, ₱200 daily, 20 days  
+            ('GROWFI 3', Decimal('2200.00'), Decimal('2200.00'), Decimal('0.00')),   # ₱2200 price, ₱225 daily, 20 days
+            ('GROWFI 4', Decimal('3500.00'), Decimal('3500.00'), Decimal('0.00')),   # ₱3500 price, ₱570 daily, 20 days
+            ('GROWFI 5', Decimal('5000.00'), Decimal('5000.00'), Decimal('0.00')),   # ₱5000 price, ₱1125 daily, 20 days
+            ('GROWFI 6', Decimal('7000.00'), Decimal('7000.00'), Decimal('0.00')),   # ₱7000 price, ₱2100 daily, 20 days
+            ('GROWFI 7', Decimal('9000.00'), Decimal('9000.00'), Decimal('0.00')),   # ₱9000 price, ₱3150 daily, 20 days
+            ('GROWFI 8', Decimal('11000.00'), Decimal('11000.00'), Decimal('0.00')), # ₱11000 price, ₱3850 daily, 20 days
         ]
         for name, min_amt, max_amt, rate in default_plans:
             InvestmentPlan.objects.create(
                 name=name,
                 minimum_amount=min_amt,
                 maximum_amount=max_amt,
-                daily_return_rate=Decimal('0.00'),  # Kept for consistency; display uses hardcoded values
-                duration_days=30,
+                daily_return_rate=Decimal('0.00'),  # Uses hardcoded daily_profit values
+                duration_days=20,  # FIXED: 20 days duration
                 is_active=True
             )
+        print(f"✅ Created {len(default_plans)} investment plans with 20-day duration")
         plans = InvestmentPlan.objects.filter(is_active=True)
     return render(request, 'myproject/investment_plans.html', {'plans': plans})
 
-@login_required
+@firebase_login_required
 def make_investment(request, plan_id):
     """Make investment view"""
     plan = get_object_or_404(InvestmentPlan, id=plan_id, is_active=True)
@@ -1552,7 +1622,7 @@ def make_investment(request, plan_id):
     
     return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
 
-@login_required
+@firebase_login_required
 def my_investments(request):
     """User investments view with enhanced calculations - SECURITY ENHANCED: Only shows current user's investments"""
     from django.db.models import Sum
@@ -1647,71 +1717,105 @@ def my_investments(request):
     }
     
     return render(request, 'myproject/my_investments.html', context)
-@login_required
-@login_required
+@firebase_login_required
 def transaction_history(request):
-    """Transaction history view with filtering and pagination"""
-    from django.core.paginator import Paginator
+    """🔥 Firebase Transaction History - Show Real Data and Individual Cards"""
     
-    # Base queryset
-    transactions = Transaction.objects.filter(user=request.user)
+    # Get Firebase user identifier
+    firebase_uid = request.firebase_user.firebase_key
+    user_phone = request.firebase_user.phone_number
     
-    # Apply filters
-    transaction_type = request.GET.get('type')
-    status = request.GET.get('status')
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
-    
-    if transaction_type:
-        transactions = transactions.filter(transaction_type=transaction_type)
-    
-    if status:
-        transactions = transactions.filter(status=status)
-    
-    if date_from:
-        transactions = transactions.filter(created_at__date__gte=date_from)
-    
-    if date_to:
-        transactions = transactions.filter(created_at__date__lte=date_to)
-    
-    # Order by most recent
-    transactions = transactions.order_by('-created_at')
-    
-    # Calculate summary statistics (include all statuses, not just completed)
-    all_user_transactions = Transaction.objects.filter(user=request.user)
-    completed_transactions = all_user_transactions.filter(status='completed')
-    
-    # Calculate totals and counts
-    deposits = completed_transactions.filter(transaction_type='deposit')
-    withdrawals = completed_transactions.filter(transaction_type='withdrawal')
-    investments = completed_transactions.filter(transaction_type='investment')
-    earnings = completed_transactions.filter(transaction_type__in=['daily_payout', 'referral_bonus', 'registration_bonus'])
-    
-    summary = {
-        'total_deposits': deposits.aggregate(Sum('amount'))['amount__sum'] or 0,
-        'total_withdrawals': withdrawals.aggregate(Sum('amount'))['amount__sum'] or 0,
-        'total_investments': investments.aggregate(Sum('amount'))['amount__sum'] or 0,
-        'total_earnings': earnings.aggregate(Sum('amount'))['amount__sum'] or 0,
-        'total_transactions': all_user_transactions.count(),
-        'deposit_count': deposits.count(),
-        'withdrawal_count': withdrawals.count(),
-        'investment_count': investments.count(),
-        'earning_count': earnings.count(),
-    }
-    
-    # Pagination
-    paginator = Paginator(transactions, 20)  # Show 20 transactions per page
-    page_number = request.GET.get('page')
-    transactions = paginator.get_page(page_number)
-    
-    context = {
-        'transactions': transactions,
-        'summary': summary,
-    }
-    
-    return render(request, 'myproject/transaction_history.html', context)
+    try:
+        print(f"🔍 Getting transaction summary for Firebase UID: {firebase_uid}")
+        
+        # Find Django user by phone number to get transactions
+        django_user = None
+        try:
+            django_user = User.objects.get(username=user_phone)
+            print(f"✅ Found Django user: {django_user.username}")
+        except User.DoesNotExist:
+            print(f"❌ No Django user found for phone: {user_phone}")
+        
+        # Initialize summary with real data
+        summary = {
+            'total_deposits': 0,
+            'total_withdrawals': 0,
+            'total_investments': 0,
+            'total_earnings': 0,
+            'total_transactions': 0,
+            'deposit_count': 0,
+            'withdrawal_count': 0,
+            'investment_count': 0,
+            'earning_count': 0,
+        }
+        
+        transactions_list = []
+        
+        if django_user:
+            # Get all transactions for this user
+            user_transactions = Transaction.objects.filter(user=django_user).order_by('-created_at')
+            
+            # Calculate real totals
+            for txn in user_transactions:
+                if txn.transaction_type == 'deposit':
+                    summary['total_deposits'] += float(txn.amount)
+                    summary['deposit_count'] += 1
+                elif txn.transaction_type == 'withdrawal':
+                    summary['total_withdrawals'] += float(txn.amount)
+                    summary['withdrawal_count'] += 1
+                elif txn.transaction_type == 'investment':
+                    summary['total_investments'] += float(txn.amount)
+                    summary['investment_count'] += 1
+                elif txn.transaction_type in ['daily_payout', 'referral_bonus', 'registration_bonus']:
+                    summary['total_earnings'] += float(txn.amount)
+                    summary['earning_count'] += 1
+                
+                transactions_list.append(txn)
+            
+            summary['total_transactions'] = user_transactions.count()
+            
+            print(f"💰 Real Summary totals:")
+            print(f"   Total Deposits: ₱{summary['total_deposits']}")
+            print(f"   Total Withdrawals: ₱{summary['total_withdrawals']}")
+            print(f"   Total Investments: ₱{summary['total_investments']}")
+            print(f"   Total Earnings: ₱{summary['total_earnings']}")
+            print(f"   Total Transactions: {summary['total_transactions']}")
+        
+        # Show real transactions with individual cards
+        context = {
+            'transactions': transactions_list,  # Real transaction list
+            'summary': summary,
+            'show_only_summary': False,  # Show individual transaction cards
+        }
+        
+        print(f"✅ Records page showing real data with {len(transactions_list)} transactions")
+        return render(request, 'myproject/transaction_history.html', context)
+        
+    except Exception as e:
+        print(f"❌ Transaction history error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Even on error, show empty data but allow the page to load
+        context = {
+            'transactions': [],  # Empty list
+            'summary': {
+                'total_deposits': 0,
+                'total_withdrawals': 0,
+                'total_investments': 0,
+                'total_earnings': 0,
+                'total_transactions': 0,
+                'deposit_count': 0,
+                'withdrawal_count': 0,
+                'investment_count': 0,
+                'earning_count': 0,
+            },
+            'show_only_summary': False,
+        }
+        print(f"✅ Error fallback: showing empty data")
+        return render(request, 'myproject/transaction_history.html', context)
 
-@login_required
+@firebase_login_required
 def notifications(request):
     """Notifications view"""
     try:
@@ -1726,7 +1830,7 @@ def notifications(request):
         messages.error(request, 'Unable to load notifications at this time.')
         return redirect('dashboard')
 
-@login_required
+@firebase_login_required
 def notification_detail(request, notification_id):
     """Notification detail view"""
     notification = get_object_or_404(Notification, id=notification_id, user=request.user)
@@ -1734,62 +1838,94 @@ def notification_detail(request, notification_id):
     notification.save()
     return render(request, 'myproject/notification_detail.html', {'notification': notification})
 
-@login_required
+@firebase_login_required
 def profile(request):
-    """User profile view"""
+    """🔥 Firebase Profile - Fixed to use Firebase UID"""
+    
+    # Get Firebase user identifier
+    firebase_uid = request.firebase_user.firebase_key
+    user_phone = request.firebase_user.phone_number
+    
     try:
-        profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        # Create profile if it doesn't exist
-        profile = UserProfile.objects.create(
-            user=request.user,
-            phone_number=request.user.username
-        )
-    
-    # Get team statistics
-    from django.db.models import Sum
-    referred_users = User.objects.filter(userprofile__referred_by=request.user)
-    total_referrals = referred_users.count()
-    active_referrals = referred_users.filter(is_active=True).count()
-    
-    # Calculate referral earnings
-    referral_earnings = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='referral_bonus',
-        status='completed'
-    ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    if request.method == 'POST':
-        # Update profile information
-        request.user.first_name = request.POST.get('first_name', '')
-        request.user.last_name = request.POST.get('last_name', '')
-        request.user.email = request.POST.get('email', '')
-        request.user.save()
+        # Get Firestore client directly
+        from firebase_admin import firestore
+        db = firestore.client()
         
-        profile.phone_number = request.POST.get('phone_number', '')
-        profile.address = request.POST.get('address', '')
+        # Get profile data from Firestore profiles collection
+        profile_ref = db.collection('profiles').document(firebase_uid)
+        profile_doc = profile_ref.get()
         
-        if 'profile_picture' in request.FILES:
-            profile.profile_picture = request.FILES['profile_picture']
+        if profile_doc.exists:
+            profile = profile_doc.to_dict()
+            print(f"✅ Profile found for: {firebase_uid}")
+        else:
+            # Auto-create new profile document
+            profile = {
+                'uid': firebase_uid,
+                'phone_number': user_phone,
+                'email': request.firebase_user.email,
+                'first_name': '',
+                'last_name': '',
+                'address': '',
+                'created_at': firestore.SERVER_TIMESTAMP
+            }
+            profile_ref.set(profile)
+            print(f"✅ New profile created for: {firebase_uid}")
         
-        if 'valid_id' in request.FILES:
-            profile.valid_id = request.FILES['valid_id']
+        # Get team statistics from Firestore
+        team_ref = db.collection('teams').document(firebase_uid)
+        team_doc = team_ref.get()
         
-        if 'proof_of_address' in request.FILES:
-            profile.proof_of_address = request.FILES['proof_of_address']
+        if team_doc.exists:
+            team_data = team_doc.to_dict()
+            total_referrals = team_data.get('total_referrals', 0)
+            active_referrals = team_data.get('active_referrals', 0)
+            referral_earnings = team_data.get('total_earnings', 0)
+        else:
+            # Create default team data
+            team_data = {
+                'uid': firebase_uid,
+                'total_referrals': 0,
+                'active_referrals': 0,
+                'total_earnings': 0,
+                'created_at': firestore.SERVER_TIMESTAMP
+            }
+            team_ref.set(team_data)
+            total_referrals = 0
+            active_referrals = 0
+            referral_earnings = 0
         
-        profile.save()
-        messages.success(request, 'Profile updated successfully!')
-    
-    context = {
-        'profile': profile,
-        'total_referrals': total_referrals,
-        'active_referrals': active_referrals,
-        'referral_earnings': referral_earnings,
-    }
-    return render(request, 'myproject/profile.html', context)
+        if request.method == 'POST':
+            # Update profile in Firestore
+            updates = {
+                'first_name': request.POST.get('first_name', ''),
+                'last_name': request.POST.get('last_name', ''),
+                'email': request.POST.get('email', ''),
+                'phone_number': request.POST.get('phone_number', ''),
+                'address': request.POST.get('address', ''),
+                'updated_at': firestore.SERVER_TIMESTAMP
+            }
+            profile_ref.update(updates)
+            profile.update(updates)
+            messages.success(request, 'Profile updated successfully!')
+            print(f"✅ Profile updated for: {firebase_uid}")
+        
+        context = {
+            'profile': profile,
+            'total_referrals': total_referrals,
+            'active_referrals': active_referrals,
+            'referral_earnings': referral_earnings,
+        }
+        return render(request, 'myproject/profile.html', context)
+        
+    except Exception as e:
+        print(f"❌ Profile error: {e}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, 'Unable to load profile.')
+        return redirect('dashboard')
 
-@login_required
+@firebase_login_required
 def referrals(request):
     """Referrals view"""
     profile = UserProfile.objects.get(user=request.user)
@@ -1805,7 +1941,7 @@ def referrals(request):
     }
     return render(request, 'myproject/referrals.html', context)
 
-@login_required
+@firebase_login_required
 def support(request):
     """Support ticket view"""
     tickets = SupportTicket.objects.filter(user=request.user).order_by('-created_at')
@@ -1827,7 +1963,7 @@ def support(request):
     
     return render(request, 'myproject/support.html', {'tickets': tickets})
 
-@login_required
+@firebase_login_required
 def ticket_detail(request, ticket_id):
     """Support ticket detail view"""
     ticket = get_object_or_404(SupportTicket, id=ticket_id, user=request.user)
@@ -1877,7 +2013,17 @@ def calculate_investment(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def user_logout(request):
-    """User logout view"""
+    """User logout view - Clear Firebase sessions"""
+    # Clear Firebase session data (no tokens to worry about)
+    request.session.pop('firebase_authenticated', None)
+    request.session.pop('firebase_key', None)
+    request.session.pop('is_authenticated', None)
+    request.session.pop('firebase_user_data', None)
+    request.session.pop('user_phone', None)
+    request.session.pop('login_time', None)
+    request.session.pop('login_method', None)
+    
+    # Clear Django session
     logout(request)
     messages.success(request, 'Logged out successfully!')
     return redirect('login')
@@ -2226,7 +2372,7 @@ def gcash_payment_page(request):
     }
     return render(request, 'myproject/gcash_payment.html', context)
 
-@login_required
+@firebase_login_required
 def bank_accounts(request):
     """Bank accounts management"""
     from .models import BankAccount
@@ -2239,7 +2385,7 @@ def bank_accounts(request):
     
     return render(request, 'myproject/bank_accounts.html', context)
 
-@login_required
+@firebase_login_required
 def add_bank_account(request):
     """Add new bank account"""
     from .models import BankAccount
@@ -2314,7 +2460,7 @@ def add_bank_account(request):
     else:
         return redirect('bank_accounts')
 
-@login_required
+@firebase_login_required
 def delete_bank_account(request, account_id):
     """Delete bank account"""
     from .models import BankAccount
@@ -2346,7 +2492,7 @@ def delete_bank_account(request, account_id):
         'error': 'Invalid request method.'
     })
 
-@login_required
+@firebase_login_required
 def set_primary_account(request, account_id):
     """Set account as primary"""
     from .models import BankAccount
@@ -2410,60 +2556,149 @@ def gcash_webhook(request):
     
     return JsonResponse({'success': False, 'error': 'Invalid method'})
 
-@login_required
+@firebase_login_required
 def team(request):
-    """Team/Referral System view"""
-    from django.db.models import Sum, Count
+    """🔥 Pure Firebase Team - Firestore Only Implementation"""
     
-    profile = UserProfile.objects.get(user=request.user)
+    # Get Firebase user identifier
+    firebase_uid = request.firebase_user.firebase_key
+    user_phone = request.firebase_user.phone_number
     
-    # Get referral statistics
-    referred_users = User.objects.filter(userprofile__referred_by=request.user).select_related('userprofile')
-    
-    # Calculate team stats
-    total_referrals = referred_users.count()
-    # Count users who are still active (Django's built-in is_active field)
-    active_referrals = referred_users.filter(is_active=True).count()
-    
-    # Calculate referral earnings
-    referral_earnings = Transaction.objects.filter(
-        user=request.user,
-        transaction_type='referral_bonus',
-        status='completed'
-    ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    # Get recent referral activities
-    recent_referrals = referred_users.order_by('-date_joined')[:10]
-    
-    # Calculate team investment stats
-    team_total_invested = 0
-    team_total_earnings = 0
-    
-    for referred_user in referred_users:
-        user_investments = Investment.objects.filter(user=referred_user, status='active')
-        user_total_invested = user_investments.aggregate(total=Sum('amount'))['total'] or 0
-        team_total_invested += user_total_invested
+    try:
+        print(f"� Getting Firebase team data for UID: {firebase_uid}")
         
-        user_earnings = Transaction.objects.filter(
-            user=referred_user,
-            transaction_type='daily_payout',
-            status='completed'
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        team_total_earnings += user_earnings
-    
-    context = {
-        'profile': profile,
-        'referral_code': profile.referral_code,
-        'total_referrals': total_referrals,
-        'active_referrals': active_referrals,
-        'referral_earnings': referral_earnings,
-        'recent_referrals': recent_referrals,
-        'team_total_invested': team_total_invested,
-        'team_total_earnings': team_total_earnings,
-        'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={profile.referral_code}",
-    }
-    
-    return render(request, 'myproject/team.html', context)
+        # Get Firestore client directly
+        from firebase_admin import firestore
+        db = firestore.client()
+        
+        # Get team data from Firestore teams collection
+        team_ref = db.collection('teams').document(firebase_uid)
+        team_doc = team_ref.get()
+        
+        if team_doc.exists:
+            team_data = team_doc.to_dict()
+            print(f"✅ Team data found in Firestore")
+        else:
+            # Auto-create new team document
+            team_data = {
+                'uid': firebase_uid,
+                'phone_number': user_phone,
+                'total_referrals': 0,
+                'active_referrals': 0,
+                'total_earnings': 0.0,
+                'team_volume': 0.0,
+                'referral_earnings': 0.0,
+                'referrals': [],
+                'created_at': firestore.SERVER_TIMESTAMP
+            }
+            team_ref.set(team_data)
+            print(f"✅ New team document created in Firestore")
+        
+        # Get referrals from Firestore referrals collection
+        referrals_ref = db.collection('referrals').where('referrer_uid', '==', firebase_uid)
+        referrals_docs = referrals_ref.get()
+        
+        referrals_list = []
+        total_referrals = 0
+        active_referrals = 0
+        team_volume = 0.0
+        team_earnings = 0.0
+        
+        for referral_doc in referrals_docs:
+            referral_data = referral_doc.to_dict()
+            referred_uid = referral_data.get('referred_uid', '')
+            
+            # Get referred user's profile from Firestore
+            profile_ref = db.collection('profiles').document(referred_uid)
+            profile_doc = profile_ref.get()
+            
+            if profile_doc.exists:
+                profile_data = profile_doc.to_dict()
+                balance = profile_data.get('balance', 0.0)
+                total_invested = profile_data.get('total_invested', 0.0)
+                total_earnings = profile_data.get('total_earnings', 0.0)
+                
+                total_referrals += 1
+                if balance > 0:
+                    active_referrals += 1
+                
+                team_volume += total_invested
+                team_earnings += total_earnings
+                
+                referrals_list.append({
+                    'uid': referred_uid,
+                    'phone': profile_data.get('phone_number', ''),
+                    'display_name': profile_data.get('display_name', ''),
+                    'balance': balance,
+                    'total_invested': total_invested,
+                    'total_earnings': total_earnings,
+                    'date_joined': referral_data.get('created_at'),
+                    'is_active': balance > 0
+                })
+        
+        # Get referral commissions from Firestore commissions collection
+        commissions_ref = db.collection('commissions').where('referrer_uid', '==', firebase_uid)
+        commissions_docs = commissions_ref.get()
+        
+        referral_earnings = 0.0
+        for commission_doc in commissions_docs:
+            commission_data = commission_doc.to_dict()
+            referral_earnings += commission_data.get('amount', 0.0)
+        
+        # Update team document with calculated values
+        updated_team_data = {
+            'uid': firebase_uid,
+            'phone_number': user_phone,
+            'total_referrals': total_referrals,
+            'active_referrals': active_referrals,
+            'total_earnings': team_earnings,
+            'team_volume': team_volume,
+            'referral_earnings': referral_earnings,
+            'referrals': referrals_list,
+            'updated_at': firestore.SERVER_TIMESTAMP
+        }
+        team_ref.set(updated_team_data, merge=True)
+        
+        print(f"📊 Firebase Team Stats:")
+        print(f"   Total Referrals: {total_referrals}")
+        print(f"   Active Members: {active_referrals}")
+        print(f"   Team Volume: ₱{team_volume}")
+        print(f"   Team Earnings: ₱{team_earnings}")
+        print(f"   Referral Earnings: ₱{referral_earnings}")
+        
+        context = {
+            'user_phone': user_phone,
+            'referral_code': user_phone,  # Use phone as referral code
+            'total_referrals': total_referrals,
+            'active_referrals': active_referrals,
+            'referral_earnings': referral_earnings,
+            'recent_referrals': referrals_list,
+            'team_total_invested': team_volume,
+            'team_total_earnings': team_earnings,
+            'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={user_phone}",
+            'firebase_uid': firebase_uid
+        }
+        
+        return render(request, 'myproject/team.html', context)
+        
+    except Exception as e:
+        print(f"❌ Firebase team error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Fallback with empty data
+        context = {
+            'user_phone': user_phone,
+            'referral_code': user_phone,
+            'total_referrals': 0,
+            'active_referrals': 0,
+            'referral_earnings': 0.0,
+            'recent_referrals': [],
+            'team_total_invested': 0.0,
+            'team_total_earnings': 0.0,
+            'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={user_phone}",
+        }
+        return render(request, 'myproject/team.html', context)
 
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required

@@ -105,6 +105,7 @@
 </div>
 
 <!-- Records List -->
+{% if not show_only_summary %}
 <div class="records-section">
     {% if transactions %}
         <div class="records-container">
@@ -222,7 +223,7 @@
             <h3>No Records Found</h3>
             <p>You haven't made any transactions yet. Start investing or make a deposit to see your account records here.</p>
             <div class="no-records-actions">
-                <a href="{% url 'invest' %}" class="action-btn primary">
+                <a href="{% url 'investment_plans' %}" class="action-btn primary">
                     <i class="fas fa-chart-line"></i>
                     Start Investing
                 </a>
@@ -234,6 +235,9 @@
         </div>
     {% endif %}
 </div>
+{% else %}
+
+{% endif %}
 
 <style>
 /* Account Records Styles */
@@ -707,7 +711,6 @@
     opacity: 0;
     transform: translateY(20px);
 }
-
 /* Loading animation */
 @keyframes fadeInUp {
     from {

@@ -8,6 +8,7 @@ from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from myproject.views import firebase_login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -166,18 +167,91 @@ class GalaxyPaymentService:
 # Initialize Galaxy service
 galaxy_service = GalaxyPaymentService()
 
-@login_required
+@firebase_login_required
 def deposit_view(request):
     """Fixed deposit view with proper Galaxy API integration"""
     try:
-        profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=request.user, phone_number=request.user.username)
+        # Try to get Django user first, fallback to Firebase user logic
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            # Django user exists
+            user_for_profile = request.user
+            user_phone = request.user.username
+        elif hasattr(request, 'firebase_user') and request.firebase_user:
+            # Pure Firebase user - find or create Django user
+            from django.contrib.auth.models import User
+            user_phone = request.firebase_user.phone_number
+            
+            try:
+                # Try to find existing Django user
+                user_for_profile = User.objects.get(username=user_phone)
+            except User.DoesNotExist:
+                # Create Django user for compatibility
+                user_for_profile = User.objects.create_user(
+                    username=user_phone,
+                    email=request.firebase_user.email or '',
+                    first_name=request.firebase_user.display_name or ''
+                )
+                print(f"✅ Created Django user for Firebase user: {user_phone}")
+        else:
+            messages.error(request, 'Authentication error. Please log in again.')
+            return redirect('login')
+        
+        # Get or create user profile
+        profile, created = UserProfile.objects.get_or_create(
+            user=user_for_profile,
+            defaults={
+                'phone_number': user_phone,
+                'balance': Decimal('100.00')  # Give ₱100 registration bonus
+            }
+        )
+        
+        if created:
+            # Add registration bonus transaction for new Firebase users
+            from myproject.models import Transaction
+            Transaction.objects.create(
+                user=user_for_profile,
+                transaction_type='registration_bonus',
+                status='completed',
+                amount=Decimal('100.00'),
+                description='Welcome bonus for new registration'
+            )
+            profile.registration_bonus_claimed = True
+            profile.save()
+            print(f"✅ Created UserProfile with ₱100 bonus for: {user_phone}")
+        else:
+            # Check if existing user needs registration bonus
+            if not getattr(profile, 'registration_bonus_claimed', False) and profile.balance == Decimal('0.00'):
+                # Give existing user the registration bonus
+                profile.balance = Decimal('100.00')
+                profile.registration_bonus_claimed = True
+                profile.save()
+                
+                # Add registration bonus transaction
+                from myproject.models import Transaction
+                Transaction.objects.create(
+                    user=user_for_profile,
+                    transaction_type='registration_bonus',
+                    status='completed',
+                    amount=Decimal('100.00'),
+                    description='Welcome bonus for new registration'
+                )
+                print(f"✅ Added ₱100 bonus to existing user: {user_phone}")
+        
+        print(f"💰 Current user balance: ₱{profile.balance}")
 
-    recent_deposits = InvestmentTransaction.objects.filter(
-        user=request.user,
-        transaction_type='deposit'
-    ).order_by('-created_at')[:5]
+    except Exception as profile_error:
+        print(f"❌ Error getting user profile: {profile_error}")
+        messages.error(request, 'Unable to access your profile. Please try again.')
+        return redirect('dashboard')
+
+    try:
+        recent_deposits = InvestmentTransaction.objects.filter(
+            user=user_for_profile,
+            transaction_type='deposit'
+        ).order_by('-created_at')[:5]
+    except Exception as e:
+        print(f"⚠️ Error getting recent deposits: {e}")
+        recent_deposits = []
 
     payment_methods = {
         'gcash_qr': {
@@ -239,7 +313,7 @@ def deposit_view(request):
                 'payment_methods': payment_methods
             })
 
-        reference_id = f"DEP_{request.user.id}_{int(timezone.now().timestamp())}"
+        reference_id = f"DEP_{user_for_profile.id}_{int(timezone.now().timestamp())}"
         client_ip = get_client_ip(request)
         
         # Prepare URLs
@@ -251,7 +325,7 @@ def deposit_view(request):
             with db_transaction.atomic():
                 # Create investment transaction
                 investment_transaction = InvestmentTransaction.objects.create(
-                    user=request.user,
+                    user=user_for_profile,
                     transaction_type='deposit',
                     amount=amount_decimal,
                     status='pending',
@@ -261,7 +335,7 @@ def deposit_view(request):
 
                 # Create payment transaction
                 payment_transaction = PaymentTransaction.objects.create(
-                    user=request.user,
+                    user=user_for_profile,
                     transaction_type='deposit',
                     amount=amount_decimal,
                     reference_id=reference_id,
@@ -271,7 +345,7 @@ def deposit_view(request):
                     user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
                 )
 
-                logger.info(f"Processing Galaxy payment for user {request.user.id}, amount: {amount_decimal}")
+                logger.info(f"Processing Galaxy payment for user {user_for_profile.id}, amount: {amount_decimal}")
                 
                 # Get bank code and payment type for Galaxy API
                 bank_code = payment_methods[payment_method]['code']
@@ -353,7 +427,7 @@ def deposit_view(request):
                 })
 
         except Exception as e:
-            logger.error(f"Deposit process failed for user {request.user.id}: {str(e)}")
+            logger.error(f"Deposit process failed for user {user_for_profile.id}: {str(e)}")
             messages.error(request, f"An error occurred while processing your deposit: {str(e)}")
             
             return render(request, "myproject/deposit.html", {
@@ -584,7 +658,7 @@ def payment_callback(request):
     
     return result
 
-@login_required
+@firebase_login_required
 def payment_success(request):
     """Handle successful payment redirect from Galaxy"""
     order_id = request.GET.get('order_id')
@@ -836,18 +910,91 @@ def verify_with_galaxy_api(order_id, payment_method, amount):
             'error_code': 'NETWORK_ERROR'
         }
 
-@login_required
+@firebase_login_required
 def withdraw_view(request):
     """Withdraw view for users to request withdrawals"""
     try:
-        profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=request.user, phone_number=request.user.username)
+        # Try to get Django user first, fallback to Firebase user logic
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            # Django user exists
+            user_for_profile = request.user
+            user_phone = request.user.username
+        elif hasattr(request, 'firebase_user') and request.firebase_user:
+            # Pure Firebase user - find or create Django user
+            from django.contrib.auth.models import User
+            user_phone = request.firebase_user.phone_number
+            
+            try:
+                # Try to find existing Django user
+                user_for_profile = User.objects.get(username=user_phone)
+            except User.DoesNotExist:
+                # Create Django user for compatibility
+                user_for_profile = User.objects.create_user(
+                    username=user_phone,
+                    email=request.firebase_user.email or '',
+                    first_name=request.firebase_user.display_name or ''
+                )
+                print(f"✅ Created Django user for Firebase user: {user_phone}")
+        else:
+            messages.error(request, 'Authentication error. Please log in again.')
+            return redirect('login')
+        
+        # Get or create user profile
+        profile, created = UserProfile.objects.get_or_create(
+            user=user_for_profile,
+            defaults={
+                'phone_number': user_phone,
+                'balance': Decimal('100.00')  # Give ₱100 registration bonus
+            }
+        )
+        
+        if created:
+            # Add registration bonus transaction for new Firebase users
+            from myproject.models import Transaction
+            Transaction.objects.create(
+                user=user_for_profile,
+                transaction_type='registration_bonus',
+                status='completed',
+                amount=Decimal('100.00'),
+                description='Welcome bonus for new registration'
+            )
+            profile.registration_bonus_claimed = True
+            profile.save()
+            print(f"✅ Created UserProfile with ₱100 bonus for: {user_phone}")
+        else:
+            # Check if existing user needs registration bonus
+            if not getattr(profile, 'registration_bonus_claimed', False) and profile.balance == Decimal('0.00'):
+                # Give existing user the registration bonus
+                profile.balance = Decimal('100.00')
+                profile.registration_bonus_claimed = True
+                profile.save()
+                
+                # Add registration bonus transaction
+                from myproject.models import Transaction
+                Transaction.objects.create(
+                    user=user_for_profile,
+                    transaction_type='registration_bonus',
+                    status='completed',
+                    amount=Decimal('100.00'),
+                    description='Welcome bonus for new registration'
+                )
+                print(f"✅ Added ₱100 bonus to existing user: {user_phone}")
+        
+        print(f"💰 Current user balance: ₱{profile.balance}")
 
-    recent_withdrawals = InvestmentTransaction.objects.filter(
-        user=request.user,
-        transaction_type='withdrawal'
-    ).order_by('-created_at')[:5]
+    except Exception as profile_error:
+        print(f"❌ Error getting user profile: {profile_error}")
+        messages.error(request, 'Unable to access your profile. Please try again.')
+        return redirect('dashboard')
+
+    try:
+        recent_withdrawals = InvestmentTransaction.objects.filter(
+            user=user_for_profile,
+            transaction_type='withdrawal'
+        ).order_by('-created_at')[:5]
+    except Exception as e:
+        print(f"⚠️ Error getting recent withdrawals: {e}")
+        recent_withdrawals = []
 
     if request.method == "POST":
         amount = request.POST.get("amount")
@@ -874,13 +1021,13 @@ def withdraw_view(request):
                 'recent_withdrawals': recent_withdrawals
             })
 
-        reference_id = f"WIT_{request.user.id}_{int(timezone.now().timestamp())}"
+        reference_id = f"WIT_{user_for_profile.id}_{int(timezone.now().timestamp())}"
 
         try:
             with db_transaction.atomic():
                 # Create investment transaction
                 investment_transaction = InvestmentTransaction.objects.create(
-                    user=request.user,
+                    user=user_for_profile,
                     transaction_type='withdrawal',
                     amount=amount_decimal,
                     status='pending',
@@ -890,7 +1037,7 @@ def withdraw_view(request):
 
                 # Create payment transaction
                 payment_transaction = PaymentTransaction.objects.create(
-                    user=request.user,
+                    user=user_for_profile,
                     transaction_type='withdrawal',
                     amount=amount_decimal,
                     reference_id=reference_id,
@@ -904,7 +1051,7 @@ def withdraw_view(request):
                 profile.balance -= amount_decimal
                 profile.save()
 
-                logger.info(f"Withdrawal request created for user {request.user.id}, amount: {amount_decimal}")
+                logger.info(f"Withdrawal request created for user {user_for_profile.id}, amount: {amount_decimal}")
 
                 # Log withdrawal request
                 create_payment_log(
@@ -919,7 +1066,7 @@ def withdraw_view(request):
                 return redirect('withdraw')
 
         except Exception as e:
-            logger.error(f"Withdrawal request failed for user {request.user.id}: {str(e)}")
+            logger.error(f"Withdrawal request failed for user {user_for_profile.id}: {str(e)}")
             messages.error(request, f"An error occurred while processing your withdrawal: {str(e)}")
             
             return render(request, "myproject/withdraw.html", {

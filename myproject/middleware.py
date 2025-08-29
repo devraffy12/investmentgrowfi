@@ -7,8 +7,69 @@ from django.utils import timezone
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.contrib import messages
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
+
+
+class PermanentSessionMiddleware:
+    """PERMANENT SESSION MIDDLEWARE - NEVER EXPIRES - INSTANT LOGIN"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # PERMANENT session processing BEFORE view
+        self.make_session_permanent(request)
+        
+        response = self.get_response(request)
+        
+        # PERMANENT session processing AFTER view
+        self.ensure_permanent_session(request, response)
+        
+        return response
+    
+    def make_session_permanent(self, request):
+        """Make EVERY session PERMANENT (never expires)"""
+        if hasattr(request, 'session'):
+            # ALWAYS set to 1 year expiry (permanent)
+            request.session.set_expiry(365 * 24 * 60 * 60)  # 1 YEAR
+            
+            # Mark as modified to force save
+            request.session.modified = True
+            
+            # Add permanent markers
+            request.session['permanent_session'] = True
+            request.session['last_permanent_renewal'] = timezone.now().isoformat()
+            request.session['session_type'] = 'PERMANENT_NO_EXPIRY'
+            
+            # Force authentication persistence
+            if request.user.is_authenticated:
+                request.session['authenticated_permanently'] = True
+                request.session['user_id_permanent'] = request.user.id
+                request.session['username_permanent'] = request.user.username
+                
+            logger.info(f"🔒 PERMANENT session set for: {getattr(request.user, 'username', 'anonymous')}")
+    
+    def ensure_permanent_session(self, request, response):
+        """Ensure session remains PERMANENT after response"""
+        if hasattr(request, 'session'):
+            try:
+                # Force session save
+                request.session.save()
+                
+                # Set response cookies to be permanent
+                if hasattr(response, 'cookies'):
+                    if 'sessionid' in response.cookies:
+                        # Make session cookie permanent (1 year)
+                        response.cookies['sessionid']['max-age'] = 365 * 24 * 60 * 60
+                        response.cookies['sessionid']['expires'] = timezone.now() + timedelta(days=365)
+                
+                logger.debug("✅ PERMANENT session saved and secured")
+                
+            except Exception as e:
+                logger.error(f"❌ PERMANENT session save error: {e}")
+
 
 class SecurityHeadersMiddleware:
     def __init__(self, get_response):

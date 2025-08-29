@@ -21,7 +21,9 @@ from typing import Optional, Dict, Any
 from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 # Setup logging
@@ -156,6 +158,333 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Create templates directory if it doesn't exist
+import pathlib
+templates_dir = pathlib.Path("templates")
+if not templates_dir.exists():
+    templates_dir.mkdir()
+
+# Set up templates and static files
+templates = Jinja2Templates(directory="templates")
+
+# Create simple HTML templates inline since we might not have template files
+HOMEPAGE_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrowFi - Investment Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+        h1 { color: #333; margin-bottom: 1rem; font-size: 2rem; }
+        .subtitle { color: #666; margin-bottom: 2rem; }
+        .btn-group { display: flex; flex-direction: column; gap: 1rem; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #f8f9fa; color: #333; border: 2px solid #dee2e6; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .features { margin-top: 2rem; text-align: left; }
+        .feature { padding: 0.5rem 0; color: #666; }
+        .feature::before { content: "✓"; color: #28a745; font-weight: bold; margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 GrowFi</h1>
+        <p class="subtitle">Your Investment Growth Platform</p>
+        
+        <div class="btn-group">
+            <a href="/register" class="btn btn-primary">Create Account</a>
+            <a href="/login" class="btn btn-secondary">Login</a>
+            <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature">Secure Firebase Authentication</div>
+            <div class="feature">Real-time Investment Tracking</div>
+            <div class="feature">Daily Earnings & Rewards</div>
+            <div class="feature">Mobile-Responsive Design</div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+REGISTER_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - GrowFi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 400px; width: 90%; }
+        h1 { color: #333; margin-bottom: 1rem; text-align: center; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500; }
+        input { width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; }
+        input:focus { outline: none; border-color: #667eea; }
+        .btn { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 1rem; }
+        .btn:hover { background: #5a6fd8; }
+        .back-link { text-align: center; margin-top: 1rem; }
+        .back-link a { color: #667eea; text-decoration: none; }
+        .message { margin-top: 1rem; padding: 10px; border-radius: 5px; text-align: center; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Account</h1>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="phone">Phone Number *</label>
+                <input type="tel" id="phone" name="phone_number" required placeholder="+639123456789">
+            </div>
+            <div class="form-group">
+                <label for="email">Email (Optional)</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label for="name">Display Name (Optional)</label>
+                <input type="text" id="name" name="display_name" placeholder="Your Name">
+            </div>
+            <button type="submit" class="btn">Create Account</button>
+        </form>
+        <div id="message"></div>
+        <div class="back-link">
+            <a href="/">← Back to Home</a>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                const messageDiv = document.getElementById('message');
+                
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="success">Registration successful! You can now login.</div>';
+                    e.target.reset();
+                } else {
+                    messageDiv.innerHTML = `<div class="error">${result.detail || 'Registration failed'}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = '<div class="error">Network error. Please try again.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
+"""
+
+LOGIN_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GrowFi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 400px; width: 90%; }
+        h1 { color: #333; margin-bottom: 1rem; text-align: center; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500; }
+        input { width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; }
+        input:focus { outline: none; border-color: #667eea; }
+        .btn { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 1rem; }
+        .btn:hover { background: #5a6fd8; }
+        .back-link { text-align: center; margin-top: 1rem; }
+        .back-link a { color: #667eea; text-decoration: none; }
+        .message { margin-top: 1rem; padding: 10px; border-radius: 5px; text-align: center; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone_number" required placeholder="+639123456789">
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <div id="message"></div>
+        <div class="back-link">
+            <a href="/">← Back to Home</a> | <a href="/register">Create Account</a>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                const messageDiv = document.getElementById('message');
+                
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="success">Login successful! Redirecting to dashboard...</div>';
+                    setTimeout(() => window.location.href = '/dashboard', 1500);
+                } else {
+                    messageDiv.innerHTML = `<div class="error">${result.detail || 'Login failed'}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = '<div class="error">Network error. Please try again.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
+"""
+
+DASHBOARD_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - GrowFi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8f9fa; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; text-align: center; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: bold; color: #667eea; margin-bottom: 0.5rem; }
+        .stat-label { color: #666; font-size: 0.9rem; }
+        .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; transition: all 0.3s ease; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .transactions { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 1.5rem; }
+        .transaction-item { padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .transaction-item:last-child { border-bottom: none; }
+        .transaction-amount { font-weight: bold; color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 GrowFi Dashboard</h1>
+        <p>Welcome to your investment platform</p>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalBalance">₱0.00</div>
+                <div class="stat-label">Total Balance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalEarnings">₱0.00</div>
+                <div class="stat-label">Total Earnings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeInvestments">0</div>
+                <div class="stat-label">Active Investments</div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" onclick="investNow()">Invest Now</button>
+            <button class="btn btn-success" onclick="loadTransactions()">View Records</button>
+            <a href="/" class="btn btn-secondary">Home</a>
+        </div>
+        
+        <div class="transactions">
+            <h3>Recent Transactions</h3>
+            <div id="transactionsList">
+                <p style="text-align: center; color: #666; padding: 2rem;">Loading transactions...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function loadTransactions() {
+            try {
+                const response = await fetch('/api/transactions');
+                const result = await response.json();
+                
+                const transactionsList = document.getElementById('transactionsList');
+                
+                if (result.success && result.transactions.length > 0) {
+                    transactionsList.innerHTML = result.transactions.map(tx => `
+                        <div class="transaction-item">
+                            <div>
+                                <strong>${tx.type || 'Investment'}</strong><br>
+                                <small>${new Date(tx.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div class="transaction-amount">₱${tx.amount || '0.00'}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    transactionsList.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No transactions found. Start investing to see your records here!</p>';
+                }
+            } catch (error) {
+                document.getElementById('transactionsList').innerHTML = '<p style="text-align: center; color: #dc3545; padding: 2rem;">Error loading transactions. Please try again.</p>';
+            }
+        }
+        
+        async function investNow() {
+            const amount = prompt('Enter investment amount (₱):');
+            if (!amount || isNaN(amount) || amount <= 0) return;
+            
+            try {
+                const response = await fetch('/api/invest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: parseFloat(amount) })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Investment successful!');
+                    loadTransactions();
+                } else {
+                    alert(result.detail || 'Investment failed');
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+        
+        // Load transactions on page load
+        loadTransactions();
+    </script>
+</body>
+</html>
+"""
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize Firebase on app startup"""
@@ -168,9 +497,29 @@ async def startup_event():
     else:
         logger.warning("⚠️ App started but Firebase unavailable")
 
-@app.get("/", response_model=Dict[str, Any])
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Root endpoint"""
+    """Home page"""
+    return HOMEPAGE_HTML
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page():
+    """Registration page"""
+    return REGISTER_HTML
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page():
+    """Login page"""
+    return LOGIN_HTML
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page():
+    """Dashboard page"""
+    return DASHBOARD_HTML
+
+@app.get("/api", response_model=Dict[str, Any])
+async def api_info():
+    """API information endpoint"""
     return {
         "app": "GrowFi Investment Platform",
         "version": "1.0.0",
@@ -213,7 +562,7 @@ async def health_check():
             environment="render" if os.environ.get('RENDER_EXTERNAL_HOSTNAME') else "local"
         )
 
-@app.post("/register")
+@app.post("/api/register")
 async def register_user(user_data: UserRegistration):
     """Register new user with Firebase Auth and Firestore"""
     try:
@@ -284,7 +633,7 @@ async def register_user(user_data: UserRegistration):
         logger.error(f"❌ Registration failed: {e}")
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
-@app.post("/login")
+@app.post("/api/login")
 async def login_user(login_data: UserLogin):
     """Login user and return profile data"""
     try:
@@ -334,7 +683,7 @@ async def login_user(login_data: UserLogin):
         logger.error(f"❌ Login failed: {e}")
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
-@app.get("/users/{phone_number}")
+@app.get("/api/users/{phone_number}")
 async def get_user_profile(phone_number: str):
     """Get user profile by phone number"""
     try:
@@ -365,7 +714,83 @@ async def get_user_profile(phone_number: str):
         logger.error(f"❌ Get user failed: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}")
 
-@app.get("/transactions/{user_uid}")
+@app.get("/api/transactions")
+async def get_transactions(user_uid: Optional[str] = None, limit: int = 10):
+    """Get transactions from Firestore"""
+    try:
+        if not _firebase_ready:
+            raise HTTPException(status_code=503, detail="Firebase not available")
+        
+        db = get_firestore_client()
+        
+        # Get transactions (filtered by user if provided)
+        transactions_ref = db.collection('transactions')
+        if user_uid:
+            query = transactions_ref.where('user_uid', '==', user_uid).limit(limit)
+        else:
+            query = transactions_ref.limit(limit)
+        
+        docs = list(query.stream())
+        
+        transactions = []
+        for doc in docs:
+            tx_data = doc.to_dict()
+            transactions.append(tx_data)
+        
+        return {
+            "success": True,
+            "transactions": transactions,
+            "count": len(transactions)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Get transactions failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get transactions: {str(e)}")
+
+class InvestmentRequest(BaseModel):
+    amount: float
+    user_uid: Optional[str] = None
+
+@app.post("/api/invest")
+async def create_investment(investment: InvestmentRequest):
+    """Create a new investment"""
+    try:
+        if not _firebase_ready:
+            raise HTTPException(status_code=503, detail="Firebase not available")
+        
+        if investment.amount <= 0:
+            raise HTTPException(status_code=400, detail="Investment amount must be positive")
+        
+        db = get_firestore_client()
+        
+        # Create transaction record
+        transaction_data = {
+            'user_uid': investment.user_uid or 'demo_user',
+            'type': 'investment',
+            'amount': investment.amount,
+            'status': 'completed',
+            'timestamp': datetime.now().isoformat(),
+            'description': f'Investment of ₱{investment.amount}'
+        }
+        
+        # Add to Firestore
+        db.collection('transactions').add(transaction_data)
+        
+        logger.info(f"✅ Investment created: ₱{investment.amount}")
+        
+        return {
+            "success": True,
+            "message": "Investment successful",
+            "transaction": transaction_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Investment failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Investment failed: {str(e)}")
+
+@app.get("/api/transactions/{user_uid}")
 async def get_user_transactions(user_uid: str, limit: int = 10):
     """Get user transactions from Firestore"""
     try:

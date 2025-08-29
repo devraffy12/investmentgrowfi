@@ -560,7 +560,12 @@ def handle_gcash_webhook(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 def index(request):
-    """Homepage view"""
+    """Homepage view - redirects unauthenticated users to register"""
+    # If user is not authenticated, redirect to register page
+    if not request.user.is_authenticated:
+        return redirect('register')
+    
+    # If user is authenticated, show the dashboard
     try:
         investment_plans = InvestmentPlan.objects.filter(is_active=True)
         announcements = Announcement.objects.filter(is_active=True)[:5]
@@ -753,7 +758,10 @@ def register(request):
                 notification_type='system'
             )
 
-            # 🔥 Save user data to Firebase Realtime Database
+            # 🔥 Save user data to Firebase Realtime Database with password
+            import hashlib
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            
             firebase_data = {
                 'balance': float(profile.balance),
                 'registration_bonus_claimed': True,
@@ -766,7 +774,9 @@ def register(request):
                 'total_referrals': 0,
                 'referral_earnings': 0.0,
                 'date_joined': user.date_joined.isoformat(),
-                'user_id': user.id
+                'user_id': user.id,
+                'password': hashed_password,  # Add hashed password for Firebase authentication
+                'phone_number': clean_phone
             }
             save_user_to_firebase_realtime_db(user, clean_phone, firebase_data)
             
@@ -895,9 +905,68 @@ def user_login(request):
     
     return render(request, 'myproject/login.html')
 
-@login_required
 def dashboard(request):
-    """Enhanced user dashboard view with improved session tracking and persistence"""  
+    """Firebase-based dashboard view that works with pure Firebase authentication"""
+    # Check if user is authenticated via Firebase
+    firebase_key = request.session.get('firebase_key')
+    is_authenticated = request.session.get('is_authenticated', False)
+    
+    if not firebase_key or not is_authenticated:
+        messages.error(request, 'Please log in to access your dashboard.')
+        return redirect('login')
+    
+    try:
+        # Get user data from Firebase
+        from firebase_auth import FirebaseAuth
+        firebase_auth = FirebaseAuth()
+        
+        if firebase_auth.db:
+            user_data = firebase_auth.db.child('users').child(firebase_key).get()
+            
+            if not user_data or user_data.get('status') != 'active':
+                # Clear invalid session
+                request.session.flush()
+                messages.error(request, 'Your session has expired. Please log in again.')
+                return redirect('login')
+            
+            # Update last activity
+            firebase_auth.db.child('users').child(firebase_key).update({
+                'last_activity': timezone.now().isoformat(),
+                'is_online': True
+            })
+            
+            # Prepare context for dashboard
+            context = {
+                'user_phone': user_data.get('phone_number', ''),
+                'user_balance': user_data.get('balance', 0),
+                'referral_code': user_data.get('referral_code', ''),
+                'total_referrals': user_data.get('total_referrals', 0),
+                'referral_earnings': user_data.get('referral_earnings', 0),
+                'firebase_user': user_data,
+                'session_info': {
+                    'login_time': request.session.get('login_time', ''),
+                    'login_method': 'firebase_auth',
+                    'session_age': request.session.get_expiry_age() if hasattr(request.session, 'get_expiry_age') else 'Unknown'
+                }
+            }
+            
+            print(f"✅ Firebase dashboard loaded for: {user_data.get('phone_number')}")
+            return render(request, 'myproject/dashboard.html', context)
+        else:
+            print("❌ Firebase database not available")
+            messages.error(request, 'Database temporarily unavailable. Please try again.')
+            return redirect('login')
+            
+    except Exception as e:
+        print(f"❌ Dashboard error: {e}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, 'Error loading dashboard. Please try logging in again.')
+        return redirect('login')
+
+@login_required
+def dashboard_old(request):
+    """Old Django-based dashboard - kept for reference"""  
     try:
         profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:

@@ -1,606 +1,893 @@
 {% extends 'myproject/base.html' %}
 {% load static %}
 
-{% block title %}Join GrowFi - Start Your Investment Journey{% endblock %}
+{% block title %}Register - GrowFi Investment{% endblock %}
 
 {% block extra_css %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-body {
-    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+* {
     margin: 0;
     padding: 0;
-    background: url("{% static '2.jpg' %}") no-repeat center center fixed;
-    background-size: cover;
-    min-height: 100vh;
-}
-.app-content {
-    background: url("{% static '2.jpg' %}") no-repeat center center fixed;
-
-}
-/* Responsive Container */
-.main-container {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 15px;
-}
-
-/* Enhanced Form Styling */
-.custom-form-card {
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    padding: 25px;
-    margin-bottom: 20px;
-}
-
-/* Logo Responsive */
-.logo-container {
-    width: 70px;
-    height: 70px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-}
-
-/* Responsive Input Groups */
-.custom-input-group {
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.custom-input {
-    width: 100%;
-    padding: 16px 18px;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    border-radius: 15px;
-    font-size: 16px;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    transition: all 0.3s ease;
     box-sizing: border-box;
 }
 
-.custom-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-    background: white;
-}
-
-.custom-input::placeholder {
-    color: rgba(0, 0, 0, 0.5);
-    font-weight: 500;
-}
-
-/* Phone Input with Prefix */
-.phone-input-container {
-    display: flex;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    border-radius: 15px;
-    background: rgba(255, 255, 255, 0.9);
+body {
+    font-family: 'Roboto', sans-serif;
+    height: 100vh;
     overflow: hidden;
+    background: #ffffff !important;
+    margin: 0;
+    padding: 0;
+}
+
+/* Override base styles completely */
+.mobile-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    animation: none !important;
+    position: static !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+.app-content {
+    padding: 0 !important;
+    background: transparent !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+}
+
+.register-container {
+    height: 100vh;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    background: #ffffff;
+    width: 100%;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #ffffff !important;
+}
+
+/* GROWFI Background Section */
+.background-section {
+    flex: 1;
+    background: linear-gradient(135deg, rgba(6, 95, 70, 0.3), rgba(16, 185, 129, 0.2)), url('{% static "GrowFi.png" %}') center center;
+    background-size: cover;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 20px 20px 0;
+}
+
+.background-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(6, 95, 70, 0.9) 0%,
+        rgba(4, 120, 87, 0.7) 50%,
+        rgba(5, 150, 105, 0.8) 100%
+    );
+    z-index: 1;
+}
+
+.growfi-image {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 2;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+}
+
+/* Register Form Section */
+.form-section {
+    width: 100%;
+    max-width: 480px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 40px;
+    position: relative;
+    z-index: 10;
+    box-shadow: -15px 0 40px rgba(0,0,0,0.15);
+    overflow-y: auto;
+    border-radius: 20px 0 0 20px;
+}
+
+/* Logo Section */
+.logo-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+
+/* Form Inputs with Icons */
+.form-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 18px;
+    z-index: 2;
     transition: all 0.3s ease;
 }
 
-.phone-input-container:focus-within {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
-    background: white;
+.form-input {
+    width: 100%;
+    height: 56px;
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 0 20px 0 50px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.form-input:focus + .input-icon {
+    color: #10b981;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+/* Phone Input with Philippines Flag */
+.phone-group {
+    display: flex;
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.phone-group:focus-within {
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .phone-prefix {
-    background: #f8f9fa;
-    padding: 16px 15px;
-    font-weight: 700;
-    color: #333;
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-right: 1px solid #e5e7eb;
+    padding: 0 18px;
     display: flex;
     align-items: center;
-    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    min-width: 90px;
+    position: relative;
+}
+
+.phone-prefix::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 60%;
+    background: linear-gradient(to bottom, #10b981, #059669);
+    border-radius: 1px;
+}
+
+.flag-icon {
+    width: 28px;
+    height: 18px;
+    border-radius: 4px;
+    margin-right: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    position: relative;
+    background: linear-gradient(to bottom, #0038a8 0%, #0038a8 50%, #ce1126 50%, #ce1126 100%);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.flag-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 9px 0 9px 12px;
+    border-color: transparent transparent transparent #ffffff;
+    z-index: 1;
+}
+
+.flag-icon::after {
+    content: '☀';
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    transform: translateY(-50%);
+    color: #ffd700;
+    font-size: 7px;
+    z-index: 2;
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
 .phone-input {
     flex: 1;
-    padding: 16px 18px;
+    height: 56px;
     border: none;
     outline: none;
+    padding: 0 20px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
+    color: #374151;
     background: transparent;
-    color: #333;
 }
 
-/* Password Input with Toggle */
-.password-input-container {
-    position: relative;
+.phone-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
 }
 
-.password-toggle-btn {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 18px;
-    z-index: 3;
-    padding: 5px;
-    transition: color 0.3s ease;
-}
-
-.password-toggle-btn:hover {
-    color: #667eea;
-}
-
-/* Enhanced Button */
-.custom-btn {
+/* Register Button */
+.register-btn {
     width: 100%;
-    padding: 18px 20px;
-    background: linear-gradient(135deg, #dc2545 0%, #6f42c1 100%);
+    height: 56px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
     border: none;
-    border-radius: 15px;
+    border-radius: 16px;
     color: white;
     font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(220, 37, 69, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 24px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
 }
 
-.custom-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(220, 37, 69, 0.4);
+.register-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
 }
 
-.custom-btn:active {
-    transform: translateY(0);
+.register-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
 }
 
-/* Sign In Link */
-.signin-link {
+.register-btn:hover::before {
+    left: 100%;
+}
+
+.register-btn:active {
+    transform: translateY(-1px);
+    transition: all 0.1s;
+}
+
+.register-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.register-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Login Link */
+.login-link {
+    text-align: center;
+    color: #6b7280;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 16px 24px;
+    border-radius: 16px;
+    position: relative;
     display: block;
     width: 100%;
-    padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid rgba(102, 126, 234, 0.3);
-    border-radius: 15px;
-    color: #333;
-    text-decoration: none;
-    font-weight: 600;
-    text-align: center;
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border: 2px solid #e5e7eb;
+    overflow: hidden;
 }
 
-.signin-link:hover {
-    background: rgba(102, 126, 234, 0.1);
-    border-color: #667eea;
-    color: #667eea;
-    text-decoration: none;
+.login-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.login-link:hover {
+    color: #10b981;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.login-link:hover::before {
+    left: 100%;
+}
+
+.login-link .link-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.login-link .link-icon {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.login-link:hover .link-icon {
+    transform: translateX(3px);
+}
+
+/* Password Toggle Eye Icon */
+.password-toggle {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 3;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.password-toggle:hover {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
 }
 
 /* Form Labels */
 .form-label {
-    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
     margin-bottom: 8px;
-    font-weight: 700;
-    color: #333;
-    font-size: 15px;
+    display: block;
+    letter-spacing: 0.5px;
 }
 
-/* Alert Styling */
-.custom-alert {
-    padding: 15px 18px;
+/* Enhanced Form Group with Animation */
+.form-group.has-value .input-icon {
+    color: #10b981;
+}
+
+.form-group.has-error .form-input {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.form-group.has-error .input-icon {
+    color: #ef4444;
+}
+
+.form-group.has-success .form-input {
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.form-group.has-success .input-icon {
+    color: #10b981;
+}
+
+/* Custom Alert Styles */
+.alert {
+    padding: 12px 16px;
     border-radius: 12px;
-    margin-bottom: 20px;
-    font-weight: 600;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
+    font-weight: 500;
+    font-size: 14px;
+    animation: slideDown 0.3s ease;
 }
 
-.custom-alert.alert-danger {
-    background: rgba(220, 53, 69, 0.1);
-    border: 1px solid rgba(220, 53, 69, 0.2);
-    color: #dc3545;
+.alert-error {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid #fecaca;
+    color: #dc2626;
 }
 
-.custom-alert.alert-info {
-    background: rgba(13, 202, 240, 0.1);
-    border: 1px solid rgba(13, 202, 240, 0.2);
-    color: #0dcaf0;
+.alert-info {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #bfdbfe;
+    color: #2563eb;
 }
-/* Mobile Responsive Design */
+
+.alert i {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Error Messages */
+.error-message {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid #fecaca;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #dc2626;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.error-icon {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .main-container {
-        padding: 10px;
+    .register-container {
+        flex-direction: column;
+        padding: 0;
+    }
+    
+    .background-section {
+        height: 35vh;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .form-section {
+        height: 65vh;
         max-width: 100%;
+        padding: 25px 20px;
+        overflow-y: auto;
+        border-radius: 20px 20px 0 0;
+        margin-top: -20px;
     }
     
-    .custom-form-card {
-        padding: 20px;
-        border-radius: 18px;
-        margin-bottom: 15px;
+    .logo-section {
+        margin-bottom: 25px;
     }
     
-    .logo-container {
-        width: 65px;
-        height: 65px;
+    .logo-bg {
+        width: 120px;
+        height: 75px;
+    }
+    
+    .logo-text {
+        font-size: 20px;
+    }
+    
+    .logo-subtitle {
+        font-size: 14px;
+    }
+    
+    .growfi-image {
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .form-group {
         margin-bottom: 18px;
-    }
-    
-    .custom-input, .phone-input {
-        padding: 15px 16px;
-        font-size: 16px;
-    }
-    
-    .phone-prefix {
-        padding: 15px 12px;
-        font-size: 15px;
-    }
-    
-    .custom-btn {
-        padding: 16px 18px;
-        font-size: 15px;
-    }
-    
-    .signin-link {
-        padding: 14px 18px;
-        font-size: 15px;
-    }
-    
-    h1 {
-        font-size: 1.8rem !important;
-    }
-    
-    p {
-        font-size: 1rem !important;
     }
 }
 
 @media (max-width: 480px) {
-    .main-container {
-        padding: 8px;
-    }
-    
-    .custom-form-card {
-        padding: 18px;
-        border-radius: 16px;
-    }
-    
-    .logo-container {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 15px;
-    }
-    
-    .custom-input, .phone-input {
-        padding: 14px 15px;
-        font-size: 15px;
+    .form-section {
+        padding: 20px 16px;
     }
     
     .phone-prefix {
-        padding: 14px 10px;
+        min-width: 70px;
+        padding: 0 12px;
+    }
+    
+    .form-input,
+    .phone-input,
+    .register-btn {
+        height: 48px;
+    }
+    
+    .logo-bg {
+        width: 110px;
+        height: 65px;
+    }
+    
+    .logo-text {
+        font-size: 18px;
+    }
+    
+    .logo-subtitle {
+        font-size: 12px;
+    }
+    
+    .login-link {
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+    
+    .login-link .link-text {
+        gap: 6px;
+    }
+    
+    .login-link .link-icon {
         font-size: 14px;
-    }
-    
-    .custom-btn {
-        padding: 15px 16px;
-        font-size: 14px;
-    }
-    
-    .signin-link {
-        padding: 13px 16px;
-        font-size: 14px;
-    }
-    
-    h1 {
-        font-size: 1.6rem !important;
-    }
-    
-    .form-label {
-        font-size: 14px;
-    }
-}
-
-/* High DPI Displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .custom-input, .phone-input {
-        font-size: 16px;
-    }
-}
-
-/* Landscape Mobile */
-@media (max-width: 768px) and (orientation: landscape) {
-    .main-container {
-        padding: 5px;
-    }
-    
-    .custom-form-card {
-        padding: 15px;
-    }
-    
-    .logo-container {
-        width: 50px;
-        height: 50px;
-        margin-bottom: 10px;
-    }
-    
-    h1 {
-        font-size: 1.5rem !important;
-        margin-bottom: 5px !important;
-    }
-    
-    p {
-        font-size: 0.9rem !important;
-        margin-bottom: 10px !important;
-    }
-    
-    .custom-input-group {
-        margin-bottom: 15px;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Main Content Container -->
-    <div class="main-container w-100 mx-auto position-relative" style="max-width: 480px;">
-        <!-- Enhanced Header Section -->
-        <div class="text-center mb-4">
-            <!-- Premium Logo Design -->
-            <div class="logo-container mx-auto mb-4" style="width: 80px; height: 80px; border-radius: 24px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
-                <img src="{% static 'GrowFi.png' %}" alt="GrowFi Logo" style="width: 60px; height: 60px; object-fit: contain;">
-            </div>
-            <!-- Enhanced Typography -->
-            <h1 class="fw-bold text-dark mb-2" style="font-family: 'Poppins', sans-serif; font-size: 2.2rem;">
-                Join <span class="fw-bold text-dark">GrowFi</span>
-            </h1>
-            <p class="text-dark mb-3" style="font-size: 1.1rem; font-weight: 500;">Start Your Investment Journey</p>
-        </div>
+<div class="register-container">
+    <!-- GROWFI Background Section -->
+    <div class="background-section">
+        <img src="{% static 'Lucid_Origin_A_grand_concept_illustration_for_GROWFI_a_plantin_2.jpg' %}" alt="GrowFi Investment" class="growfi-image">
+    </div>
+    
+    <!-- Register Form Section -->
+    <div class="form-section">
+        <!-- Logo Section -->
 
-        <!-- Enhanced Error Messages -->
-        {% if form.errors %}
-            <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <div>Please correct the errors below.</div>
-            </div>
-        {% endif %}
-
+        
+        <!-- Error Messages -->
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <div>{{ message }}</div>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle error-icon"></i>
+                    {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
-
-        <!-- Registration Form Card -->
-        <div class="card border-0 mx-auto" style="max-width: 420px; background: rgba(255,255,255,0.95); box-shadow: 0 20px 60px rgba(0,0,0,0.1);">
-            <div class="card-body p-4">
-                <form id="registerForm" method="post" action="{% url 'register' %}">
-                    {% csrf_token %}
-                    <!-- Phone Number -->
-                    <div class="mb-4">
-                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Phone Number</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white fw-bold text-dark">+63</span>
-                            <input 
-                                class="form-control border-0 text-dark fw-bold" 
-                                style="background: transparent; font-size: 16px;"
-                                placeholder="Phone Number"
-                                id="phone" 
-                                name="phone" 
-                                required 
-                                maxlength="13"
-                                autocomplete="tel"
-                            >
-                        </div>
+        
+        <!-- Register Form -->
+        <form method="post" action="{% url 'register' %}" id="registerForm">
+            {% csrf_token %}
+            
+            <!-- Phone Number Input -->
+            <div class="form-group">
+                <div class="phone-group">
+                    <div class="phone-prefix">
+                        <div class="flag-icon"></div>
+                        +63
                     </div>
-                    <!-- Password -->
-                    <div class="mb-4">
-                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Create Password</label>
-                        <div class="input-group">
-                            <input 
-                                type="password"
-                                class="form-control border-0 text-dark fw-bold" 
-                                style="background: transparent; font-size: 16px; padding-right: 40px;"
-                                placeholder="Choose a strong password"
-                                id="password" 
-                                name="password" 
-                                required
-                                autocomplete="new-password"
-                            >
-                            <button 
-                                type="button" 
-                                class="btn btn-link text-dark border-0"
-                                onclick="togglePassword()"
-                                tabindex="-1"
-                                style="margin-left: -40px; z-index: 2;"
-                            >
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Confirm Password -->
-                    <div class="mb-4">
-                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Confirm Password</label>
-                        <div class="input-group">
-                            <input 
-                                type="password"
-                                class="form-control border-0 text-dark fw-bold" 
-                                style="background: transparent; font-size: 16px; padding-right: 40px;"
-                                placeholder="Confirm your password"
-                                id="confirm_password" 
-                                name="confirm_password" 
-                                required
-                                autocomplete="new-password"
-                            >
-                            <button 
-                                type="button" 
-                                class="btn btn-link text-dark border-0"
-                                onclick="toggleConfirmPassword()"
-                                tabindex="-1"
-                                style="margin-left: -40px; z-index: 2;"
-                            >
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Referral Code -->
-                    <div class="mb-4">
-                        <label class="fw-bold text-dark mb-2" style="font-size: 16px;">Referral Code </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="fas fa-gift text-dark"></i></span>
-                            <input 
-                                class="form-control border-0 text-dark fw-bold" 
-                                style="background: transparent; font-size: 16px;"
-                                placeholder="Enter referral code"
-                                id="referral_code" 
-                                name="referral_code" 
-                                value="{{ referral_code }}"
-                                autocomplete="off"
-                            >
-                        </div>
-                    </div>
-                    <!-- Create Account Button -->
-                    <button 
-                        type="submit" 
-                        class="btn btn-primary w-100 fw-bold py-3 rounded-pill border-0"
-                        style="font-size: 16px; min-height: 56px; background: linear-gradient(135deg, #dc2545 0%, #6f42c1 100%);"
+                    <input 
+                        type="tel" 
+                        name="phone" 
+                        id="phone"
+                        class="phone-input"
+                        placeholder="Enter Your 10-Digit Mobile Number"
+                        required
+                        maxlength="10"
                     >
-                        START INVESTING WITH ₱100 BONUS
-                    </button>
-                </form>
+                </div>
             </div>
-        </div>
-
+            
+            <!-- Password Input -->
+            <div class="form-group">
+                <div class="input-group">
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="password"
+                        class="form-input"
+                        placeholder="Enter Your Password"
+                        required
+                        minlength="8"
+                    >
+                    <i class="fas fa-lock input-icon"></i>
+                    <i class="fas fa-eye password-toggle" onclick="togglePassword('password')"></i>
+                </div>
+            </div>
+            
+            <!-- Confirm Password Input -->
+            <div class="form-group">
+                <div class="input-group">
+                    <input 
+                        type="password" 
+                        name="confirm_password" 
+                        id="confirm_password"
+                        class="form-input"
+                        placeholder="Confirm Your Password"
+                        required
+                        minlength="8"
+                    >
+                    <i class="fas fa-lock input-icon"></i>
+                    <i class="fas fa-eye password-toggle" onclick="togglePassword('confirm_password')"></i>
+                </div>
+            </div>
+            
+            <!-- Referral Code Input -->
+            <div class="form-group">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        name="referral_code" 
+                        id="referral_code"
+                        class="form-input"
+                        placeholder="Referral Code (Optional)"
+                        value="{{ referral_code }}"
+                        maxlength="8"
+                    >
+                    <i class="fas fa-gift input-icon"></i>
+                </div>
+            </div>
+            
+            <!-- Register Button -->
+            <button type="submit" class="register-btn">
+                REGISTER
+            </button>
+        </form>
+        
         <!-- Login Link -->
-        <div class="text-center mt-4">
-            <a 
-                href="{% url 'login' %}" 
-                class="btn btn-outline-secondary w-100 fw-semibold"
-                style="text-decoration: none;"
-            >
-                <i class="fas fa-sign-in-alt me-2"></i>
-                Already have an account? Sign In
-                <i class="fas fa-external-link-alt ms-2"></i>
-            </a>
-        </div>
-
+        <a href="{% url 'login' %}" class="login-link">
+            <span class="link-text">
+                <span>Already have an account?</span>
+                <strong>Login</strong>
+                <i class="fas fa-arrow-right link-icon"></i>
+            </span>
+        </a>
     </div>
 </div>
 
 <script>
-// Password toggle functions
-function togglePassword() {
-    const passwordField = document.getElementById('password');
-    const passwordIcon = document.getElementById('password-icon');
-    if (passwordField.type === 'password') {
-        passwordField.type = 'text';
-        passwordIcon.classList.remove('fa-eye');
-        passwordIcon.classList.add('fa-eye-slash');
+// Password toggle functionality
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.parentElement.querySelector('.password-toggle');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
     } else {
-        passwordField.type = 'password';
-        passwordIcon.classList.remove('fa-eye-slash');
-        passwordIcon.classList.add('fa-eye');
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
     }
 }
-function toggleConfirmPassword() {
-    const confirmField = document.getElementById('confirm_password');
-    const confirmIcon = document.getElementById('confirm-password-icon');
-    if (confirmField.type === 'password') {
-        confirmField.type = 'text';
-        confirmIcon.classList.remove('fa-eye');
-        confirmIcon.classList.add('fa-eye-slash');
-    } else {
-        confirmField.type = 'password';
-        confirmIcon.classList.remove('fa-eye-slash');
-        confirmIcon.classList.add('fa-eye');
-    }
-}
-// Form submission handling
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    const phone = document.getElementById('phone').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm_password').value;
-    const phoneDigits = phone.replace(/\D/g, '');
-    // Validate phone number
-    if (!phoneDigits.startsWith('9') || phoneDigits.length !== 10) {
-        e.preventDefault();
-        alert('Please enter a valid Philippine phone number (9XX XXX XXXX)');
-        return;
-    }
-    // Validate password match
-    if (password !== confirmPassword) {
-        e.preventDefault();
-        alert('Passwords do not match. Please check and try again.');
-        return;
-    }
-    // Validate password strength
-    if (password.length < 8) {
-        e.preventDefault();
-        alert('Password must be at least 8 characters long.');
-        return;
-    }
-    const submitBtn = this.querySelector('button[type="submit"]');
-    // Loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = 'Creating Account...';
-    // Convert formatted phone to clean format for submission
-    document.getElementById('phone').value = phoneDigits;
+
+// Add input animation and validation
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.form-input, .phone-input');
+    
+    inputs.forEach(input => {
+        // Add focus animation
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+            if (this.value.trim() !== '') {
+                this.parentElement.parentElement.classList.add('has-value');
+            } else {
+                this.parentElement.parentElement.classList.remove('has-value');
+            }
+        });
+        
+        // Real-time validation
+        input.addEventListener('input', function() {
+            const formGroup = this.parentElement.parentElement;
+            formGroup.classList.remove('has-error', 'has-success');
+            
+            if (this.value.trim() !== '') {
+                formGroup.classList.add('has-value');
+                
+                // Validate based on input type
+                if (this.id === 'password') {
+                    if (this.value.length >= 8) {
+                        formGroup.classList.add('has-success');
+                    }
+                } else if (this.id === 'confirm_password') {
+                    const password = document.getElementById('password').value;
+                    if (this.value === password && this.value.length >= 8) {
+                        formGroup.classList.add('has-success');
+                    } else if (this.value.length > 0) {
+                        formGroup.classList.add('has-error');
+                    }
+                }
+            } else {
+                formGroup.classList.remove('has-value');
+            }
+        });
+    });
 });
-// Phone number formatting
-document.getElementById('phone').addEventListener('input', function() {
-    let value = this.value.replace(/\D/g, '');
-    // Limit to 10 digits
-    if (value.length > 10) {
-        value = value.slice(0, 10);
-    }
-    // Ensure it starts with 9
+
+// Phone number formatting and validation
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    
+    // Ensure it starts with 9 and limit to 10 digits
     if (value.length > 0 && !value.startsWith('9')) {
         if (value.startsWith('09')) {
             value = value.substring(1);
+        } else if (value.startsWith('63')) {
+            value = value.substring(2);
         }
     }
-    // Format with spacing: 9XX XXX XXXX
-    let formattedValue = '';
-    if (value.length > 0) {
-        formattedValue = value;
-        if (value.length > 3) {
-            formattedValue = value.substring(0, 3) + ' ' + value.substring(3);
-        }
-        if (value.length > 6) {
-            formattedValue = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6);
-        }
+    
+    if (value.length > 10) {
+        value = value.substring(0, 10);
     }
-    this.value = formattedValue;
-});
-// Real-time password match validation
-document.getElementById('confirm_password').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
-    const container = this.parentElement;
-    if (confirmPassword.length > 0) {
-        if (password === confirmPassword) {
-            container.style.borderColor = '#10b981';
-        } else {
-            container.style.borderColor = '#ef4444';
-        }
+    
+    e.target.value = value;
+    
+    // Validate phone number
+    const phoneGroup = document.querySelector('.phone-group');
+    if (value.length === 10 && value.startsWith('9')) {
+        phoneGroup.style.borderColor = '#10b981';
+        phoneGroup.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
+    } else if (value.length > 0) {
+        phoneGroup.style.borderColor = '#ef4444';
+        phoneGroup.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
     } else {
-        container.style.borderColor = '';
+        phoneGroup.style.borderColor = '#e5e7eb';
+        phoneGroup.style.boxShadow = 'none';
     }
 });
+
+// Password confirmation validation
+document.getElementById('confirm_password').addEventListener('input', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = e.target.value;
+    const formGroup = e.target.parentElement.parentElement;
+    
+    formGroup.classList.remove('has-error', 'has-success');
+    
+    if (confirmPassword.length > 0) {
+        if (password === confirmPassword && confirmPassword.length >= 8) {
+            formGroup.classList.add('has-success');
+        } else {
+            formGroup.classList.add('has-error');
+        }
+    }
+});
+
+// Referral code formatting
+document.getElementById('referral_code').addEventListener('input', function(e) {
+    e.target.value = e.target.value.toUpperCase();
+});
+
+// Enhanced form submission
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const phone = document.getElementById('phone').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    // Validate phone number
+    if (!/^9\d{9}$/.test(phone)) {
+        e.preventDefault();
+        showAlert('Please enter a valid 10-digit phone number starting with 9', 'error');
+        return;
+    }
+    
+    // Validate password length
+    if (password.length < 8) {
+        e.preventDefault();
+        showAlert('Password must be at least 8 characters long', 'error');
+        return;
+    }
+    
+    // Validate password confirmation
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        showAlert('Passwords do not match', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const btn = this.querySelector('.register-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> REGISTERING...';
+    btn.disabled = true;
+    
+    // Reset button after 3 seconds if form doesn't submit (for demo purposes)
+    setTimeout(() => {
+        if (btn.disabled) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }, 10000);
+});
+
+// Alert function
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        ${message}
+    `;
+    
+    const form = document.getElementById('registerForm');
+    form.insertBefore(alertDiv, form.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
 </script>
 {% endblock %}

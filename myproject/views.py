@@ -588,7 +588,6 @@ def register(request):
     if request.method == 'POST':
         phone = request.POST.get('phone', '')
         password = request.POST['password']
-        confirm_password = request.POST.get('confirm_password', '')
         referral_code = request.POST.get('referral_code', '').strip()
         
         # Clean phone number - remove spaces and ensure +63 format
@@ -618,9 +617,9 @@ def register(request):
                 # Fallback: just add +63 to whatever digits we have
                 clean_phone = '+63' + digits_only if digits_only else clean_phone
         
-        # Validate password confirmation
-        if password != confirm_password:
-            messages.error(request, 'Passwords do not match')
+        # Basic validation - no need for confirm password anymore
+        if len(password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long')
             return render(request, 'myproject/register.html')
         
         # Check if phone number already exists

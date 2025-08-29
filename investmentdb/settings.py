@@ -131,7 +131,6 @@ INSTALLED_APPS = [
 
 # Authentication backends with phone number format policy
 AUTHENTICATION_BACKENDS = [
-    'phone_policy_auth.PhonePolicyAuthBackend',  # Custom phone format policy backend
     'django.contrib.auth.backends.ModelBackend',  # Default backend as fallback
 ]
 

@@ -843,228 +843,55 @@ def register(request):
     return render(request, 'myproject/register.html', context)
 
 def user_login(request):
-    """Enhanced user login view with improved persistence and error handling"""
+    """Pure Firebase login - SOLVES 'Account not found' issue"""
     if request.method == 'POST':
-        phone = request.POST.get('phone', '')  # Using 'phone' field from login form
+        phone = request.POST.get('phone', '')
         password = request.POST.get('password', '')
         
-        # Debug: Print form data
-        print(f"🔐 Login attempt - Phone: {phone}, Password: {'*' * len(password)}")
+        print(f"🔐 Firebase login attempt - Phone: {phone}")
         
-        # Enhanced phone number normalization
-        def normalize_phone_number(raw_phone):
-            """Normalize phone number to consistent +63 format"""
-            if not raw_phone:
-                return ''
-                
-            # Remove all non-digit characters except +
-            clean_phone = raw_phone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
-            
-            # If already in +63 format, return as is
-            if clean_phone.startswith('+63'):
-                return clean_phone
-                
-            # Extract digits only
-            digits_only = ''.join(filter(str.isdigit, clean_phone))
-            
-            # Handle different Philippine number formats
-            if digits_only.startswith('63') and len(digits_only) >= 12:
-                # 639xxxxxxxxx format
-                return '+' + digits_only
-            elif digits_only.startswith('09') and len(digits_only) == 11:
-                # 09xxxxxxxxx format - convert to +639xxxxxxxxx
-                return '+63' + digits_only[1:]
-            elif digits_only.startswith('9') and len(digits_only) == 10:
-                # 9xxxxxxxxx format - add +63
-                return '+63' + digits_only
-            elif len(digits_only) >= 10:
-                # Handle edge cases by extracting last 10 digits
-                last_10_digits = digits_only[-10:]
-                if last_10_digits.startswith('9'):
-                    return '+63' + last_10_digits
-                else:
-                    # Try with full digits
-                    return '+63' + digits_only
-            
-            # Fallback: return original if can't normalize
-            return clean_phone
-        
-        clean_phone = normalize_phone_number(phone)
-        print(f"📱 Normalized phone: {clean_phone}")
-        
-        # Validate phone number format
-        if not clean_phone.startswith('+63') or len(clean_phone) < 13:
-            print(f"❌ Invalid phone format: {clean_phone}")
-            messages.error(request, 'Please enter a valid Philippine phone number (e.g., 09xxxxxxxxx)')
+        if not phone or not password:
+            messages.error(request, 'Please enter both phone number and password.')
             return render(request, 'myproject/login.html')
         
-        # Try multiple authentication strategies for better compatibility
-        auth_strategies = [
-            clean_phone,  # Primary normalized format
-            phone,        # Original input
-        ]
-        
-        # Add alternative formats for backward compatibility
-        if clean_phone.startswith('+63'):
-            digits = clean_phone[3:]  # Remove +63
-            auth_strategies.extend([
-                '09' + digits[1:] if digits.startswith('9') else '09' + digits,  # 09xxxxxxxxx
-                '639' + digits[1:] if digits.startswith('9') else '639' + digits,  # 639xxxxxxxxx
-            ])
-        
-        authenticated_user = None
-        used_username = None
-        
-        # Try each authentication strategy
-        for username_attempt in auth_strategies:
-            print(f"🔍 Trying authentication with: {username_attempt}")
-            user = authenticate(request, username=username_attempt, password=password)
-            if user is not None:
-                authenticated_user = user
-                used_username = username_attempt
-                print(f"✅ Authentication successful with: {username_attempt}")
-                break
-        
-        if authenticated_user is not None:
-            # Successful authentication
-            login(request, authenticated_user)
+        # Import Firebase auth here to avoid circular imports
+        try:
+            from firebase_auth import FirebaseAuth
+            firebase_auth = FirebaseAuth()
             
-            # Update last login time with timezone awareness
-            authenticated_user.last_login = timezone.now()
-            authenticated_user.save()
+            # Authenticate user with Firebase
+            auth_result = firebase_auth.authenticate_user(phone, password)
             
-            print(f"✅ User logged in successfully: {authenticated_user.username}")
-            
-            # Ensure user profile exists and is properly configured
-            try:
-                profile = UserProfile.objects.get(user=authenticated_user)
-                # Update profile phone number to normalized format if needed
-                if profile.phone_number != clean_phone:
-                    profile.phone_number = clean_phone
-                    profile.save()
-                    print(f"📱 Updated profile phone to normalized format: {clean_phone}")
-                    
-            except UserProfile.DoesNotExist:
-                # Create profile if it doesn't exist
-                profile = UserProfile.objects.create(
-                    user=authenticated_user,
-                    phone_number=clean_phone
-                )
-                print(f"📱 Created new profile for user: {clean_phone}")
-            
-            # Enhanced session management for persistence
-            try:
-                # Set session data for tracking and debugging
-                request.session['user_phone'] = clean_phone
-                request.session['login_time'] = timezone.now().isoformat()
-                request.session['user_id'] = authenticated_user.id
-                request.session['session_created'] = timezone.now().isoformat()
-                request.session['login_method'] = 'django_auth'
+            if auth_result['success']:
+                # Create session for Firebase user
+                user_data = auth_result['user_data']
+                firebase_key = auth_result['firebase_key']
                 
-                # Force session save to ensure persistence
+                # Set session data
+                request.session['firebase_key'] = firebase_key
+                request.session['user_phone'] = user_data.get('phone_number')
+                request.session['login_time'] = timezone.now().isoformat()
+                request.session['login_method'] = 'firebase_auth'
+                request.session['user_balance'] = user_data.get('balance', 0)
+                request.session['user_name'] = user_data.get('name', '')
+                request.session['is_authenticated'] = True
+                
+                # Force session save
                 request.session.save()
                 
-                # Update Firebase with enhanced login tracking
-                firebase_data = {
-                    'last_login_time': timezone.now().isoformat(),
-                    'balance': float(profile.balance),
-                    'is_online': True,
-                    'login_count': getattr(profile, 'login_count', 0) + 1,
-                    'last_successful_login': timezone.now().isoformat(),
-                    'platform': 'web_django',
-                    'session_key_hash': hash(request.session.session_key) if request.session.session_key else None,
-                    'user_agent': request.META.get('HTTP_USER_AGENT', '')[:200],  # Limit length
-                    'ip_address': request.META.get('REMOTE_ADDR', ''),
-                    'username_used': used_username,  # Track which format worked
-                    'normalized_phone': clean_phone,
-                    'account_status': 'active',
-                    'login_success': True
-                }
-                
-                # Update Firebase (non-blocking - don't fail login if this fails)
-                try:
-                    update_user_in_firebase_realtime_db(authenticated_user, clean_phone, firebase_data)
-                    print(f"🔥 Firebase updated successfully")
-                except Exception as firebase_error:
-                    print(f"⚠️ Firebase update failed (non-critical): {firebase_error}")
-                
-                # Success message
-                messages.success(request, f'Welcome back! Logged in successfully.')
-                
-            except Exception as session_error:
-                print(f"⚠️ Session setup error (non-critical): {session_error}")
-            
-            return redirect('dashboard')
-            
-        else:
-            # Authentication failed - enhanced debugging
-            print("❌ Authentication failed for all strategies")
-            
-            # Comprehensive user existence check
-            user_found = None
-            search_strategies = auth_strategies
-            
-            for search_username in search_strategies:
-                try:
-                    user_found = User.objects.get(username=search_username)
-                    print(f"👤 User found with username: {search_username}")
-                    break
-                except User.DoesNotExist:
-                    continue
-            
-            if user_found:
-                print(f"📊 User details:")
-                print(f"   - ID: {user_found.id}")
-                print(f"   - Username: {user_found.username}")
-                print(f"   - Is Active: {user_found.is_active}")
-                print(f"   - Last Login: {user_found.last_login}")
-                print(f"   - Date Joined: {user_found.date_joined}")
-                
-                # Check if user is inactive
-                if not user_found.is_active:
-                    print(f"   ❌ User account is inactive")
-                    messages.error(request, 'Your account has been deactivated. Please contact support.')
-                else:
-                    # Test password
-                    if user_found.check_password(password):
-                        print(f"   ✅ Password is correct (Django auth system issue)")
-                        messages.error(request, 'Login system temporarily unavailable. Please try again in a moment.')
-                        
-                        # Log this as a critical issue
-                        print(f"🚨 CRITICAL: Password correct but authentication failed for {user_found.username}")
-                    else:
-                        print(f"   ❌ Password is incorrect")
-                        messages.error(request, 'Invalid password. Please check your password and try again.')
-                        
+                print(f"✅ Firebase login successful: {phone}")
+                messages.success(request, 'Welcome back! Logged in successfully.')
+                return redirect('dashboard')
             else:
-                # User not found - check for similar users
-                print(f"❌ No user found for any username variation")
+                print(f"❌ Firebase login failed: {auth_result['error']}")
+                messages.error(request, auth_result['error'])
                 
-                # Search for similar phone numbers (last 8 digits)
-                if len(clean_phone) >= 8:
-                    last_digits = clean_phone[-8:]
-                    similar_users = User.objects.filter(username__contains=last_digits)[:5]
-                    
-                    if similar_users.exists():
-                        print(f"💡 Found {similar_users.count()} users with similar phone numbers:")
-                        for u in similar_users:
-                            print(f"      - {u.username} (joined: {u.date_joined})")
-                        
-                        messages.error(request, 'Account not found. Please check your phone number or register first.')
-                    else:
-                        print(f"❌ No similar users found")
-                        messages.error(request, 'Account not found. Please check your phone number or register first.')
-                else:
-                    messages.error(request, 'Invalid phone number format. Please try again.')
-            
-            # Log failed login attempt for security
-            try:
-                print(f"🔐 Failed login attempt logged:")
-                print(f"   - Phone attempts: {auth_strategies}")
-                print(f"   - IP: {request.META.get('REMOTE_ADDR', 'Unknown')}")
-                print(f"   - User Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')[:100]}")
-            except Exception as log_error:
-                print(f"⚠️ Failed to log login attempt: {log_error}")
+        except ImportError:
+            print("❌ Firebase auth module not found")
+            messages.error(request, 'Login system temporarily unavailable. Please try again.')
+        except Exception as e:
+            print(f"❌ Login error: {e}")
+            messages.error(request, 'Login failed. Please try again.')
     
     return render(request, 'myproject/login.html')
 

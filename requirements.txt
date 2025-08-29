@@ -9,7 +9,7 @@ django-crispy-forms==2.4
 crispy-bootstrap5==2025.6
 firebase-admin==6.9.0
 python-decouple==3.8
-python-dotenv==1.1.0
+python-dotenv==1.1.0    
 Pillow==11.2.1
 requests==2.32.3
 Pyrebase4==4.8.0

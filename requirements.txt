@@ -2,3 +2,7 @@ Django>=4.2.0
 python-decouple>=3.8
 requests>=2.31.0
 gunicorn>=21.2.0
+firebase-admin>=6.2.0
+dj-database-url>=2.1.0
+whitenoise>=6.5.0
+python-dotenv>=1.0.0

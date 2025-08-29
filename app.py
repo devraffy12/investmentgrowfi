@@ -60,14 +60,20 @@ class GrowFiStaticHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     content_type = 'text/plain'
                 
-                with open(file_path, 'rb') as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
+                
+                # Process Django template syntax for HTML files
+                if file_path.endswith('.html'):
+                    content = self.process_django_template(content)
+                
+                content_bytes = content.encode('utf-8')
                 
                 self.send_response(200)
                 self.send_header('Content-Type', content_type)
-                self.send_header('Content-Length', len(content))
+                self.send_header('Content-Length', len(content_bytes))
                 self.end_headers()
-                self.wfile.write(content)
+                self.wfile.write(content_bytes)
                 
                 print(f"✅ Served: {file_path}")
             else:
@@ -76,6 +82,80 @@ class GrowFiStaticHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"💥 Error serving {file_path}: {e}")
             self.send_error(500, f"Error serving file: {str(e)}")
+    
+    def process_django_template(self, content):
+        """Process Django template syntax and replace with actual values"""
+        import re
+        
+        # Sample user data for demo
+        user_data = {
+            'first_name': 'John',
+            'last_name': 'Investor',
+            'phone_number': '+639123456789',
+            'email': 'john@example.com'
+        }
+        
+        # Sample investment data
+        investment_data = {
+            'active_investments': [
+                {'name': 'Growth Plan A', 'amount': 5000, 'roi_percentage': 15},
+                {'name': 'Premium Plan', 'amount': 10000, 'roi_percentage': 20}
+            ],
+            'total_invested': 15000,
+            'total_earnings': 2250,
+            'withdrawable_balance': 1500,
+            'non_withdrawable_bonus': 100,
+            'roi_percentage': 15,
+            'current_investments': [
+                {'investment_amount': 5000, 'plan_name': 'Growth Plan A'},
+                {'investment_amount': 10000, 'plan_name': 'Premium Plan'}
+            ],
+            'recent_transactions': [
+                {'transaction_type': 'investment', 'amount': 5000, 'created_at': '2025-08-29'},
+                {'transaction_type': 'earning', 'amount': 750, 'created_at': '2025-08-29'}
+            ]
+        }
+        
+        # Replace Django template variables
+        replacements = {
+            # User variables
+            r'\{\{\s*user\.first_name\|default:"User"\s*\}\}': user_data['first_name'],
+            r'\{\{\s*user\.first_name\s*\}\}': user_data['first_name'],
+            r'\{\{\s*user\.last_name\s*\}\}': user_data['last_name'],
+            r'\{\{\s*user\.phone_number\s*\}\}': user_data['phone_number'],
+            r'\{\{\s*user\.email\s*\}\}': user_data['email'],
+            
+            # Investment variables
+            r'\{\{\s*active_investments\|length\s*\}\}': str(len(investment_data['active_investments'])),
+            r'\{\{\s*user\.userprofile\.total_invested\|default:"0"\s*\}\}': f"₱{investment_data['total_invested']:,}",
+            r'\{\{\s*user\.userprofile\.roi_percentage\|default:"15"\s*\}\}%': f"{investment_data['roi_percentage']}%",
+            r'\{\{\s*userprofile\.total_invested\|default:"0"\s*\}\}': f"₱{investment_data['total_invested']:,}",
+            r'\{\{\s*userprofile\.roi_percentage\|default:"15"\s*\}\}': str(investment_data['roi_percentage']),
+            
+            # Remove Django template tags
+            r'\{\%\s*extends.*?\%\}': '',
+            r'\{\%\s*load.*?\%\}': '',
+            r'\{\%\s*block.*?\%\}': '',
+            r'\{\%\s*endblock.*?\%\}': '',
+            r'\{\%\s*url.*?\%\}': '#',
+            r'\{\%\s*static.*?\%\}': '/static/',
+            
+            # Fix common template patterns
+            r'\{\{\s*INVESTMENT_PLAN_NAME\s*\}\}': 'Growth Plan A',
+            r'\{\{\s*investment\.amount\|floatformat:2\s*\}\}': '₱5,000.00',
+            r'\{\{\s*investment\.plan_name\s*\}\}': 'Growth Plan A',
+            r'\{\{\s*investment\.roi_percentage\|default:"0"\s*\}\}': '15',
+        }
+        
+        # Apply replacements
+        for pattern, replacement in replacements.items():
+            content = re.sub(pattern, str(replacement), content)
+        
+        # Remove any remaining Django template syntax
+        content = re.sub(r'\{\{.*?\}\}', '0', content)
+        content = re.sub(r'\{\%.*?\%\}', '', content)
+        
+        return content
 
 def main():
     port = int(os.environ.get('PORT', 8000))

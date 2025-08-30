@@ -1300,15 +1300,31 @@ def dashboard(request):
                 active_investments = Investment.objects.filter(
                     user=user, status='active').count()
                 
+                # Calculate referral earnings and total balance
+                from myproject.models import ReferralCommission
+                confirmed_referrals = ReferralCommission.objects.filter(referrer=user).count()
+                referral_earnings = confirmed_referrals * 15  # ₱15 per referral
+                free_bonus = 100  # ₱100 free bonus
+                total_balance = referral_earnings + free_bonus  # Total available balance
+                
+                print(f"💰 Dashboard balance calculation:")
+                print(f"   Confirmed referrals: {confirmed_referrals}")
+                print(f"   Referral earnings: ₱{referral_earnings} ({confirmed_referrals} × ₱15)")
+                print(f"   Free bonus: ₱{free_bonus}")
+                print(f"   Total balance: ₱{total_balance}")
+                
                 context = {
                     'user': user,
                     'profile': profile,
-                    'balance': float(profile.balance),
+                    'balance': total_balance,  # Show total balance (referral + bonus)
+                    'main_balance': 0,  # No separate main balance initially
+                    'referral_earnings': referral_earnings,
+                    'free_bonus': free_bonus,
                     'total_invested': float(total_invested),
                     'total_earnings': float(total_earnings),
                     'today_earnings': float(today_earnings),
                     'active_investments': active_investments,
-                    'withdrawable_balance': float(total_earnings),
+                    'withdrawable_balance': total_balance,  # All can be withdrawn
                     'development_mode': True,
                 }
                 
@@ -2949,8 +2965,8 @@ def team(request):
                     if is_active:
                         active_referrals += 1
                     
-                    # Add to team totals
-                    team_volume += (total_invested + balance)
+                    # Add to team totals - ONLY real investments, no fake volume
+                    team_volume += total_invested  # Only actual investments, not balance
                     team_earnings += total_earnings
                     
                     # Get display info
@@ -3007,8 +3023,8 @@ def team(request):
                 if is_active:
                     active_referrals += 1
                 
-                # Add to team totals
-                team_volume += (total_invested + balance)
+                # Add to team totals - ONLY real investments, no fake volume
+                team_volume += total_invested  # Only actual investments, not balance
                 team_earnings += total_earnings
                 
                 # Get display info
@@ -3031,52 +3047,14 @@ def team(request):
         except Exception as firestore_error:
             print(f"⚠️ Firestore fallback error: {firestore_error}")
         
-        # Calculate referral earnings from current user's Firebase transactions
-        try:
-            # First check RTDB for current user
-            from firebase_admin import db as firebase_db
-            ref = firebase_db.reference('/', get_firebase_app())
-            users_ref = ref.child('users')
-            
-            # Find current user in Firebase by phone
-            current_user_data = None
-            current_user_key = None
-            all_users = users_ref.get() or {}
-            
-            for user_key, user_data in all_users.items():
-                if user_data and user_data.get('phone_number') == user_phone:
-                    current_user_data = user_data
-                    current_user_key = user_key
-                    break
-            
-            if current_user_data:
-                transactions = current_user_data.get('transactions', {})
-                
-                for tx_id, tx_data in transactions.items():
-                    if isinstance(tx_data, dict) and tx_data.get('type') == 'referral_bonus':
-                        referral_earnings += float(tx_data.get('amount', 0.0))
-                
-                print(f"💰 Current user referral earnings from RTDB: ₱{referral_earnings}")
-            
-            # Fallback to Firestore if RTDB doesn't have the user
-            if not current_user_data:
-                user_doc_ref = db.collection('users').document(firebase_uid)
-                user_doc = user_doc_ref.get()
-                
-                if user_doc.exists:
-                    user_data = user_doc.to_dict()
-                    transactions = user_data.get('transactions', {})
-                    
-                    for tx_id, tx_data in transactions.items():
-                        if isinstance(tx_data, dict) and tx_data.get('type') == 'referral_bonus':
-                            referral_earnings += float(tx_data.get('amount', 0.0))
-                    
-                    print(f"💰 Current user referral earnings from Firestore: ₱{referral_earnings}")
-                else:
-                    print(f"⚠️ User document not found: {firebase_uid}")
-                
-        except Exception as earnings_error:
-            print(f"❌ Error calculating referral earnings: {earnings_error}")
+        # Calculate referral earnings: ₱15 per confirmed referral
+        referral_earnings = total_referrals * 15.0
+        print(f"💰 Calculated referral earnings: {total_referrals} referrals × ₱15 = ₱{referral_earnings}")
+        
+        # Calculate total balance: referral earnings + ₱100 free bonus
+        free_bonus = 100.0
+        total_balance = referral_earnings + free_bonus
+        print(f"💰 Total balance: ₱{referral_earnings} (referrals) + ₱{free_bonus} (bonus) = ₱{total_balance}")
         
         # 🔥 UPDATE BOTH FIREBASE RTDB AND FIRESTORE with calculated values for persistence
         try:
@@ -3089,6 +3067,8 @@ def team(request):
                     'team_volume': team_volume,
                     'team_earnings': team_earnings,
                     'referral_earnings': referral_earnings,
+                    'free_bonus': free_bonus,
+                    'balance': total_balance,  # Total withdrawable balance
                     'last_team_update': firebase_db.ServerValue.TIMESTAMP
                 }
                 
@@ -3113,6 +3093,8 @@ def team(request):
                 'total_earnings': team_earnings,
                 'team_volume': team_volume,
                 'referral_earnings': referral_earnings,
+                'free_bonus': free_bonus,
+                'total_balance': total_balance,
                 'referrals': referrals_list,
                 'updated_at': firestore.SERVER_TIMESTAMP
             }
@@ -3126,27 +3108,15 @@ def team(request):
         print(f"   Referral Code: {referral_code}")
         print(f"   Total Referrals: {total_referrals}")
         print(f"   Active Members: {active_referrals}")
-        print(f"   Team Volume: ₱{team_volume}")
+        print(f"   Team Volume: ₱{team_volume} (real investments only)")
         print(f"   Team Earnings: ₱{team_earnings}")
-        print(f"   Referral Earnings: ₱{referral_earnings}")
+        print(f"   Referral Earnings: ₱{referral_earnings} ({total_referrals} × ₱15)")
+        print(f"   Free Bonus: ₱{free_bonus}")
+        print(f"   Total Balance: ₱{total_balance}")
         
-        # Get current user balance from Firebase RTDB (for display)
-        current_balance = 0.0
-        withdrawable_balance = 0.0
-        try:
-            from firebase_admin import db as firebase_db
-            ref = firebase_db.reference('/', get_firebase_app())
-            users_ref = ref.child('users')
-            all_users = users_ref.get() or {}
-            for user_key, user_data in all_users.items():
-                if user_data and user_data.get('phone_number') == user_phone:
-                    # Current balance includes referral earnings
-                    current_balance = float(user_data.get('balance', 0.0))
-                    # Withdrawable balance = balance + referral_earnings
-                    withdrawable_balance = current_balance + float(user_data.get('referral_earnings', 0.0))
-                    break
-        except Exception as bal_error:
-            print(f"⚠️ Error getting current balance: {bal_error}")
+        # Set withdrawable balance to total balance (referral earnings + free bonus)
+        current_balance = total_balance
+        withdrawable_balance = total_balance
 
         # Prepare context for template
         context = {
@@ -3155,6 +3125,8 @@ def team(request):
             'total_referrals': total_referrals,
             'active_referrals': active_referrals,
             'referral_earnings': referral_earnings,
+            'free_bonus': free_bonus,
+            'total_balance': total_balance,
             'recent_referrals': referrals_list,
             'team_total_invested': team_volume,
             'team_total_earnings': team_earnings,

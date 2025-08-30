@@ -21,7 +21,9 @@
             <div class="balance-card">
                 <div class="balance-label">Withdrawable Balance</div>
                 <div class="balance-amount">₱{{ withdrawable_amount|floatformat:2 }}</div>
-                <div class="balance-note">Registration bonus cannot be withdrawn</div>
+                <div class="balance-note">
+                    Balance: ₱{{ profile.balance|floatformat:2 }} + Referral Earnings: ₱{{ referral_earnings|floatformat:2 }}
+                </div>
             </div>
         </div>
     </div>
@@ -37,6 +39,7 @@
             <div class="stat-info">
                 <div class="stat-number">₱{{ withdrawable_amount|floatformat:2 }}</div>
                 <div class="stat-label">Available to Withdraw</div>
+                <div class="stat-sublabel">Balance + Referral Earnings</div>
             </div>
         </div>
         
@@ -67,6 +70,53 @@
             <div class="stat-info">
                 <div class="stat-number">₱100</div>
                 <div class="stat-label">Minimum Amount</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Balance Breakdown Section -->
+<div class="container">
+    <div class="balance-breakdown-card">
+        <div class="breakdown-header">
+            <div class="breakdown-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div class="breakdown-text">
+                <h3>Balance Breakdown</h3>
+                <p>Your total withdrawable amount breakdown</p>
+            </div>
+        </div>
+        
+        <div class="breakdown-grid">
+            <div class="breakdown-item">
+                <div class="breakdown-item-icon wallet">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="breakdown-item-info">
+                    <div class="breakdown-amount">₱{{ profile.balance|floatformat:2 }}</div>
+                    <div class="breakdown-label">Main Balance</div>
+                </div>
+            </div>
+            
+            <div class="breakdown-item">
+                <div class="breakdown-item-icon referral">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="breakdown-item-info">
+                    <div class="breakdown-amount">₱{{ referral_earnings|floatformat:2 }}</div>
+                    <div class="breakdown-label">Referral Earnings</div>
+                </div>
+            </div>
+            
+            <div class="breakdown-item total">
+                <div class="breakdown-item-icon total">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="breakdown-item-info">
+                    <div class="breakdown-amount">₱{{ withdrawable_amount|floatformat:2 }}</div>
+                    <div class="breakdown-label">Total Available</div>
+                </div>
             </div>
         </div>
     </div>
@@ -107,7 +157,7 @@
                                        class="amount-input" 
                                        placeholder="0.00" 
                                        min="100" 
-                                       max="{{ profile.balance }}"
+                                       max="{{ withdrawable_amount }}"
                                        step="0.01" 
                                        required>
                                 <button type="button" class="max-btn" onclick="setMaxAmount()">MAX</button>
@@ -467,6 +517,118 @@
 .stat-label {
     font-size: 14px;
     color: #666;
+}
+
+/* Balance Breakdown Section */
+.balance-breakdown-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.breakdown-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.breakdown-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.breakdown-text h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #2d3436;
+    font-weight: 600;
+}
+
+.breakdown-text p {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.breakdown-item {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.breakdown-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.breakdown-item.total {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.breakdown-item.total:hover {
+    background: linear-gradient(135deg, #218838, #1ea78e);
+}
+
+.breakdown-item-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+}
+
+.breakdown-item-icon.wallet {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.breakdown-item-icon.referral {
+    background: linear-gradient(135deg, #fd7e14, #e85d04);
+}
+
+.breakdown-item-icon.total {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.breakdown-amount {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: inherit;
+}
+
+.breakdown-label {
+    font-size: 13px;
+    color: #6c757d;
+    margin: 2px 0 0 0;
+}
+
+.breakdown-item.total .breakdown-label {
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* Main Grid Layout */
@@ -1178,7 +1340,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const netAmountSpan = document.getElementById('netAmount');
     const submitBtn = document.getElementById('submitBtn');
     const withdrawalForm = document.getElementById('withdrawalForm');
-    const maxBalance = {{ profile.balance }};
+    const maxBalance = {{ withdrawable_amount|default:profile.balance }};
 
     // Payment method selection
     const paymentOptions = document.querySelectorAll('.payment-option');

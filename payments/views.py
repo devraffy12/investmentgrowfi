@@ -982,6 +982,40 @@ def withdraw_view(request):
         
         print(f"💰 Current user balance: ₱{profile.balance}")
 
+        # 🔥 INCLUDE REFERRAL EARNINGS IN WITHDRAWABLE BALANCE
+        referral_earnings = Decimal('0.00')
+        try:
+            # Get referral earnings from Firebase
+            from myproject.firebase_config import get_firebase_app, FIREBASE_AVAILABLE
+            if FIREBASE_AVAILABLE:
+                from firebase_admin import db as firebase_db
+                ref = firebase_db.reference('/', get_firebase_app())
+                users_ref = ref.child('users')
+                all_users = users_ref.get() or {}
+                
+                # Find current user in Firebase and get referral earnings
+                for user_key, user_data in all_users.items():
+                    if user_data and user_data.get('phone_number') == user_phone:
+                        transactions = user_data.get('transactions', {})
+                        for tx_id, tx_data in transactions.items():
+                            if isinstance(tx_data, dict) and tx_data.get('type') == 'referral_bonus':
+                                referral_earnings += Decimal(str(tx_data.get('amount', 0)))
+                        
+                        # Also check referral_earnings field directly
+                        firebase_referral_earnings = user_data.get('referral_earnings', 0)
+                        if firebase_referral_earnings > 0:
+                            referral_earnings = max(referral_earnings, Decimal(str(firebase_referral_earnings)))
+                        
+                        print(f"💰 Referral earnings from Firebase: ₱{referral_earnings}")
+                        break
+                        
+        except Exception as ref_error:
+            print(f"⚠️ Error getting referral earnings: {ref_error}")
+        
+        # Calculate total withdrawable amount (balance + referral earnings)
+        withdrawable_amount = profile.balance + referral_earnings
+        print(f"💰 Total withdrawable amount: ₱{withdrawable_amount} (Balance: ₱{profile.balance} + Referral: ₱{referral_earnings})")
+
     except Exception as profile_error:
         print(f"❌ Error getting user profile: {profile_error}")
         messages.error(request, 'Unable to access your profile. Please try again.')
@@ -1006,9 +1040,9 @@ def withdraw_view(request):
             if amount_decimal <= 0:
                 raise ValueError("Invalid amount")
                 
-            # Check if user has sufficient balance
-            if amount_decimal > profile.balance:
-                raise ValueError("Insufficient balance")
+            # Check if user has sufficient balance (including referral earnings)
+            if amount_decimal > withdrawable_amount:
+                raise ValueError(f"Insufficient balance. Available: ₱{withdrawable_amount:.2f}")
                 
             # Check minimum withdrawal amount
             if amount_decimal < Decimal('100.00'):
@@ -1071,12 +1105,16 @@ def withdraw_view(request):
             
             return render(request, "myproject/withdraw.html", {
                 'profile': profile,
-                'recent_withdrawals': recent_withdrawals
+                'recent_withdrawals': recent_withdrawals,
+                'withdrawable_amount': withdrawable_amount,
+                'referral_earnings': referral_earnings
             })
 
     return render(request, 'myproject/withdraw.html', {
         'profile': profile,
-        'recent_withdrawals': recent_withdrawals
+        'recent_withdrawals': recent_withdrawals,
+        'withdrawable_amount': withdrawable_amount,
+        'referral_earnings': referral_earnings
     })
 
 @login_required

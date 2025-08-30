@@ -3130,6 +3130,24 @@ def team(request):
         print(f"   Team Earnings: ₱{team_earnings}")
         print(f"   Referral Earnings: ₱{referral_earnings}")
         
+        # Get current user balance from Firebase RTDB (for display)
+        current_balance = 0.0
+        withdrawable_balance = 0.0
+        try:
+            from firebase_admin import db as firebase_db
+            ref = firebase_db.reference('/', get_firebase_app())
+            users_ref = ref.child('users')
+            all_users = users_ref.get() or {}
+            for user_key, user_data in all_users.items():
+                if user_data and user_data.get('phone_number') == user_phone:
+                    # Current balance includes referral earnings
+                    current_balance = float(user_data.get('balance', 0.0))
+                    # Withdrawable balance = balance + referral_earnings
+                    withdrawable_balance = current_balance + float(user_data.get('referral_earnings', 0.0))
+                    break
+        except Exception as bal_error:
+            print(f"⚠️ Error getting current balance: {bal_error}")
+
         # Prepare context for template
         context = {
             'user_phone': user_phone,
@@ -3141,9 +3159,10 @@ def team(request):
             'team_total_invested': team_volume,
             'team_total_earnings': team_earnings,
             'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={referral_code}",
-            'firebase_uid': firebase_uid
+            'firebase_uid': firebase_uid,
+            'current_balance': current_balance,
+            'withdrawable_balance': withdrawable_balance
         }
-        
         return render(request, 'myproject/team.html', context)
         
     except Exception as e:

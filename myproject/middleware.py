@@ -116,24 +116,29 @@ class SessionPersistenceMiddleware:
             
             logger.info(f"PERMANENT session renewed for user: {request.user.username}")
             
-            # Update Firebase activity (non-blocking)
-            try:
-                from myproject.views import update_user_in_firebase_realtime_db
-                firebase_data = {
-                    'last_activity': timezone.now().isoformat(),
-                    'is_online': True,
-                    'session_active': True,
-                    'session_permanent': True,  # Mark as permanent
-                    'current_page': request.path,
-                    'activity_count': request.session.get('activity_count', 1)
-                }
-                
-                # Non-blocking Firebase update
-                update_user_in_firebase_realtime_db(request.user, request.user.username, firebase_data)
-                
-            except Exception as firebase_error:
-                # Don't break the request if Firebase fails
-                logger.warning(f"Firebase activity update failed: {firebase_error}")
+            # COMPLETELY DISABLE Firebase updates during development to prevent delays
+            from django.conf import settings
+            if not getattr(settings, 'DEBUG', True):  # Only in production
+                try:
+                    from myproject.views import update_user_in_firebase_realtime_db
+                    firebase_data = {
+                        'last_activity': timezone.now().isoformat(),
+                        'is_online': True,
+                        'session_active': True,
+                        'session_permanent': True,  # Mark as permanent
+                        'current_page': request.path,
+                        'activity_count': request.session.get('activity_count', 1)
+                    }
+                    
+                    # Non-blocking Firebase update (PRODUCTION ONLY)
+                    update_user_in_firebase_realtime_db(request.user, request.user.username, firebase_data)
+                    
+                except Exception as firebase_error:
+                    # Don't break the request if Firebase fails
+                    logger.warning(f"Firebase activity update failed: {firebase_error}")
+            else:
+                # DEVELOPMENT: Skip Firebase completely to prevent delays
+                logger.debug(f"🔥 Firebase middleware disabled in DEBUG mode for: {request.user.username}")
             
         except Exception as e:
             logger.error(f"PERMANENT session persistence error: {e}")

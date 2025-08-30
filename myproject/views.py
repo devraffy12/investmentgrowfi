@@ -1209,14 +1209,69 @@ def user_login(request):
 
 @firebase_login_required
 def dashboard(request):
-    """🔥 PURE FIREBASE/FIRESTORE DASHBOARD - No Django ORM"""
+    """🔥 PURE FIREBASE/FIRESTORE DASHBOARD - DEVELOPMENT MODE (No Firebase calls)"""
     
     # Get Firebase user from decorator
     firebase_user = request.firebase_user
     firebase_uid = firebase_user.firebase_key  # This is the Firebase UID
     
-    print(f"📊 Pure Firebase dashboard access: {firebase_uid}")
+    print(f"📊 Dashboard access: {firebase_uid}")
     
+    # DEVELOPMENT MODE: Skip Firebase operations to prevent delays
+    from django.conf import settings
+    if settings.DEBUG:
+        print("🔥 DEVELOPMENT MODE: Using Django ORM instead of Firebase")
+        
+        # Use regular Django authentication and data
+        try:
+            if hasattr(request, 'user') and request.user.is_authenticated:
+                user = request.user
+                profile = UserProfile.objects.get(user=user)
+                
+                # Calculate stats using Django ORM
+                total_invested = Investment.objects.filter(user=user).aggregate(
+                    Sum('amount'))['amount__sum'] or Decimal('0.00')
+                
+                total_earnings = Transaction.objects.filter(
+                    user=user,
+                    transaction_type__in=['daily_payout', 'referral_bonus'],
+                    status='completed'
+                ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+                
+                today = timezone.now().date()
+                today_earnings = Transaction.objects.filter(
+                    user=user,
+                    transaction_type__in=['daily_payout', 'referral_bonus'],
+                    status='completed',
+                    created_at__date=today
+                ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+                
+                active_investments = Investment.objects.filter(
+                    user=user, status='active').count()
+                
+                context = {
+                    'user': user,
+                    'profile': profile,
+                    'balance': float(profile.balance),
+                    'total_invested': float(total_invested),
+                    'total_earnings': float(total_earnings),
+                    'today_earnings': float(today_earnings),
+                    'active_investments': active_investments,
+                    'withdrawable_balance': float(total_earnings),
+                    'development_mode': True,
+                }
+                
+                return render(request, 'myproject/dashboard.html', context)
+            else:
+                messages.error(request, 'Please log in to access the dashboard.')
+                return redirect('login')
+                
+        except Exception as e:
+            print(f"❌ Dashboard error: {e}")
+            messages.error(request, 'Unable to load dashboard. Please try again.')
+            return redirect('login')
+    
+    # PRODUCTION MODE: Use Firebase (original code)
     try:
         # Initialize Firestore client
         if not FIREBASE_AVAILABLE:
@@ -1537,7 +1592,53 @@ def investment_plans(request):
 
 @firebase_login_required
 def investment_plans(request):
-    """Investment plans view - Fixed to use 20-day duration and correct prices"""
+    """Investment plans view - DEVELOPMENT MODE (Django ORM)"""
+    from django.conf import settings
+    
+    if settings.DEBUG:
+        print("🔥 DEVELOPMENT MODE: Using Django ORM for investment plans")
+        
+        # Use regular Django authentication
+        try:
+            if hasattr(request, 'user') and request.user.is_authenticated:
+                user = request.user
+                plans = InvestmentPlan.objects.filter(is_active=True)
+                
+                if not plans.exists():
+                    # Auto-seed correct GrowFi plans
+                    default_plans = [
+                        ('GROWFI 1', Decimal('300.00'), Decimal('300.00'), Decimal('0.00')),
+                        ('GROWFI 2', Decimal('700.00'), Decimal('700.00'), Decimal('0.00')),
+                        ('GROWFI 3', Decimal('2200.00'), Decimal('2200.00'), Decimal('0.00')),
+                        ('GROWFI 4', Decimal('3500.00'), Decimal('3500.00'), Decimal('0.00')),
+                        ('GROWFI 5', Decimal('5000.00'), Decimal('5000.00'), Decimal('0.00')),
+                        ('GROWFI 6', Decimal('7000.00'), Decimal('7000.00'), Decimal('0.00')),
+                        ('GROWFI 7', Decimal('9000.00'), Decimal('9000.00'), Decimal('0.00')),
+                        ('GROWFI 8', Decimal('11000.00'), Decimal('11000.00'), Decimal('0.00')),
+                    ]
+                    for name, min_amt, max_amt, rate in default_plans:
+                        InvestmentPlan.objects.create(
+                            name=name,
+                            minimum_amount=min_amt,
+                            maximum_amount=max_amt,
+                            daily_return_rate=Decimal('0.00'),
+                            duration_days=20,
+                            is_active=True
+                        )
+                    plans = InvestmentPlan.objects.filter(is_active=True)
+                    print(f"✅ Created {len(default_plans)} investment plans")
+                
+                return render(request, 'myproject/investment_plans.html', {'plans': plans})
+            else:
+                messages.error(request, 'Please log in to access investment plans.')
+                return redirect('login')
+                
+        except Exception as e:
+            print(f"❌ Investment plans error: {e}")
+            messages.error(request, 'Unable to load investment plans. Please try again.')
+            return redirect('login')
+    
+    # PRODUCTION MODE: Original Firebase code
     plans = InvestmentPlan.objects.filter(is_active=True)
     if not plans.exists():
         # Auto-seed correct GrowFi plans with 20-day duration and correct prices

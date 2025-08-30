@@ -746,42 +746,93 @@ def register(request):
                 # Clean the referral code input
                 referral_code_original = referral_code
                 referral_code = referral_code.strip().upper()
-                
+
                 # Enhanced Debug: Print everything about the referral code
                 print(f"🔍 REFERRAL CODE DEBUG:")
                 print(f"   Original input: '{referral_code_original}' (type: {type(referral_code_original)})")
                 print(f"   After cleaning: '{referral_code}' (length: {len(referral_code)})")
                 print(f"   Character codes: {[ord(c) for c in referral_code]}")
-                
-                # Check if the code has any non-printable characters
+
+                # Remove non-printable characters
                 printable_chars = ''.join(c for c in referral_code if c.isprintable())
                 if printable_chars != referral_code:
                     print(f"   ⚠️ Found non-printable characters!")
                     referral_code = printable_chars
                     print(f"   After removing non-printable: '{referral_code}'")
-                
-                # Simple and efficient lookup with case-insensitive match
+
+                # 1) Try Django DB lookup first (case-insensitive)
                 referrer_profile = UserProfile.objects.filter(
                     referral_code__iexact=referral_code
                 ).select_related('user').first()
-                
+
                 if referrer_profile:
                     referrer = referrer_profile.user
-                    print(f"✅ Valid referral code found: {referral_code} from user {referrer.username}")
+                    print(f"✅ Valid referral code found in Django DB: {referral_code} from user {referrer.username}")
                 else:
-                    # Debug: Show available codes for troubleshooting
-                    all_profiles = UserProfile.objects.exclude(
-                        referral_code__isnull=True
-                    ).exclude(
-                        referral_code__exact=''
-                    ).values_list('referral_code', flat=True)[:10]
-                    
-                    print(f"❌ No matching referral code found for: '{referral_code}'")
-                    print(f"� Sample available referral codes: {list(all_profiles)}")
-                    
-                    messages.error(request, f'Invalid referral code "{referral_code}". Please check and try again.')
-                    return render(request, 'myproject/register.html', {'referral_code': referral_code})
-                            
+                    # 2) If not found in Django, check Firebase (Firestore and RTDB) when available
+                    if FIREBASE_AVAILABLE:
+                        try:
+                            app = get_firebase_app()
+                            from firebase_admin import firestore
+
+                            db = firestore.client()
+                            # Firestore query (exact match; codes are stored uppercase)
+                            fs_matches = db.collection('profiles').where('referral_code', '==', referral_code).get()
+                            if fs_matches:
+                                doc = fs_matches[0].to_dict()
+                                # possible identifiers saved in Firebase: user_id, phone_number, username, email
+                                candidate = doc.get('user_id') or doc.get('phone_number') or doc.get('username') or doc.get('email')
+                                if candidate:
+                                    from django.contrib.auth.models import User
+                                    try:
+                                        referrer = User.objects.get(username=candidate)
+                                        print(f"✅ Valid referral code found in Firestore: {referral_code} mapped to Django user {referrer.username}")
+                                    except User.DoesNotExist:
+                                        # Try flexible username/phone variants
+                                        candidate_variants = [candidate, candidate.replace('+',''), candidate.replace('+63','0')]
+                                        for cv in candidate_variants:
+                                            try:
+                                                referrer = User.objects.get(username=cv)
+                                                print(f"✅ Mapped Firestore referral to Django user via variant: {cv}")
+                                                break
+                                            except Exception:
+                                                continue
+                            # If still not found, check Realtime Database referral_codes node
+                            if not referrer:
+                                try:
+                                    ref = firebase_db.reference('/', app=app)
+                                    r = ref.child('referral_codes').child(referral_code).get()
+                                    if r:
+                                        candidate = r.get('username') or r.get('phone_number') or r.get('user_id')
+                                        if candidate:
+                                            from django.contrib.auth.models import User
+                                            try:
+                                                referrer = User.objects.get(username=candidate)
+                                                print(f"✅ Valid referral code found in RTDB: {referral_code} mapped to Django user {referrer.username}")
+                                            except User.DoesNotExist:
+                                                # try variants
+                                                candidate_variants = [candidate, candidate.replace('+',''), candidate.replace('+63','0')]
+                                                for cv in candidate_variants:
+                                                    try:
+                                                        referrer = User.objects.get(username=cv)
+                                                        print(f"✅ Mapped RTDB referral to Django user via variant: {cv}")
+                                                        break
+                                                    except Exception:
+                                                        continue
+                                except Exception as e:
+                                    print(f"⚠️ RTDB referral_codes lookup failed: {e}")
+                        except Exception as e:
+                            print(f"⚠️ Firebase referral lookup error: {e}")
+
+                    # If after all lookups referrer still not found, show error
+                    if not referrer:
+                        # Debug: Show available codes for troubleshooting (Django samples only)
+                        all_profiles = UserProfile.objects.exclude(referral_code__isnull=True).exclude(referral_code__exact='').values_list('referral_code', flat=True)[:10]
+                        print(f"❌ No matching referral code found for: '{referral_code}'")
+                        print(f"⚠️ Sample available referral codes (Django): {list(all_profiles)}")
+                        messages.error(request, f'Invalid referral code "{referral_code}". Please check and try again.')
+                        return render(request, 'myproject/register.html', {'referral_code': referral_code})
+
             except Exception as e:
                 print(f"❌ Error during referral code validation: {e}")
                 import traceback
@@ -2732,126 +2783,364 @@ def gcash_webhook(request):
     
     return JsonResponse({'success': False, 'error': 'Invalid method'})
 
+
 @firebase_login_required
 def team(request):
-    """🔥 Pure Firebase Team - Firestore Only Implementation"""
+    """🔥 Pure Firebase Team - Firestore Only Implementation - FIXED"""
     
     # Get Firebase user identifier
     firebase_uid = request.firebase_user.firebase_key
     user_phone = request.firebase_user.phone_number
     
     try:
-        print(f"� Getting Firebase team data for UID: {firebase_uid}")
+        print(f"🔍 Getting Firebase team data for UID: {firebase_uid}")
         
         # Get Firestore client directly
         from firebase_admin import firestore
         db = firestore.client()
         
-        # Get team data from Firestore teams collection
-        team_ref = db.collection('teams').document(firebase_uid)
-        team_doc = team_ref.get()
+        # First get the user's referral code from profiles collection
+        user_profile_ref = db.collection('profiles').document(firebase_uid)
+        user_profile_doc = user_profile_ref.get()
         
-        if team_doc.exists:
-            team_data = team_doc.to_dict()
-            print(f"✅ Team data found in Firestore")
+        referral_code = None
+        
+        if user_profile_doc.exists:
+            user_profile_data = user_profile_doc.to_dict()
+            referral_code = user_profile_data.get('referral_code')
+            
+            # If no referral code exists, generate one
+            if not referral_code:
+                import random
+                import string
+                while True:
+                    new_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                    # Check if code is unique in Firestore
+                    existing = db.collection('profiles').where('referral_code', '==', new_code).limit(1).get()
+                    if not existing:
+                        referral_code = new_code
+                        # Update user profile with new code
+                        user_profile_ref.update({'referral_code': referral_code})
+                        print(f"✅ Generated new referral code: {referral_code}")
+                        break
         else:
-            # Auto-create new team document
-            team_data = {
+            # Create new profile with referral code
+            import random
+            import string
+            while True:
+                referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                # Check if code is unique
+                existing = db.collection('profiles').where('referral_code', '==', referral_code).limit(1).get()
+                if not existing:
+                    break
+                    
+            user_profile_data = {
                 'uid': firebase_uid,
                 'phone_number': user_phone,
-                'total_referrals': 0,
-                'active_referrals': 0,
-                'total_earnings': 0.0,
-                'team_volume': 0.0,
-                'referral_earnings': 0.0,
-                'referrals': [],
+                'referral_code': referral_code,
                 'created_at': firestore.SERVER_TIMESTAMP
             }
-            team_ref.set(team_data)
-            print(f"✅ New team document created in Firestore")
+            user_profile_ref.set(user_profile_data)
+            print(f"✅ Created new profile with referral code: {referral_code}")
         
-        # Get referrals from Firestore referrals collection
-        referrals_ref = db.collection('referrals').where('referrer_uid', '==', firebase_uid)
-        referrals_docs = referrals_ref.get()
+        print(f"🔑 Current user referral code: {referral_code}")
         
+        # Initialize counters
         referrals_list = []
         total_referrals = 0
         active_referrals = 0
         team_volume = 0.0
         team_earnings = 0.0
+        referral_earnings = 0.0
         
-        for referral_doc in referrals_docs:
-            referral_data = referral_doc.to_dict()
-            referred_uid = referral_data.get('referred_uid', '')
+        # 🔥 PURE FIREBASE REALTIME DATABASE APPROACH - Primary source of truth
+        try:
+            from firebase_admin import db as firebase_db
+            ref = firebase_db.reference('/', get_firebase_app())
             
-            # Get referred user's profile from Firestore
-            profile_ref = db.collection('profiles').document(referred_uid)
-            profile_doc = profile_ref.get()
+            # Try different database URLs if the first one fails
+            database_urls = [
+                'https://growthinvestment-bbfe2-default-rtdb.asia-southeast1.firebasedatabase.app',
+                'https://growthinvestment-bbfe2-default-rtdb.firebaseio.com'
+            ]
             
-            if profile_doc.exists:
-                profile_data = profile_doc.to_dict()
-                balance = profile_data.get('balance', 0.0)
-                total_invested = profile_data.get('total_invested', 0.0)
-                total_earnings = profile_data.get('total_earnings', 0.0)
+            all_users = {}
+            for db_url in database_urls:
+                try:
+                    # Reinitialize with specific URL
+                    import firebase_admin
+                    from firebase_admin import credentials
+                    
+                    # Get existing app
+                    app = get_firebase_app()
+                    
+                    # Try to get users directly
+                    if hasattr(app, '_database_cache'):
+                        app._database_cache.clear()
+                    
+                    ref = firebase_db.reference('/', app=app)
+                    users_ref = ref.child('users')
+                    all_users = users_ref.get() or {}
+                    
+                    if all_users:
+                        print(f"✅ Successfully connected to Firebase RTDB: {len(all_users)} users")
+                        break
+                    else:
+                        print(f"⚠️ Empty database at {db_url}")
+                        
+                except Exception as db_error:
+                    print(f"⚠️ Failed to connect to {db_url}: {db_error}")
+                    continue
+            
+            if not all_users:
+                print("❌ Could not connect to Firebase RTDB, falling back to Firestore only")
+                raise Exception("No RTDB data available")
+            
+            print(f"🔍 Checking Firebase RTDB with {len(all_users)} users for referral code: {referral_code}")
+            
+            # Track processed phones to avoid duplicates
+            processed_phones = set()
+            
+            for user_key, user_data in all_users.items():
+                if not user_data:
+                    continue
+                    
+                # Check if this user was referred by our referral code
+                user_referred_by = user_data.get('referred_by_code', '')
+                if user_referred_by == referral_code:
+                    phone_number = user_data.get('phone_number', '')
+                    
+                    # Skip duplicates
+                    if phone_number in processed_phones:
+                        continue
+                    processed_phones.add(phone_number)
+                    
+                    # Extract financial data - check multiple fields for robustness
+                    balance = float(user_data.get('balance', 0.0))
+                    total_invested = float(user_data.get('total_invested', 0.0))
+                    total_earnings = float(user_data.get('total_earnings', 0.0))
+                    
+                    # Also check transactions for invested amounts if not in main fields
+                    transactions = user_data.get('transactions', {})
+                    transaction_invested = 0.0
+                    transaction_earnings = 0.0
+                    
+                    for tx_id, tx_data in transactions.items():
+                        if isinstance(tx_data, dict):
+                            tx_type = tx_data.get('type', '')
+                            tx_amount = float(tx_data.get('amount', 0.0))
+                            tx_status = tx_data.get('status', '')
+                            
+                            if tx_status == 'completed':
+                                if tx_type in ['investment', 'deposit', 'add_funds']:
+                                    transaction_invested += tx_amount
+                                elif tx_type in ['daily_earning', 'profit', 'earning']:
+                                    transaction_earnings += tx_amount
+                    
+                    # Use the higher value between stored fields and calculated from transactions
+                    total_invested = max(total_invested, transaction_invested)
+                    total_earnings = max(total_earnings, transaction_earnings)
+                    
+                    # Count this referral
+                    total_referrals += 1
+                    
+                    # Check if user is active (has balance, investments, or recent activity)
+                    is_active = balance > 0 or total_invested > 0 or len(transactions) > 1
+                    if is_active:
+                        active_referrals += 1
+                    
+                    # Add to team totals
+                    team_volume += (total_invested + balance)
+                    team_earnings += total_earnings
+                    
+                    # Get display info
+                    display_name = user_data.get('display_name') or user_data.get('username') or user_data.get('first_name', '') or phone_number
+                    date_joined = user_data.get('date_joined') or user_data.get('created_at')
+                    
+                    referral_info = {
+                        'uid': user_key,
+                        'phone': phone_number,
+                        'display_name': display_name,
+                        'balance': balance,
+                        'total_invested': total_invested,
+                        'total_earnings': total_earnings,
+                        'date_joined': date_joined,
+                        'is_active': is_active,
+                        'transaction_count': len(transactions)
+                    }
+                    
+                    referrals_list.append(referral_info)
+                    
+                    print(f"✅ Found referral: {phone_number}, Balance: ₱{balance}, Invested: ₱{total_invested}, Active: {is_active}")
                 
+        except Exception as rtdb_error:
+            print(f"❌ Firebase RTDB error: {rtdb_error}")
+            all_users = {}  # Reset for fallback
+            
+        # 🔥 FALLBACK: Also check Firestore as secondary source
+        try:
+            referred_users_query = db.collection('users').where('referred_by_code', '==', referral_code)
+            referred_users_docs = referred_users_query.get()
+            
+            print(f"� Also checking Firestore: {len(referred_users_docs)} referred users found")
+            
+            for referred_doc in referred_users_docs:
+                referred_data = referred_doc.to_dict()
+                referred_uid = referred_doc.id
+                phone_number = referred_data.get('phone_number', '')
+                
+                # Skip if already processed from RTDB
+                if phone_number in processed_phones:
+                    continue
+                processed_phones.add(phone_number)
+                
+                # Extract financial data
+                balance = float(referred_data.get('balance', 0.0))
+                total_invested = float(referred_data.get('total_invested', 0.0))
+                total_earnings = float(referred_data.get('total_earnings', 0.0))
+                
+                # Count this referral
                 total_referrals += 1
-                if balance > 0:
+                
+                # Check if user is active
+                is_active = balance > 0 or total_invested > 0
+                if is_active:
                     active_referrals += 1
                 
-                team_volume += total_invested
+                # Add to team totals
+                team_volume += (total_invested + balance)
                 team_earnings += total_earnings
+                
+                # Get display info
+                display_name = referred_data.get('display_name') or referred_data.get('username') or referred_data.get('phone_number', '')
+                date_joined = referred_data.get('date_joined') or referred_data.get('created_at')
                 
                 referrals_list.append({
                     'uid': referred_uid,
-                    'phone': profile_data.get('phone_number', ''),
-                    'display_name': profile_data.get('display_name', ''),
+                    'phone': phone_number,
+                    'display_name': display_name,
                     'balance': balance,
                     'total_invested': total_invested,
                     'total_earnings': total_earnings,
-                    'date_joined': referral_data.get('created_at'),
-                    'is_active': balance > 0
+                    'date_joined': date_joined,
+                    'is_active': is_active
                 })
+                
+                print(f"✅ Added Firestore referral: {phone_number}, Balance: ₱{balance}, Invested: ₱{total_invested}")
+                
+        except Exception as firestore_error:
+            print(f"⚠️ Firestore fallback error: {firestore_error}")
         
-        # Get referral commissions from Firestore commissions collection
-        commissions_ref = db.collection('commissions').where('referrer_uid', '==', firebase_uid)
-        commissions_docs = commissions_ref.get()
+        # Calculate referral earnings from current user's Firebase transactions
+        try:
+            # First check RTDB for current user
+            from firebase_admin import db as firebase_db
+            ref = firebase_db.reference('/', get_firebase_app())
+            users_ref = ref.child('users')
+            
+            # Find current user in Firebase by phone
+            current_user_data = None
+            current_user_key = None
+            all_users = users_ref.get() or {}
+            
+            for user_key, user_data in all_users.items():
+                if user_data and user_data.get('phone_number') == user_phone:
+                    current_user_data = user_data
+                    current_user_key = user_key
+                    break
+            
+            if current_user_data:
+                transactions = current_user_data.get('transactions', {})
+                
+                for tx_id, tx_data in transactions.items():
+                    if isinstance(tx_data, dict) and tx_data.get('type') == 'referral_bonus':
+                        referral_earnings += float(tx_data.get('amount', 0.0))
+                
+                print(f"💰 Current user referral earnings from RTDB: ₱{referral_earnings}")
+            
+            # Fallback to Firestore if RTDB doesn't have the user
+            if not current_user_data:
+                user_doc_ref = db.collection('users').document(firebase_uid)
+                user_doc = user_doc_ref.get()
+                
+                if user_doc.exists:
+                    user_data = user_doc.to_dict()
+                    transactions = user_data.get('transactions', {})
+                    
+                    for tx_id, tx_data in transactions.items():
+                        if isinstance(tx_data, dict) and tx_data.get('type') == 'referral_bonus':
+                            referral_earnings += float(tx_data.get('amount', 0.0))
+                    
+                    print(f"💰 Current user referral earnings from Firestore: ₱{referral_earnings}")
+                else:
+                    print(f"⚠️ User document not found: {firebase_uid}")
+                
+        except Exception as earnings_error:
+            print(f"❌ Error calculating referral earnings: {earnings_error}")
         
-        referral_earnings = 0.0
-        for commission_doc in commissions_docs:
-            commission_data = commission_doc.to_dict()
-            referral_earnings += commission_data.get('amount', 0.0)
+        # 🔥 UPDATE BOTH FIREBASE RTDB AND FIRESTORE with calculated values for persistence
+        try:
+            # Update Firebase RTDB
+            if current_user_key:
+                rtdb_team_data = {
+                    'referral_code': referral_code,
+                    'total_referrals': total_referrals,
+                    'active_referrals': active_referrals,
+                    'team_volume': team_volume,
+                    'team_earnings': team_earnings,
+                    'referral_earnings': referral_earnings,
+                    'last_team_update': firebase_db.ServerValue.TIMESTAMP
+                }
+                
+                # Update user's team stats in RTDB
+                users_ref.child(current_user_key).update(rtdb_team_data)
+                
+                # Also save detailed referrals list
+                users_ref.child(current_user_key).child('team_referrals').set({
+                    f"referral_{i}": ref_data for i, ref_data in enumerate(referrals_list)
+                })
+                
+                print(f"✅ Updated Firebase RTDB team data for {user_phone}")
+            
+            # Update Firestore team document
+            team_ref = db.collection('teams').document(firebase_uid)
+            team_data = {
+                'uid': firebase_uid,
+                'phone_number': user_phone,
+                'referral_code': referral_code,
+                'total_referrals': total_referrals,
+                'active_referrals': active_referrals,
+                'total_earnings': team_earnings,
+                'team_volume': team_volume,
+                'referral_earnings': referral_earnings,
+                'referrals': referrals_list,
+                'updated_at': firestore.SERVER_TIMESTAMP
+            }
+            team_ref.set(team_data, merge=True)
+            print(f"✅ Updated Firestore team document")
+            
+        except Exception as team_error:
+            print(f"❌ Error updating team documents: {team_error}")
         
-        # Update team document with calculated values
-        updated_team_data = {
-            'uid': firebase_uid,
-            'phone_number': user_phone,
-            'total_referrals': total_referrals,
-            'active_referrals': active_referrals,
-            'total_earnings': team_earnings,
-            'team_volume': team_volume,
-            'referral_earnings': referral_earnings,
-            'referrals': referrals_list,
-            'updated_at': firestore.SERVER_TIMESTAMP
-        }
-        team_ref.set(updated_team_data, merge=True)
-        
-        print(f"📊 Firebase Team Stats:")
+        print(f"📊 Firebase Team Final Stats:")
+        print(f"   Referral Code: {referral_code}")
         print(f"   Total Referrals: {total_referrals}")
         print(f"   Active Members: {active_referrals}")
         print(f"   Team Volume: ₱{team_volume}")
         print(f"   Team Earnings: ₱{team_earnings}")
         print(f"   Referral Earnings: ₱{referral_earnings}")
         
+        # Prepare context for template
         context = {
             'user_phone': user_phone,
-            'referral_code': user_phone,  # Use phone as referral code
+            'referral_code': referral_code,
             'total_referrals': total_referrals,
             'active_referrals': active_referrals,
             'referral_earnings': referral_earnings,
             'recent_referrals': referrals_list,
             'team_total_invested': team_volume,
             'team_total_earnings': team_earnings,
-            'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={user_phone}",
+            'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={referral_code}",
             'firebase_uid': firebase_uid
         }
         
@@ -2862,20 +3151,23 @@ def team(request):
         import traceback
         traceback.print_exc()
         
-        # Fallback with empty data
+        # Fallback with empty data but still generate referral code
+        import random
+        import string
+        fallback_referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        
         context = {
             'user_phone': user_phone,
-            'referral_code': user_phone,
+            'referral_code': fallback_referral_code,
             'total_referrals': 0,
             'active_referrals': 0,
             'referral_earnings': 0.0,
             'recent_referrals': [],
             'team_total_invested': 0.0,
             'team_total_earnings': 0.0,
-            'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={user_phone}",
+            'referral_link': f"{request.scheme}://{request.get_host()}/register/?ref={fallback_referral_code}",
         }
         return render(request, 'myproject/team.html', context)
-
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods

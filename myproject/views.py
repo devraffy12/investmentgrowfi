@@ -1666,81 +1666,135 @@ def investment_plans(request):
     return render(request, 'myproject/investment_plans.html', {'plans': plans})
 
 @firebase_login_required
+@firebase_login_required
 def make_investment(request, plan_id):
-    """Make investment view"""
+    """🔥 PURE FIREBASE Make investment view - PRODUCTION READY"""
     plan = get_object_or_404(InvestmentPlan, id=plan_id, is_active=True)
-    profile = UserProfile.objects.get(user=request.user)
+    
+    # Get Firebase user
+    firebase_user = request.firebase_user
+    firebase_uid = firebase_user.firebase_key
+    
+    # Get or create Django user safely
+    try:
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            django_user = request.user
+        else:
+            # Fallback: create Django user from Firebase data
+            from django.contrib.auth.models import User
+            phone = firebase_user.phone_number
+            django_user, created = User.objects.get_or_create(
+                username=phone,
+                defaults={'first_name': firebase_user.display_name or ''}
+            )
+            request.user = django_user  # Set for this request
+        
+        # Get or create profile
+        profile, created = UserProfile.objects.get_or_create(
+            user=django_user,
+            defaults={'phone_number': firebase_user.phone_number}
+        )
+        
+    except Exception as e:
+        logger.error(f"⚠️ Error getting user profile: {e}")
+        messages.error(request, 'Unable to access user profile. Please try logging in again.')
+        return redirect('login')
     
     if request.method == 'POST':
-        amount = Decimal(request.POST['amount'])
-        
-        # Validate amount
-        if amount < plan.minimum_amount or amount > plan.maximum_amount:
-            messages.error(request, f'Amount must be between ₱{plan.minimum_amount} and ₱{plan.maximum_amount}')
-            return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
-        
-        # Check if user has enough balance
-        if profile.balance < amount:
-            messages.error(request, 'Insufficient balance')
-            return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
-        
-        # Create investment
-        investment = Investment.objects.create(
-            user=request.user,
-            plan=plan,
-            amount=amount,
-            end_date=timezone.now() + timezone.timedelta(days=plan.duration_days)
-        )
-        
-        # Deduct balance
-        profile.balance -= amount
-        profile.total_invested += amount
-        profile.save()
-        
-        # Create transaction record
-        Transaction.objects.create(
-            user=request.user,
-            transaction_type='investment',
-            amount=amount,
-            status='completed'
-        )
-        
-        # Create notification
-        Notification.objects.create(
-            user=request.user,
-            title='Investment Created',
-            message=f'Your investment of ₱{amount} has been created successfully.',
-            notification_type='investment'
-        )
-        
-        # Handle referral commission
-        if profile.referred_by:
-            commission_rate = Decimal('5.00')  # 5% commission
-            commission_amount = (amount * commission_rate) / 100
+        try:
+            amount = Decimal(request.POST['amount'])
             
-            referrer_profile = UserProfile.objects.get(user=profile.referred_by)
-            referrer_profile.balance += commission_amount
-            referrer_profile.save()
+            # Validate amount
+            if amount < plan.minimum_amount or amount > plan.maximum_amount:
+                messages.error(request, f'Amount must be between ₱{plan.minimum_amount} and ₱{plan.maximum_amount}')
+                return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
             
-            ReferralCommission.objects.create(
-                referrer=profile.referred_by,
-                referred_user=request.user,
-                investment=investment,
-                commission_rate=commission_rate,
-                commission_amount=commission_amount,
-                level=1,
-                commission_type='investment'  # Specify this is an investment commission
+            # Check if user has enough balance
+            if profile.balance < amount:
+                messages.error(request, 'Insufficient balance')
+                return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
+            
+            # Create investment using Django user
+            investment = Investment.objects.create(
+                user=django_user,
+                plan=plan,
+                amount=amount,
+                end_date=timezone.now() + timezone.timedelta(days=plan.duration_days)
             )
             
-            Transaction.objects.create(
-                user=profile.referred_by,
-                transaction_type='referral_bonus',
-                amount=commission_amount,
-                status='completed'
+            # Update profile immediately with database transaction
+            from django.db import transaction as db_transaction
+            with db_transaction.atomic():
+                # Deduct balance and update totals
+                profile.balance -= amount
+                profile.total_invested += amount
+                profile.save()
+                
+                # Create transaction record
+                Transaction.objects.create(
+                    user=django_user,
+                    transaction_type='investment',
+                    amount=amount,
+                    status='completed'
+                )
+                
+                # Recalculate all totals immediately
+                total_invested = Investment.objects.filter(user=django_user).aggregate(
+                    Sum('amount'))['amount__sum'] or Decimal('0.00')
+                
+                total_earnings = Transaction.objects.filter(
+                    user=django_user,
+                    transaction_type__in=['daily_payout', 'referral_bonus'],
+                    status='completed'
+                ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+                
+                # Update profile with refreshed values
+                profile.total_invested = total_invested
+                profile.total_earnings = total_earnings
+                profile.save()
+            
+            # Create notification
+            Notification.objects.create(
+                user=django_user,
+                title='Investment Created',
+                message=f'Your investment of ₱{amount} has been created successfully.',
+                notification_type='investment'
             )
-        
-        messages.success(request, 'Investment created successfully!')
-        return redirect('my_investments')
+            
+            # Handle referral commission
+            if profile.referred_by:
+                commission_rate = Decimal('5.00')  # 5% commission
+                commission_amount = (amount * commission_rate) / 100
+                
+                referrer_profile = UserProfile.objects.get(user=profile.referred_by)
+                referrer_profile.balance += commission_amount
+                referrer_profile.save()
+                
+                ReferralCommission.objects.create(
+                    referrer=profile.referred_by,
+                    referred_user=django_user,
+                    investment=investment,
+                    commission_rate=commission_rate,
+                    commission_amount=commission_amount,
+                    level=1,
+                    commission_type='investment'
+                )
+                
+                Transaction.objects.create(
+                    user=profile.referred_by,
+                    transaction_type='referral_bonus',
+                    amount=commission_amount,
+                    status='completed',
+                    description=f'Referral commission from {django_user.username} investment'
+                )
+            
+            messages.success(request, f'Investment of ₱{amount} created successfully!')
+            return redirect('dashboard')
+            
+        except Exception as e:
+            logger.error(f"🔥 Investment creation error: {e}")
+            messages.error(request, 'An error occurred while creating your investment. Please try again.')
+            return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
     
     return render(request, 'myproject/make_investment.html', {'plan': plan, 'profile': profile})
 

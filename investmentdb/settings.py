@@ -333,6 +333,9 @@ FIREBASE_CREDENTIALS_FILE = str(BASE_DIR / 'firebase-service-account.json')
 # Firebase Database URL
 FIREBASE_DATABASE_URL = os.environ.get('FIREBASE_DATABASE_URL', 'https://investment-6d6f7-default-rtdb.firebaseio.com')
 
+# Disable Firebase middleware in production to prevent delays
+DISABLE_FIREBASE_MIDDLEWARE = IS_PRODUCTION  # Disable in production
+
 # Firebase Client Config (for frontend use)
 FIREBASE_CLIENT_CONFIG = {
     "apiKey": "AIzaSyBbVKoWwHBfvDRGCEGMYHc9KRlpQ-BsOJQ",
